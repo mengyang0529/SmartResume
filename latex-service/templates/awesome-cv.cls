@@ -81,6 +81,15 @@
 \defaultfontfeatures{
   Renderer=HarfBuzz,
 }
+
+% --- Chinese Support Start ---
+\RequirePackage{xeCJK}
+% Set Chinese font - LXGW Neo XiHei is available in the Docker container
+\setCJKmainfont{LXGW Neo XiHei}
+\setCJKsansfont{LXGW Neo XiHei}
+\setCJKmonofont{LXGW Neo XiHei}
+% --- Chinese Support End ---
+
 \setmainfont{SourceSans3-LightIt}
 \setsansfont{SourceSans3-LightIt}
 \newfontfamily\roboto{Roboto}[
