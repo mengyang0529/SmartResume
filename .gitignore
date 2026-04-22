@@ -37,3 +37,4 @@ compile.log
 # resumeme
 *.tex
 resume.pdf
+/data/*.*
