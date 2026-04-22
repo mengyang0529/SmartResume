@@ -369,77 +369,92 @@ export default function GalleryPage() {
             {/* Modal Body - Resume Preview */}
             <div className="flex-1 overflow-y-auto p-8 bg-gray-100">
               <div className="max-w-[800px] mx-auto bg-white shadow-xl min-h-[1000px] p-12 font-sans text-gray-800">
-                {/* Classic Professional Header Style */}
-                <div className="text-center mb-10">
-                  <h3 className="text-4xl font-bold uppercase tracking-tight text-gray-900 mb-2">
-                    {previewData.personal.firstName} <span className="text-primary-600">{previewData.personal.lastName}</span>
-                  </h3>
-                  <p className="text-lg text-primary-600 font-medium tracking-wide uppercase mb-3">
-                    {previewData.personal.position}
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-600 border-t border-gray-100 pt-3">
-                    <span className="flex items-center">{previewData.personal.mobile}</span>
-                    <span className="text-gray-300">•</span>
-                    <span className="flex items-center">{previewData.personal.email}</span>
-                    <span className="text-gray-300">•</span>
-                    <span className="flex items-center">{previewData.personal.address}</span>
-                  </div>
-                </div>
+                {/* Dynamic Style Configuration */}
+                {(() => {
+                  const isModernTech = selectedTemplate?.name === 'Modern Tech';
+                  const isAcademicCV = selectedTemplate?.name === 'Academic CV';
+                  
+                  const primaryColorClass = isModernTech ? 'text-[#0395DE]' : (isAcademicCV ? 'text-black' : 'text-primary-600');
+                  const borderColorClass = isModernTech ? 'border-[#0395DE]' : (isAcademicCV ? 'border-black' : 'border-gray-900');
+                  const skillLabelColor = isModernTech ? 'text-[#0395DE]' : (isAcademicCV ? 'text-black' : 'text-gray-800');
+                  const fontClass = isAcademicCV ? 'font-serif' : 'font-sans';
 
-                {/* Summary Section */}
-                <div className="mb-8">
-                  <h4 className="font-bold text-gray-900 border-b-2 border-gray-900 pb-1 mb-3 uppercase tracking-wider text-sm">Summary</h4>
-                  <p className="text-gray-700 leading-relaxed text-[15px]">{previewData.summary}</p>
-                </div>
-
-                {/* Experience Section */}
-                <div className="mb-8">
-                  <h4 className="font-bold text-gray-900 border-b-2 border-gray-900 pb-1 mb-3 uppercase tracking-wider text-sm">Experience</h4>
-                  <div className="space-y-6">
-                    {previewData.experience.map((exp) => (
-                      <div key={exp.id}>
-                        <div className="flex justify-between items-baseline mb-1">
-                          <span className="text-lg font-bold text-gray-900">{exp.position}</span>
-                          <span className="text-sm font-bold text-gray-500">{exp.startDate} — {exp.endDate || 'Present'}</span>
+                  return (
+                    <div className={fontClass}>
+                      {/* Header Style */}
+                      <div className="text-center mb-10">
+                        <h3 className="text-4xl font-bold uppercase tracking-tight text-gray-900 mb-2">
+                          {previewData.personal.firstName} <span className={isAcademicCV ? 'text-gray-900' : primaryColorClass}>{previewData.personal.lastName}</span>
+                        </h3>
+                        <p className={`text-lg ${primaryColorClass} font-medium tracking-wide uppercase mb-3`}>
+                          {previewData.personal.position}
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-600 border-t border-gray-100 pt-3">
+                          <span className="flex items-center">{previewData.personal.mobile}</span>
+                          <span className="text-gray-300">•</span>
+                          <span className="flex items-center">{previewData.personal.email}</span>
+                          <span className="text-gray-300">•</span>
+                          <span className="flex items-center">{previewData.personal.address}</span>
                         </div>
-                        <div className="flex justify-between italic text-gray-600 mb-2">
-                          <span>{exp.company}</span>
-                          <span className="text-sm">{exp.location}</span>
-                        </div>
-                        <p className="text-[14px] text-gray-700 leading-relaxed">{exp.description}</p>
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Education Section */}
-                <div className="mb-8">
-                  <h4 className="font-bold text-gray-900 border-b-2 border-gray-900 pb-1 mb-3 uppercase tracking-wider text-sm">Education</h4>
-                  <div className="space-y-4">
-                    {previewData.education.map((edu) => (
-                      <div key={edu.id}>
-                        <div className="flex justify-between items-baseline mb-1">
-                          <span className="text-lg font-bold text-gray-900">{edu.degree} in {edu.field}</span>
-                          <span className="text-sm font-bold text-gray-500">{edu.startDate} — {edu.endDate}</span>
-                        </div>
-                        <div className="italic text-gray-600">{edu.school}</div>
+                      {/* Summary Section */}
+                      <div className={isModernTech ? 'mb-6' : 'mb-8'}>
+                        <h4 className={`font-bold text-gray-900 border-b-2 ${borderColorClass} pb-1 mb-3 uppercase tracking-wider text-sm`}>Summary</h4>
+                        <p className="text-gray-700 leading-relaxed text-[15px]">{previewData.summary}</p>
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Skills Section */}
-                <div>
-                  <h4 className="font-bold text-gray-900 border-b-2 border-gray-900 pb-1 mb-3 uppercase tracking-wider text-sm">Skills</h4>
-                  <div className="space-y-2">
-                    {previewData.skills.map((skill) => (
-                      <div key={skill.id} className="grid grid-cols-4 gap-4 text-[14px]">
-                        <span className="font-bold text-gray-800">{skill.category}</span>
-                        <span className="col-span-3 text-gray-700">{skill.name}</span>
+                      {/* Experience Section */}
+                      <div className={isModernTech ? 'mb-6' : 'mb-8'}>
+                        <h4 className={`font-bold text-gray-900 border-b-2 ${borderColorClass} pb-1 mb-3 uppercase tracking-wider text-sm`}>Experience</h4>
+                        <div className={isModernTech ? 'space-y-4' : (isAcademicCV ? 'space-y-8' : 'space-y-6')}>
+                          {previewData.experience.map((exp) => (
+                            <div key={exp.id}>
+                              <div className="flex justify-between items-baseline mb-1">
+                                <span className="text-lg font-bold text-gray-900">{exp.position}</span>
+                                <span className="text-sm font-bold text-gray-500">{exp.startDate} — {exp.endDate || 'Present'}</span>
+                              </div>
+                              <div className="flex justify-between italic text-gray-600 mb-2">
+                                <span>{exp.company}</span>
+                                <span className="text-sm">{exp.location}</span>
+                              </div>
+                              <p className="text-[14px] text-gray-700 leading-relaxed">{exp.description}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+
+                      {/* Education Section */}
+                      <div className={isModernTech ? 'mb-6' : 'mb-8'}>
+                        <h4 className={`font-bold text-gray-900 border-b-2 ${borderColorClass} pb-1 mb-3 uppercase tracking-wider text-sm`}>Education</h4>
+                        <div className="space-y-4">
+                          {previewData.education.map((edu) => (
+                            <div key={edu.id}>
+                              <div className="flex justify-between items-baseline mb-1">
+                                <span className="text-lg font-bold text-gray-900">{edu.degree} in {edu.field}</span>
+                                <span className="text-sm font-bold text-gray-500">{edu.startDate} — {edu.endDate}</span>
+                              </div>
+                              <div className="italic text-gray-600">{edu.school}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Skills Section */}
+                      <div>
+                        <h4 className={`font-bold text-gray-900 border-b-2 ${borderColorClass} pb-1 mb-3 uppercase tracking-wider text-sm`}>Skills</h4>
+                        <div className={isModernTech ? 'space-y-1' : (isAcademicCV ? 'space-y-3' : 'space-y-2')}>
+                          {previewData.skills.map((skill) => (
+                            <div key={skill.id} className="grid grid-cols-4 gap-4 text-[14px]">
+                              <span className={`font-bold ${skillLabelColor}`}>{skill.category}</span>
+                              <span className={`col-span-3 text-gray-700 ${isModernTech ? 'font-mono bg-gray-50 px-2 py-0.5 rounded' : ''}`}>{skill.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 

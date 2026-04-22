@@ -83,6 +83,7 @@ export interface TemplateSettings {
   sectionColorHighlight: boolean
   headerAlignment: 'C' | 'L' | 'R'
   customColor?: string // hex color
+  className?: string // Added for dynamic template class support
 }
 
 export type ResumeType = 'resume' | 'cv' | 'coverletter'
