@@ -130,7 +130,7 @@ export class TypstService {
       ? `\n#align(center)[#text(style: "italic", size: 10pt)["${this.escapeTypstString(personal.quote.replace(/^["']|["']$/g, '').trim())}"]]\n`
       : ''
 
-    const typst = `#import "@preview/modern-cv:0.10.0": *
+    const typst = `#import "awesome-cv.typ": *
 
 #show: resume.with(
   author: (

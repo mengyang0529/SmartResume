@@ -17,6 +17,9 @@ cd "$WORK_DIR"
 # Copy input file to working directory
 cp "$INPUT_FILE" ./input.typ
 
+# Copy template files to working directory
+cp -r /app/templates/awesome-cv/* ./
+
 # Run typst compile with timeout
 set +e
 timeout "$TIMEOUT" typst compile \

@@ -71,14 +71,6 @@ RUN python3 -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn
 
 # Pre-download Typst packages to avoid runtime network requests
 RUN git clone --depth 1 https://github.com/typst/packages.git /tmp/typst-packages \
-    && mkdir -p /root/.local/share/typst/packages/preview/modern-cv \
-    && cp -r /tmp/typst-packages/packages/preview/modern-cv/0.10.0 \
-       /root/.local/share/typst/packages/preview/modern-cv/0.10.0 \
-    # Apply hotfixes to modern-cv package
-    && sed -i 's/author.positions/AUTHOR_POSITIONS_PLACEHOLDER/g' /root/.local/share/typst/packages/preview/modern-cv/0.10.0/lib.typ \
-    && sed -i 's/\bpositions\b/positions-block/g' /root/.local/share/typst/packages/preview/modern-cv/0.10.0/lib.typ \
-    && sed -i 's/AUTHOR_POSITIONS_PLACEHOLDER/author.positions/g' /root/.local/share/typst/packages/preview/modern-cv/0.10.0/lib.typ \
-    && sed -i 's/profile-picture: image/profile-picture: none/g' /root/.local/share/typst/packages/preview/modern-cv/0.10.0/lib.typ \
     && mkdir -p /root/.local/share/typst/packages/preview/fontawesome \
     && cp -r /tmp/typst-packages/packages/preview/fontawesome/0.6.0 \
        /root/.local/share/typst/packages/preview/fontawesome/0.6.0 \
@@ -88,8 +80,11 @@ RUN git clone --depth 1 https://github.com/typst/packages.git /tmp/typst-package
     && rm -rf /tmp/typst-packages
 
 # Create working directories
-RUN mkdir -p /app /templates /cache /output
+RUN mkdir -p /app /templates/awesome-cv /cache /output
 WORKDIR /app
+
+# Copy templates
+COPY templates/ /app/templates/
 
 # Copy compilation service files
 COPY compile.sh /app/

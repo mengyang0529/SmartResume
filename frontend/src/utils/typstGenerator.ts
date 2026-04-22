@@ -77,7 +77,7 @@ export function generateResumeTypst(data: ResumeData, settings: TemplateSettings
     ? `\n#align(center)[#text(style: "italic", size: 10pt)["${escapeTypstString(personal.quote.replace(/^["']|["']$/g, '').trim())}"]]\n`
     : ''
 
-  return `#import "@preview/modern-cv:0.10.0": *
+  return `#import "awesome-cv.typ": *
 
 #show: resume.with(
   author: (
