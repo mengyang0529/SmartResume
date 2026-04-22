@@ -1,20 +1,18 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { 
-  FaEdit, FaEye, FaDownload, 
+  FaEdit, FaDownload, 
   FaPlus, FaTrash, FaArrowUp, FaArrowDown,
   FaUser, FaGraduationCap, FaBriefcase, FaTools, 
-  FaProjectDiagram, FaGlobe, FaCertificate, FaMedal,
   FaSpinner, FaSave
 } from 'react-icons/fa'
 import toast from 'react-hot-toast'
-import { ResumeData, TemplateSettings, Experience, Education, Skill, Project, Language } from '../types/resume'
+import { ResumeData, TemplateSettings, Experience, Education, Skill } from '../types/resume'
 import { generateResumeLatex } from '../utils/latexGenerator'
 import { pdfApi } from '../services/api'
 
 export default function ResumeEditorPage() {
   const { templateId } = useParams()
-  const [activeTab, setActiveTab] = useState('form')
   const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData)
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings>(defaultTemplateSettings)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
@@ -150,8 +148,6 @@ export default function ResumeEditorPage() {
     }
   }
 
-  const generatedLatex = generateResumeLatex(resumeData, templateSettings)
-
   return (
     <div className="container-padded py-8">
       <div className="flex items-center justify-between mb-8">
@@ -181,39 +177,11 @@ export default function ResumeEditorPage() {
         </div>
       </div>
 
-      {/* Editor Tabs */}
-      <div className="border-b border-gray-200 mb-8">
-        <nav className="flex space-x-1">
-          {[
-            { id: 'form', label: 'Form', icon: <FaEdit /> },
-            { id: 'preview', label: 'Preview', icon: <FaEye /> },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              id={`tab-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              className={`px-4 py-3 font-medium rounded-t-lg transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-white border-t border-l border-r border-gray-200 text-primary-600'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <span className="flex items-center space-x-2">
-                {tab.icon}
-                <span className="capitalize">{tab.label}</span>
-              </span>
-            </button>
-          ))}
-        </nav>
-      </div>
-
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content Area */}
         <div className="lg:col-span-2">
           {/* Form Panel */}
-          <div id="panel-form" className={activeTab !== 'form' ? 'hidden' : ''}>
+          <div id="panel-form">
             <div className="space-y-8">
               {/* Personal Information */}
               <div className="card">
@@ -532,90 +500,6 @@ export default function ResumeEditorPage() {
                   ))}
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Preview Panel */}
-          <div id="panel-preview" className={activeTab !== 'preview' ? 'hidden' : ''}>
-            <div className="card min-h-[800px] bg-white shadow-inner overflow-auto">
-              {/* This is a simplified visual preview, not the real LaTeX output */}
-              <div className="max-w-[800px] mx-auto p-8 font-sans text-gray-800">
-                <div className="text-center mb-8">
-                  <h3 className="text-4xl font-bold uppercase tracking-tight text-gray-900">
-                    {resumeData.personal.firstName} <span className="text-primary-600">{resumeData.personal.lastName}</span>
-                  </h3>
-                  <p className="text-lg text-primary-600 font-medium tracking-wide uppercase mt-1">
-                    {resumeData.personal.position}
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-x-4 mt-2 text-sm text-gray-600">
-                    {resumeData.personal.email && <span>{resumeData.personal.email}</span>}
-                    {resumeData.personal.mobile && <span>{resumeData.personal.mobile}</span>}
-                    {resumeData.personal.address && <span>{resumeData.personal.address}</span>}
-                  </div>
-                </div>
-
-                {resumeData.summary && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-gray-900 border-b pb-1 mb-3 uppercase tracking-wider">Summary</h4>
-                    <p className="text-gray-700 leading-relaxed">{resumeData.summary}</p>
-                  </div>
-                )}
-
-                {resumeData.experience.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-gray-900 border-b pb-1 mb-3 uppercase tracking-wider">Experience</h4>
-                    <div className="space-y-4">
-                      {resumeData.experience.map((exp) => (
-                        <div key={exp.id}>
-                          <div className="flex justify-between font-bold">
-                            <span>{exp.position}</span>
-                            <span className="text-gray-500 text-sm">{exp.startDate} — {exp.endDate || 'Present'}</span>
-                          </div>
-                          <div className="flex justify-between italic text-sm mb-1">
-                            <span>{exp.company}</span>
-                            <span>{exp.location}</span>
-                          </div>
-                          <p className="text-sm text-gray-600">{exp.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {resumeData.education.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-gray-900 border-b pb-1 mb-3 uppercase tracking-wider">Education</h4>
-                    <div className="space-y-4">
-                      {resumeData.education.map((edu) => (
-                        <div key={edu.id}>
-                          <div className="flex justify-between font-bold">
-                            <span>{edu.degree} {edu.field && `in ${edu.field}`}</span>
-                            <span className="text-gray-500 text-sm">{edu.startDate} — {edu.endDate || 'Present'}</span>
-                          </div>
-                          <div className="italic text-sm">{edu.school}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {resumeData.skills.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-bold text-gray-900 border-b pb-1 mb-3 uppercase tracking-wider">Skills</h4>
-                    <div className="space-y-1">
-                      {resumeData.skills.map((skill) => (
-                        <div key={skill.id} className="grid grid-cols-4 text-sm">
-                          <span className="font-bold">{skill.category}</span>
-                          <span className="col-span-3">{skill.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="mt-4 text-sm text-gray-500">
-              <p>Preview shows approximate layout. PDF output will have perfect LaTeX formatting.</p>
             </div>
           </div>
         </div>
