@@ -34,5 +34,5 @@ frontend-report.md
 compile.log
 
 # resumeme
-resume.tex
+*.tex
 resume.pdf
