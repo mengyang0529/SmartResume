@@ -9,7 +9,6 @@ export default function Layout() {
     { path: '/editor', label: 'Editor', icon: <FaEdit /> },
     { path: '/templates', label: 'Templates', icon: <FaImages /> },
     { path: '/profile', label: 'Profile', icon: <FaUser /> },
-    { path: '/about', label: 'About', icon: <FaInfoCircle /> },
   ]
 
   const isActive = (path: string) => {
@@ -36,11 +35,11 @@ export default function Layout() {
               <div
                 className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center"
                 role="img"
-                aria-label="WebResume Logo"
+                aria-label="SmartResume Logo"
               >
                 <span className="text-white font-bold">R</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">WebResume</span>
+              <span className="text-xl font-bold text-gray-900">SmartResume</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -100,11 +99,11 @@ export default function Layout() {
                 <div
                   className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center"
                   role="img"
-                  aria-label="WebResume Logo"
+                  aria-label="SmartResume Logo"
                 >
                   <span className="text-white font-bold">R</span>
                 </div>
-                <span className="text-xl font-bold">WebResume</span>
+                <span className="text-xl font-bold">SmartResume</span>
               </div>
               <p className="text-gray-400">
                 Create professional resumes with LaTeX quality. Free and open source.
@@ -116,7 +115,6 @@ export default function Layout() {
               <ul className="space-y-2">
                 <li><Link to="/editor" className="text-gray-400 hover:text-white">Editor</Link></li>
                 <li><Link to="/templates" className="text-gray-400 hover:text-white">Templates</Link></li>
-                <li><Link to="/about" className="text-gray-400 hover:text-white">About</Link></li>
               </ul>
             </div>
 
@@ -140,7 +138,7 @@ export default function Layout() {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} WebResume. Open source under MIT License.</p>
+            <p>&copy; {new Date().getFullYear()} SmartResume. Open source under MIT License.</p>
             <p className="mt-2">Inspired by <a href="https://github.com/posquit0/Awesome-CV" className="text-primary-400 hover:text-primary-300">Awesome-CV</a></p>
           </div>
         </div>

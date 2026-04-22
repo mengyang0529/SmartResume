@@ -5,7 +5,6 @@ import HomePage from './pages/HomePage'
 import ResumeEditorPage from './pages/ResumeEditorPage'
 import TemplatesPage from './pages/TemplatesPage'
 import ProfilePage from './pages/ProfilePage'
-import AboutPage from './pages/AboutPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 // Create a client for React Query
@@ -30,7 +29,6 @@ function App() {
           <Route path="editor/:templateId" element={<ResumeEditorPage />} />
           <Route path="templates" element={<TemplatesPage />} />
           <Route path="profile" element={<ProfilePage />} />
-          <Route path="about" element={<AboutPage />} />
           <Route path="404" element={<NotFoundPage />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Route>

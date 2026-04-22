@@ -73,7 +73,7 @@ app.use(errorHandler)
 if (config.nodeEnv !== 'test') {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`
-🚀 Server is running!
+🚀 SmartResume Server is running!
 📁 Environment: ${config.nodeEnv}
 🔗 Base URL: http://localhost:${PORT}
 📊 Health check: http://localhost:${PORT}/health

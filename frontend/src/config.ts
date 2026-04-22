@@ -3,7 +3,7 @@
 // Application configuration
 export const config = {
   // Application name
-  appName: 'WebResume',
+  appName: 'SmartResume',
 
   // Base API URL (from environment or default)
   // In dev with Vite proxy, use empty string so /api routes go through proxy

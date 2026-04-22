@@ -10,12 +10,12 @@ export default function HomePage() {
       <section className="bg-gradient-to-br from-primary-50 to-accent-50 py-20">
         <div className="container-padded text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Create Professional Resumes with{' '}
-            <span className="text-primary-600">LaTeX Quality</span>
+            Build Your Career with{' '}
+            <span className="text-primary-600">SmartResume</span>
           </h1>
           <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
-            Generate beautiful, print-ready resumes using the same templates as professional
-            LaTeX documents. No coding required.
+            The smartest way to create professional, print-ready resumes with 
+            LaTeX quality. Beautiful templates, intuitive editor, no coding required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
@@ -39,7 +39,7 @@ export default function HomePage() {
       {/* Features Section */}
       <section className="py-20">
         <div className="container-padded">
-          <h2 className="section-title text-center">Why Choose Web Resume?</h2>
+          <h2 className="section-title text-center">Why Choose SmartResume?</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="card text-center">
               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -63,9 +63,9 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaDownload className="text-3xl text-green-600" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Multiple Formats</h3>
+              <h3 className="text-xl font-bold mb-3">One-Click Download</h3>
               <p className="text-gray-600">
-                Download as PDF or LaTeX source code for further customization.
+                Instantly download your resume as a professional PDF, ready for your job applications.
               </p>
             </div>
           </div>

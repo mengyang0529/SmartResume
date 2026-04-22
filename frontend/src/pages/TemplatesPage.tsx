@@ -256,14 +256,14 @@ export default function TemplatesPage() {
             <h3 className="font-bold text-lg mb-2">Can I customize the templates?</h3>
             <p className="text-gray-600">
               Absolutely! You can customize colors, fonts, sections, and layout through our
-              visual editor. You can also download the LaTeX source code for advanced editing.
+              visual editor to create your perfect resume.
             </p>
           </div>
           <div>
-            <h3 className="font-bold text-lg mb-2">Do I need LaTeX installed to use these?</h3>
+            <h3 className="font-bold text-lg mb-2">Do I need LaTeX knowledge?</h3>
             <p className="text-gray-600">
-              No, our web-based editor generates and compiles LaTeX for you. You only need
-              LaTeX if you want to edit the source code locally.
+              No, our web-based editor handles all the complexity for you. You just need to
+              fill in your information, and we'll generate a professional PDF.
             </p>
           </div>
         </div>
