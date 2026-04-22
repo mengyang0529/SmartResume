@@ -67,11 +67,14 @@
 \RequirePackage{xstring}
 % Needed to use a toolbox of programming tools
 \RequirePackage{etoolbox}
+\RequirePackage{xeCJK}
+\setCJKmainfont[AutoFakeBold=true]{LXGW Neo XiHei}
+\setCJKsansfont[AutoFakeBold=true]{LXGW Neo XiHei}
+\setCJKmonofont[AutoFakeBold=true]{LXGW Neo XiHei}
 % Needed to change line spacing in specific environment
 \RequirePackage{setspace}
 % Needed to manage fonts
 \RequirePackage[quiet]{fontspec}
-% To support LaTeX quoting style
 \defaultfontfeatures{Ligatures=TeX}
 % Needed to manage math fonts
 \RequirePackage{unicode-math}
@@ -81,14 +84,6 @@
 \defaultfontfeatures{
   Renderer=HarfBuzz,
 }
-
-% --- Chinese Support Start ---
-\RequirePackage{xeCJK}
-% Set Chinese font - LXGW Neo XiHei is available in the Docker container
-\setCJKmainfont{LXGW Neo XiHei}
-\setCJKsansfont{LXGW Neo XiHei}
-\setCJKmonofont{LXGW Neo XiHei}
-% --- Chinese Support End ---
 
 \setmainfont{SourceSans3-LightIt}
 \setsansfont{SourceSans3-LightIt}
