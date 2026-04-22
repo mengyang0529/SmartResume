@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # Frontend React/Vue.js application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:5001/api
+    depends_on:
+      - backend
+    networks:
+      - resume-network
+
+  # Backend API server (Node.js/Express)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@db:5432/resume_db
+      - LATEX_SERVICE_URL=http://latex:5050
+    depends_on:
+      - db
+      - latex
+    networks:
+      - resume-network
+
+  # LaTeX compilation service
+  latex:
+    build:
+      context: ./latex-service
+      dockerfile: Dockerfile
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./latex-service/templates:/templates
+      - latex-cache:/cache
+    environment:
+      - MAX_COMPILE_TIME=30
+      - CACHE_ENABLED=true
+    networks:
+      - resume-network
+    # Resource limits to prevent DoS
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+
+  # PostgreSQL database (optional)
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=resume_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - resume-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis cache (optional, for job queue)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - resume-network
+
+networks:
+  resume-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  latex-cache:
