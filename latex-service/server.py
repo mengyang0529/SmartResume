@@ -55,11 +55,17 @@ def cache_pdf(cache_key, pdf_path):
         import shutil
         shutil.copy2(pdf_path, cache_file)
 
-def compile_latex(latex_content):
+import sys
+
+def log(msg):
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
+
+def compile_latex(latex_content, cache_key=None):
     """
     Compile LaTeX content to PDF
     Returns path to generated PDF file
     """
+    log(f"Compiling LaTeX content (length: {len(latex_content)})")
     # Create temporary directory
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
@@ -91,27 +97,24 @@ def compile_latex(latex_content):
                 timeout=MAX_COMPILE_TIME + 5  # Add buffer
             )
             compile_time = time.time() - start_time
+            log(f"Compilation finished in {compile_time:.2f}s (Exit Code: {result.returncode})")
 
             if result.returncode == 0 and pdf_file.exists():
-                return pdf_file, compile_time, None
+                # Cache the result immediately while the temp file still exists
+                if cache_key:
+                    cache_pdf(cache_key, pdf_file)
+                return True, compile_time, None
             else:
-                error_msg = result.stderr or "Unknown compilation error"
-                return None, compile_time, error_msg
+                error_msg = result.stderr or result.stdout or "Unknown compilation error"
+                log(f"Compilation FAILED: {error_msg[:200]}...")
+                return False, compile_time, error_msg
 
         except subprocess.TimeoutExpired:
-            return None, MAX_COMPILE_TIME, f"Compilation timed out after {MAX_COMPILE_TIME} seconds"
+            log(f"Compilation TIMEOUT after {MAX_COMPILE_TIME}s")
+            return False, MAX_COMPILE_TIME, f"Compilation timed out after {MAX_COMPILE_TIME} seconds"
         except Exception as e:
-            return None, 0, f"Compilation failed: {str(e)}"
-
-@app.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({
-        "status": "healthy",
-        "service": "latex-compilation",
-        "cache_enabled": CACHE_ENABLED,
-        "cache_size": len(list(CACHE_DIR.glob("*.pdf"))) if CACHE_ENABLED else 0
-    })
+            log(f"Compilation ERROR: {str(e)}")
+            return False, 0, f"Compilation failed: {str(e)}"
 
 @app.route('/compile', methods=['POST'])
 def compile_endpoint():
@@ -122,19 +125,19 @@ def compile_endpoint():
             return jsonify({"error": "Missing 'latex' field in request body"}), 400
 
         latex_content = data['latex']
+        log(f"Received /compile request")
 
         # Validate input
         if not latex_content.strip():
             return jsonify({"error": "Empty LaTeX content"}), 400
 
-        if len(latex_content) > 1000000:  # 1MB limit
-            return jsonify({"error": "LaTeX content too large (max 1MB)"}), 400
-
         # Check cache first
         cache_key = get_cache_key(latex_content)
+        log(f"Generated cache_key: {cache_key}")
         cached_pdf = get_cached_pdf(cache_key)
 
         if cached_pdf:
+            log(f"Cache HIT for key: {cache_key}")
             return jsonify({
                 "status": "success",
                 "message": "PDF retrieved from cache",
@@ -142,19 +145,18 @@ def compile_endpoint():
                 "cache_key": cache_key
             }), 200
 
-        # Compile LaTeX
-        pdf_file, compile_time, error = compile_latex(latex_content)
+        log(f"Cache MISS for key: {cache_key}. Starting compilation...")
 
-        if error:
+        # Compile LaTeX (cache_pdf is now called inside compile_latex)
+        success, compile_time, error = compile_latex(latex_content, cache_key)
+
+        if not success:
             return jsonify({
                 "status": "error",
                 "message": "Compilation failed",
                 "error": error,
                 "compile_time": compile_time
             }), 500
-
-        # Cache the result
-        cache_pdf(cache_key, pdf_file)
 
         return jsonify({
             "status": "success",
@@ -164,7 +166,9 @@ def compile_endpoint():
             "compile_time": compile_time
         }), 200
 
+
     except Exception as e:
+        log(f"INTERNAL SERVER ERROR: {str(e)}")
         return jsonify({
             "status": "error",
             "message": "Internal server error",
@@ -174,23 +178,29 @@ def compile_endpoint():
 @app.route('/download/<cache_key>', methods=['GET'])
 def download_pdf(cache_key):
     """Download cached PDF"""
+    log(f"Received /download request for key: {cache_key}")
     if not CACHE_ENABLED:
+        log(f"Download FAILED: Cache not enabled")
         return jsonify({"error": "Cache not enabled"}), 404
 
     # Validate cache key format
     if not re.match(r'^[a-f0-9]{64}$', cache_key):
+        log(f"Download FAILED: Invalid cache key format: {cache_key}")
         return jsonify({"error": "Invalid cache key format"}), 400
 
     cache_file = CACHE_DIR / f"{cache_key}.pdf"
     if not cache_file.exists():
+        log(f"Download FAILED: PDF NOT FOUND for key: {cache_key}")
         return jsonify({"error": "PDF not found in cache"}), 404
 
+    log(f"Download SUCCESS for key: {cache_key}")
     return send_file(
         cache_file,
         as_attachment=True,
         download_name=f"resume_{cache_key[:8]}.pdf",
         mimetype='application/pdf'
     )
+
 
 @app.route('/cache/info', methods=['GET'])
 def cache_info():

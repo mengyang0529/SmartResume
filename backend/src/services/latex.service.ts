@@ -166,34 +166,32 @@ ${summary}
 %-------------------------------------------------------------------------------
 \\cvsection{Experience}
 
+\\begin{cventries}
+
 `
 
     experiences.forEach(exp => {
       const endDate = exp.endDate ? exp.endDate : 'Present'
-      section += `\\cvexperience
-  {${exp.position}}
-  {${exp.company}}
-  {${exp.location || ''}}
-  {${exp.startDate} -- ${endDate}}
+      const highlightsStr = (exp.highlights && exp.highlights.length > 0)
+        ? `\\begin{cvitems}
+${exp.highlights.map(item => `  \\item {${item}}`).join('\n')}
+\\end{cvitems}`
+        : (exp.description ? `\\begin{cvitems}
+  \\item {${exp.description}}
+\\end{cvitems}` : '')
+
+      section += `  \\cventry
+    {${exp.position}}
+    {${exp.company}}
+    {${exp.location || ''}}
+    {${exp.startDate} -- ${endDate}}
+    {${highlightsStr}}
 
 `
-      if (exp.description) {
-        section += `\\begin{cvitems}
-`
-        if (exp.highlights && exp.highlights.length > 0) {
-          exp.highlights.forEach(item => {
-            section += `  \\item {${item}}
-`
-          })
-        } else {
-          section += `  \\item {${exp.description}}
-`
-        }
-        section += `\\end{cvitems}
-`
-      }
     })
 
+    section += `\\end{cventries}
+`
     return section
   }
 
@@ -203,27 +201,30 @@ ${summary}
 %-------------------------------------------------------------------------------
 \\cvsection{Education}
 
+\\begin{cventries}
+
 `
 
     educations.forEach(edu => {
       const endDate = edu.endDate ? edu.endDate : 'Present'
-      section += `\\cveducation
-  {${edu.degree}}
-  {${edu.school}}
-  {${edu.location || ''}}
-  {${edu.startDate} -- ${endDate}}
-  {${edu.field || ''}}
-  {${edu.gpa || ''}}
+      const degreeStr = edu.field ? `${edu.degree} in ${edu.field}` : edu.degree
+      const gpaStr = edu.gpa ? ` (GPA: ${edu.gpa})` : ''
+      const descriptionStr = edu.description ? `\\begin{cvitems}
+  \\item {${edu.description}}
+\\end{cvitems}` : ''
+
+      section += `  \\cventry
+    {${degreeStr}${gpaStr}}
+    {${edu.school}}
+    {${edu.location || ''}}
+    {${edu.startDate} -- ${endDate}}
+    {${descriptionStr}}
 
 `
-      if (edu.description) {
-        section += `\\begin{cvitems}
-  \\item {${edu.description}}
-\\end{cvitems}
-`
-      }
     })
 
+    section += `\\end{cventries}
+`
     return section
   }
 
@@ -242,36 +243,52 @@ ${summary}
 %-------------------------------------------------------------------------------
 \\cvsection{Skills}
 
+\\begin{cvskills}
+
 `
 
     Object.entries(byCategory).forEach(([category, categorySkills]) => {
-      section += `\\cvskill{${category}}{`
-      section += categorySkills.map(s => s.name).join(', ')
-      section += `}
+      section += `  \\cvskill
+    {${category}}
+    {${categorySkills.map(s => s.name).join(', ')}}
 
 `
     })
 
+    section += `\\end{cvskills}
+`
     return section
   }
 
   private buildProjectsSection(projects: ResumeData['projects']): string {
-    let section = `%-------------------------------------------------------------------------------\n% PROJECTS\n%-------------------------------------------------------------------------------\n\\cvsection{Projects}\n\n`
+    let section = `%-------------------------------------------------------------------------------
+% PROJECTS
+%-------------------------------------------------------------------------------
+\\cvsection{Projects}
+
+\\begin{cventries}
+
+`
     const projectList = projects || []
     projectList.forEach((project: Project) => {
-      section += `\\cvproject
-  {${project.name}}
-  {${project.description}}
+      const techStr = (project.technologies && project.technologies.length > 0)
+        ? `\\begin{cvitems}
+  \\item \\textbf{Technologies:} ${project.technologies.join(', ')}
+\\end{cvitems}`
+        : ''
+
+      section += `  \\cventry
+    {Project}
+    {${project.name}}
+    {}
+    {}
+    {${project.description}${techStr}}
 
 `
-      if (project.technologies && project.technologies.length > 0) {
-        section += `\\begin{cvitems}
-  \\item \\textbf{Technologies:} ${project.technologies.join(', ')}
-\\end{cvitems}
-`
-      }
     })
 
+    section += `\\end{cventries}
+`
     return section
   }
 

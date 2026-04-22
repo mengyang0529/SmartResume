@@ -20,7 +20,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://backend:5000',
+        target: 'http://backend:5001',
         changeOrigin: true,
       },
       '/latex': {

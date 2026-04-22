@@ -16,12 +16,12 @@ RUN apt-get update && apt-get install -y \
     fonts-font-awesome \
     && rm -rf /var/lib/apt/lists/*
 
-# Manually install Source Sans Pro from GitHub
-RUN wget -q -O /tmp/source-sans-pro.zip https://github.com/adobe-fonts/source-sans-pro/archive/refs/tags/3.052R.zip \
-    && unzip -q /tmp/source-sans-pro.zip -d /tmp/source-sans-pro \
-    && mkdir -p /usr/local/share/fonts/truetype/adobe/source-sans-pro \
-    && find /tmp/source-sans-pro -type f -name "*.ttf" -exec cp {} /usr/local/share/fonts/truetype/adobe/source-sans-pro/ \; \
-    && rm -rf /tmp/source-sans-pro /tmp/source-sans-pro.zip
+# Manually install Source Sans 3 from GitHub
+RUN wget -q -O /tmp/source-sans-3.zip https://github.com/adobe-fonts/source-sans/releases/download/3.052R/TTF-source-sans-3.052R.zip \
+    && unzip -q /tmp/source-sans-3.zip -d /tmp/source-sans-3 \
+    && mkdir -p /usr/local/share/fonts/truetype/adobe/source-sans-3 \
+    && find /tmp/source-sans-3 -type f -name "*.ttf" -exec cp {} /usr/local/share/fonts/truetype/adobe/source-sans-3/ \; \
+    && rm -rf /tmp/source-sans-3 /tmp/source-sans-3.zip
 
 # Update font cache
 RUN fc-cache -fv
@@ -34,6 +34,9 @@ RUN python3 -m pip install --upgrade pip setuptools wheel --break-system-package
 # Create working directories
 RUN mkdir -p /app /templates /cache /output
 WORKDIR /app
+
+# Copy LaTeX templates
+COPY templates/ /templates/
 
 # Copy LaTeX compilation scripts
 COPY compile.sh /app/
