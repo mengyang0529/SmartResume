@@ -11,6 +11,24 @@ build/
 .env
 .env.local
 
+# test files
+test.*
+*.log
+*.zip
+*.fdb_latexmk
+*.fls
+*.aux
+*.out
+*.toc
+*.lof
+*.lot
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
+*.log
+
+# Project specific
+backend/test-output/
+frontend-report.md
+compile.log
