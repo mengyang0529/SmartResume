@@ -11,6 +11,76 @@ export class ResumeService {
     this.latexService = latexService || new LatexService()
   }
   /**
+   * Get sample resume data for previews
+   */
+  async getSampleResume() {
+    return {
+      personal: {
+        firstName: 'Smart',
+        lastName: 'Resume',
+        position: 'Senior Software Architect',
+        email: 'hello@smart-resume.ai',
+        mobile: '+1 234 567 8900',
+        address: '123 Innovation Drive, Silicon Valley, CA',
+      },
+      summary: 'Innovative software architect with over 10 years of experience in building scalable web applications and AI-powered tools. Expert in TypeScript, React, Node.js, and LaTeX automation.',
+      experience: [
+        {
+          id: '1',
+          company: 'Future Systems Inc.',
+          position: 'Lead Software Architect',
+          location: 'San Francisco, CA',
+          startDate: '2020-01',
+          endDate: '',
+          description: 'Leading the development of a next-generation resume builder. Managed a team of 15 engineers and improved system performance by 40%.',
+          highlights: [
+            'Architected and implemented a high-performance resume generation engine',
+            'Led a team of 15 engineers through 5 successful product launches',
+            'Reduced infrastructure costs by 35% through containerization and serverless optimization'
+          ]
+        },
+        {
+          id: '2',
+          company: 'Tech Solutions Ltd.',
+          position: 'Senior Full Stack Developer',
+          location: 'New York, NY',
+          startDate: '2016-06',
+          endDate: '2019-12',
+          description: 'Developed and maintained various client projects using React and Node.js.',
+          highlights: [
+            'Developed real-time collaboration features using WebSockets',
+            'Implemented automated CI/CD pipelines reducing deployment time by 50%',
+            'Mentored 5 junior developers and established coding standards'
+          ]
+        },
+      ],
+      education: [
+        {
+          id: '1',
+          school: 'Massachusetts Institute of Technology (MIT)',
+          degree: 'Master of Science',
+          field: 'Computer Science',
+          startDate: '2014-09',
+          endDate: '2016-05',
+        },
+        {
+          id: '2',
+          school: 'Stanford University',
+          degree: 'Bachelor of Science',
+          field: 'Software Engineering',
+          startDate: '2010-09',
+          endDate: '2014-06',
+        },
+      ],
+      skills: [
+        { id: '1', category: 'Languages', name: 'TypeScript, JavaScript, Python, Go, C++' },
+        { id: '2', category: 'Frameworks', name: 'React, Next.js, Express, FastAPI, Tailwind CSS' },
+        { id: '3', category: 'Tools', name: 'Docker, Kubernetes, AWS, Git, LaTeX, PostgreSQL' },
+      ],
+    }
+  }
+
+  /**
    * Create a new resume with generated LaTeX source
    */
   async createResume(

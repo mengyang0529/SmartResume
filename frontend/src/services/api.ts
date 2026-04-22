@@ -89,6 +89,11 @@ export const resumeApi = {
     return data.data
   },
 
+  getSampleResume: async () => {
+    const { data } = await apiClient.get('/api/v1/resumes/sample')
+    return data.data
+  },
+
 }
 
 // PDF API
@@ -108,6 +113,11 @@ export const pdfApi = {
 
   getJobStatus: async (jobId: string) => {
     const { data } = await apiClient.get(`/api/v1/pdf/jobs/${jobId}`)
+    return data.data
+  },
+
+  getTemplatePreview: async (templateName: string) => {
+    const { data } = await apiClient.get(`/api/v1/pdf/preview-template/${templateName}`)
     return data.data
   },
 

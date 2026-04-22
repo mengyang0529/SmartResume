@@ -7,6 +7,23 @@ export function createResumeRoutes(resumeService: ResumeService) {
   const router = Router()
 
 /**
+ * @route   GET /api/v1/resumes/sample
+ * @desc    Get sample resume data for previews
+ * @access  Public
+ */
+router.get('/sample', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sample = await resumeService.getSampleResume()
+    res.json({
+      status: 'success',
+      data: sample,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+/**
  * @route   GET /api/v1/resumes
  * @desc    Get all resumes for current user
  * @access  Private

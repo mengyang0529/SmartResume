@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FaStar, FaDownload, FaEye, FaFilter, FaMagic, FaTimes } from 'react-icons/fa'
 import toast from 'react-hot-toast'
+import { resumeApi, pdfApi } from '../services/api'
+import { ResumeData } from '../types/resume'
 
 const templates = [
   {
@@ -77,72 +79,37 @@ const filters: { key: FilterType; label: string }[] = [
   { key: 'Free', label: 'Free' },
 ]
 
-// Sample data for preview
-const previewData = {
-  personal: {
-    firstName: 'Smart',
-    lastName: 'Resume',
-    position: 'Senior Software Architect',
-    email: 'hello@smart-resume.ai',
-    mobile: '+1 234 567 8900',
-    address: '123 Innovation Drive, Silicon Valley, CA',
-  },
-  summary: 'Innovative software architect with over 10 years of experience in building scalable web applications and AI-powered tools. Expert in TypeScript, React, Node.js, and LaTeX automation.',
-  experience: [
-    {
-      id: '1',
-      company: 'Future Systems Inc.',
-      position: 'Lead Software Architect',
-      location: 'San Francisco, CA',
-      startDate: '2020-01',
-      endDate: '',
-      description: 'Leading the development of a next-generation resume builder. Managed a team of 15 engineers and improved system performance by 40%.',
-    },
-    {
-      id: '2',
-      company: 'Tech Solutions Ltd.',
-      position: 'Senior Full Stack Developer',
-      location: 'New York, NY',
-      startDate: '2016-06',
-      endDate: '2019-12',
-      description: 'Developed and maintained various client projects using React and Node.js. Implemented automated CI/CD pipelines and improved test coverage to 90%.',
-    },
-  ],
-  education: [
-    {
-      id: '1',
-      school: 'Massachusetts Institute of Technology (MIT)',
-      degree: 'Master of Science',
-      field: 'Computer Science',
-      startDate: '2014-09',
-      endDate: '2016-05',
-    },
-    {
-      id: '2',
-      school: 'Stanford University',
-      degree: 'Bachelor of Science',
-      field: 'Software Engineering',
-      startDate: '2010-09',
-      endDate: '2014-06',
-    },
-  ],
-  skills: [
-    { id: '1', category: 'Languages', name: 'TypeScript, JavaScript, Python, Go, C++' },
-    { id: '2', category: 'Frameworks', name: 'React, Next.js, Express, FastAPI, Tailwind CSS' },
-    { id: '3', category: 'Tools', name: 'Docker, Kubernetes, AWS, Git, LaTeX, PostgreSQL' },
-  ],
-}
-
 export default function GalleryPage() {
   const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null)
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false)
 
-  const handlePreview = (templateId: number) => {
+  const handlePreview = async (templateId: number) => {
     const template = templates.find(t => t.id === templateId)
+    if (!template) return
+    
     setSelectedTemplate(template)
     setIsPreviewOpen(true)
+    setIsLoadingPreview(true)
+    setPreviewPdfUrl(null)
+    
+    try {
+      // Use the kebab-case name for the template class
+      const templateName = template.name.toLowerCase().replace(/\s+/g, '-')
+      const result = await pdfApi.getTemplatePreview(templateName)
+      
+      // Construct absolute URL for the preview
+      setPreviewPdfUrl(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}${result.previewUrl}`)
+    } catch (error) {
+      console.error('Failed to load template preview:', error)
+      toast.error('Failed to generate template preview')
+      setIsPreviewOpen(false)
+    } finally {
+      setIsLoadingPreview(false)
+    }
   }
 
   const handleUseTemplate = (templateId: number) => {
@@ -165,6 +132,7 @@ export default function GalleryPage() {
 
   return (
     <div className="container-padded py-8">
+      {/* ... (rest of the header remains the same) */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Resume Gallery</h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -255,6 +223,7 @@ export default function GalleryPage() {
         ))}
       </div>
 
+      {/* ... (rest of comparison/FAQ remains the same) */}
       {filteredTemplates.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">No designs match the selected filter.</p>
@@ -341,7 +310,7 @@ export default function GalleryPage() {
       {/* Preview Modal */}
       {isPreviewOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
               <div>
@@ -366,102 +335,30 @@ export default function GalleryPage() {
               </div>
             </div>
 
-            {/* Modal Body - Resume Preview */}
-            <div className="flex-1 overflow-y-auto p-8 bg-gray-100">
-              <div className="max-w-[800px] mx-auto bg-white shadow-xl min-h-[1000px] p-12 font-sans text-gray-800">
-                {/* Dynamic Style Configuration */}
-                {(() => {
-                  const isModernTech = selectedTemplate?.name === 'Modern Tech';
-                  const isAcademicCV = selectedTemplate?.name === 'Academic CV';
-                  
-                  const primaryColorClass = isModernTech ? 'text-[#0395DE]' : (isAcademicCV ? 'text-black' : 'text-primary-600');
-                  const borderColorClass = isModernTech ? 'border-[#0395DE]' : (isAcademicCV ? 'border-black' : 'border-gray-900');
-                  const skillLabelColor = isModernTech ? 'text-[#0395DE]' : (isAcademicCV ? 'text-black' : 'text-gray-800');
-                  const fontClass = isAcademicCV ? 'font-serif' : 'font-sans';
-
-                  return (
-                    <div className={fontClass}>
-                      {/* Header Style */}
-                      <div className="text-center mb-10">
-                        <h3 className="text-4xl font-bold uppercase tracking-tight text-gray-900 mb-2">
-                          {previewData.personal.firstName} <span className={isAcademicCV ? 'text-gray-900' : primaryColorClass}>{previewData.personal.lastName}</span>
-                        </h3>
-                        <p className={`text-lg ${primaryColorClass} font-medium tracking-wide uppercase mb-3`}>
-                          {previewData.personal.position}
-                        </p>
-                        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-600 border-t border-gray-100 pt-3">
-                          <span className="flex items-center">{previewData.personal.mobile}</span>
-                          <span className="text-gray-300">•</span>
-                          <span className="flex items-center">{previewData.personal.email}</span>
-                          <span className="text-gray-300">•</span>
-                          <span className="flex items-center">{previewData.personal.address}</span>
-                        </div>
-                      </div>
-
-                      {/* Summary Section */}
-                      <div className={isModernTech ? 'mb-6' : 'mb-8'}>
-                        <h4 className={`font-bold text-gray-900 border-b-2 ${borderColorClass} pb-1 mb-3 uppercase tracking-wider text-sm`}>Summary</h4>
-                        <p className="text-gray-700 leading-relaxed text-[15px]">{previewData.summary}</p>
-                      </div>
-
-                      {/* Experience Section */}
-                      <div className={isModernTech ? 'mb-6' : 'mb-8'}>
-                        <h4 className={`font-bold text-gray-900 border-b-2 ${borderColorClass} pb-1 mb-3 uppercase tracking-wider text-sm`}>Experience</h4>
-                        <div className={isModernTech ? 'space-y-4' : (isAcademicCV ? 'space-y-8' : 'space-y-6')}>
-                          {previewData.experience.map((exp) => (
-                            <div key={exp.id}>
-                              <div className="flex justify-between items-baseline mb-1">
-                                <span className="text-lg font-bold text-gray-900">{exp.position}</span>
-                                <span className="text-sm font-bold text-gray-500">{exp.startDate} — {exp.endDate || 'Present'}</span>
-                              </div>
-                              <div className="flex justify-between italic text-gray-600 mb-2">
-                                <span>{exp.company}</span>
-                                <span className="text-sm">{exp.location}</span>
-                              </div>
-                              <p className="text-[14px] text-gray-700 leading-relaxed">{exp.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Education Section */}
-                      <div className={isModernTech ? 'mb-6' : 'mb-8'}>
-                        <h4 className={`font-bold text-gray-900 border-b-2 ${borderColorClass} pb-1 mb-3 uppercase tracking-wider text-sm`}>Education</h4>
-                        <div className="space-y-4">
-                          {previewData.education.map((edu) => (
-                            <div key={edu.id}>
-                              <div className="flex justify-between items-baseline mb-1">
-                                <span className="text-lg font-bold text-gray-900">{edu.degree} in {edu.field}</span>
-                                <span className="text-sm font-bold text-gray-500">{edu.startDate} — {edu.endDate}</span>
-                              </div>
-                              <div className="italic text-gray-600">{edu.school}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Skills Section */}
-                      <div>
-                        <h4 className={`font-bold text-gray-900 border-b-2 ${borderColorClass} pb-1 mb-3 uppercase tracking-wider text-sm`}>Skills</h4>
-                        <div className={isModernTech ? 'space-y-1' : (isAcademicCV ? 'space-y-3' : 'space-y-2')}>
-                          {previewData.skills.map((skill) => (
-                            <div key={skill.id} className="grid grid-cols-4 gap-4 text-[14px]">
-                              <span className={`font-bold ${skillLabelColor}`}>{skill.category}</span>
-                              <span className={`col-span-3 text-gray-700 ${isModernTech ? 'font-mono bg-gray-50 px-2 py-0.5 rounded' : ''}`}>{skill.name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
+            {/* Modal Body - PDF Viewer */}
+            <div className="flex-1 overflow-hidden bg-gray-100 relative">
+              {isLoadingPreview ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+                  <p className="text-gray-500">Compiling professional LaTeX preview...</p>
+                </div>
+              ) : previewPdfUrl ? (
+                <iframe
+                  src={`${previewPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                  className="w-full h-full border-none"
+                  title="Design Preview PDF"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  Failed to load preview. Please try again.
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
             <div className="p-4 bg-gray-50 text-center border-t border-gray-100">
               <p className="text-xs text-gray-400">
-                This is a visual preview. The final PDF will be rendered with high-precision LaTeX.
+                This is a real-time LaTeX render. The final PDF will look exactly as shown above.
               </p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-%% Start of file `classic-professional.cls'.
+%% Start of file `academic-cv.cls'.
 % Awesome CV Class File
 %
 % This class has been downloaded from:
@@ -12,7 +12,7 @@
 % 1) This class file defines the structure and layout of the template file (cv.tex, resume.tex).
 % 2) It has been written in such a way that under most circumstances you
 % should not need to edit it.
-% 3) It has been renamed to classic-professional.cls for this project.
+% 3) It has been renamed to academic-cv.cls for this project.
 %
 % Class license:
 % LPPL v1.3c (http://www.latex-project.org/lppl)
@@ -166,7 +166,7 @@
 \definecolor{awesome-nephritis}{HTML}{27AE60}
 \definecolor{awesome-concrete}{HTML}{95A5A6}
 \definecolor{awesome-darknight}{HTML}{131A28}
-\colorlet{awesome}{awesome-red}
+\definecolor{awesome}{HTML}{000000}
 
 % Boolean value to switch section color highlighting
 \newbool{acvSectionColorHighlight}
@@ -175,9 +175,11 @@
 %-------------------------------------------------------------------------------
 %                Configuration for fonts
 %-------------------------------------------------------------------------------
-\newcommand*{\footerfont}{\setmainfont{Linux Libertine O}\selectfont}
-\newcommand*{\bodyfont}{\setmainfont{Linux Libertine O}\selectfont}
-\newcommand*{\bodyfontlight}{\setmainfont{Linux Libertine O}\selectfont}
+\newcommand*{\headerfont}{\roboto\selectfont}
+\newcommand*{\headerfontlight}{\roboto\fontseries{l}\selectfont}
+\newcommand*{\footerfont}{\sffamily}
+\newcommand*{\bodyfont}{\sffamily}
+\newcommand*{\bodyfontlight}{\sffamily\fontseries{l}\selectfont}
 
 %-------------------------------------------------------------------------------
 %                Configuration for styles
@@ -809,7 +811,7 @@
   \vspace{-4.0mm}
   \begin{justify}
   \begin{itemize}[leftmargin=2ex, nosep, noitemsep]
-    \setlength{\parskip}{0.5ex}
+    \setlength{\parskip}{0pt}
     \renewcommand{\labelitemi}{\bullet}
 }{%
   \end{itemize}
@@ -863,13 +865,6 @@
   \lettertextstyle{\@letterclosing} \\\\
   \letternamestyle{\@firstname\ \@lastname}
   \ifthenelse{\isundefined{\@letterenclosure}}
-    {\\}
-    {%
-      \\\\\\
-      \letterenclosurestyle{\@letterenclname: \@letterenclosure} \\
-    }
-}
-efined{\@letterenclosure}}
     {\\}
     {%
       \\\\\\

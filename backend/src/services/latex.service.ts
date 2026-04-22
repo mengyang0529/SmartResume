@@ -2,6 +2,18 @@ import { ResumeData, TemplateSettings, Project, Language } from '../types/resume
 
 export class LatexService {
   /**
+   * Escape special LaTeX characters
+   */
+  private escapeLatex(text: string): string {
+    if (!text) return ''
+    return text
+      .replace(/\\/g, '\\textbackslash ')
+      .replace(/([&%$#_{}])/g, '\\$1')
+      .replace(/~/g, '\\textasciitilde ')
+      .replace(/\^/g, '\\textasciicircum ')
+  }
+
+  /**
    * Generate LaTeX source code from resume data
    */
   generateResumeLatex(data: ResumeData, settings: TemplateSettings): string {
@@ -18,22 +30,71 @@ export class LatexService {
       publications = []
     } = data
 
+    // Escape all user data
+    const escapedPersonal = {
+      ...personal,
+      firstName: this.escapeLatex(personal.firstName),
+      lastName: this.escapeLatex(personal.lastName),
+      position: this.escapeLatex(personal.position),
+      address: this.escapeLatex(personal.address),
+      mobile: this.escapeLatex(personal.mobile),
+      email: this.escapeLatex(personal.email),
+      homePage: this.escapeLatex(personal.homePage),
+      linkedin: this.escapeLatex(personal.linkedin),
+      gitlab: this.escapeLatex(personal.gitlab),
+      twitter: this.escapeLatex(personal.twitter),
+      quote: this.escapeLatex(personal.quote)
+    }
+
+    const escapedSummary = this.escapeLatex(summary)
+
+    const escapedExperience = experience.map(exp => ({
+      ...exp,
+      company: this.escapeLatex(exp.company),
+      position: this.escapeLatex(exp.position),
+      location: this.escapeLatex(exp.location),
+      description: this.escapeLatex(exp.description),
+      highlights: exp.highlights ? exp.highlights.map(h => this.escapeLatex(h)) : []
+    }))
+
+    const escapedEducation = education.map(edu => ({
+      ...edu,
+      school: this.escapeLatex(edu.school),
+      degree: this.escapeLatex(edu.degree),
+      field: this.escapeLatex(edu.field),
+      location: this.escapeLatex(edu.location),
+      description: this.escapeLatex(edu.description)
+    }))
+
+    const escapedSkills = skills.map(skill => ({
+      ...skill,
+      category: this.escapeLatex(skill.category),
+      name: this.escapeLatex(skill.name)
+    }))
+
+    const escapedProjects = projects.map(proj => ({
+      ...proj,
+      name: this.escapeLatex(proj.name),
+      description: this.escapeLatex(proj.description),
+      technologies: proj.technologies ? proj.technologies.map(t => this.escapeLatex(t)) : []
+    }))
+
     // Build personal information commands
-    const personalInfoCommands = this.buildPersonalInfoCommands(personal)
+    const personalInfoCommands = this.buildPersonalInfoCommands(escapedPersonal as any)
     const colorCommand = settings.customColor
       ? `\\definecolor{awesome}{HTML}{${settings.customColor.replace('#', '')}}`
       : `\\colorlet{awesome}{${settings.colorScheme}}`
 
     // Build content sections
-    const summarySection = summary ? this.buildSummarySection(summary) : ''
-    const experienceSection = experience.length > 0 ? this.buildExperienceSection(experience) : ''
-    const educationSection = education.length > 0 ? this.buildEducationSection(education) : ''
-    const skillsSection = skills.length > 0 ? this.buildSkillsSection(skills) : ''
-    const projectsSection = projects.length > 0 ? this.buildProjectsSection(projects) : ''
+    const summarySection = escapedSummary ? this.buildSummarySection(escapedSummary) : ''
+    const experienceSection = escapedExperience.length > 0 ? this.buildExperienceSection(escapedExperience as any) : ''
+    const educationSection = escapedEducation.length > 0 ? this.buildEducationSection(escapedEducation as any) : ''
+    const skillsSection = escapedSkills.length > 0 ? this.buildSkillsSection(escapedSkills as any) : ''
+    const projectsSection = escapedProjects.length > 0 ? this.buildProjectsSection(escapedProjects as any) : ''
     const languagesSection = languages.length > 0 ? this.buildLanguagesSection(languages) : ''
-    const honorsSection = honors.length > 0 ? this.buildHonorsSection(honors) : ''
-    const certificatesSection = certificates.length > 0 ? this.buildCertificatesSection(certificates) : ''
-    const publicationsSection = publications.length > 0 ? this.buildPublicationsSection(publications) : ''
+    const honorsSection = honors.length > 0 ? this.buildHonorsSection(honors.map(h => this.escapeLatex(h))) : ''
+    const certificatesSection = certificates.length > 0 ? this.buildCertificatesSection(certificates.map(c => this.escapeLatex(c))) : ''
+    const publicationsSection = publications.length > 0 ? this.buildPublicationsSection(publications.map(p => this.escapeLatex(p))) : ''
 
     const latex = `%!TEX TS-program = xelatex
 %!TEX encoding = UTF-8 Unicode

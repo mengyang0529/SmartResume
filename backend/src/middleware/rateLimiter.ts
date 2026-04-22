@@ -53,7 +53,7 @@ const commonRateLimit = rateLimit({
 // Stricter rate limit for PDF generation (expensive operation)
 export const pdfRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // 20 requests per window
+  max: 200, // Increase to 200 requests per window for development
   message: {
     status: 'error',
     message: 'Too many PDF generation requests. Please wait before generating more PDFs.',

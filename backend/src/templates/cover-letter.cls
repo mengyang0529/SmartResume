@@ -1,4 +1,4 @@
-%% Start of file `modern-tech.cls'.
+%% Start of file `cover-letter.cls'.
 % Awesome CV Class File
 %
 % This class has been downloaded from:
@@ -12,7 +12,7 @@
 % 1) This class file defines the structure and layout of the template file (cv.tex, resume.tex).
 % 2) It has been written in such a way that under most circumstances you
 % should not need to edit it.
-% 3) It has been renamed to modern-tech.cls for this project.
+% 3) It has been renamed to cover-letter.cls for this project.
 %
 % Class license:
 % LPPL v1.3c (http://www.latex-project.org/lppl)
@@ -22,7 +22,7 @@
 %-------------------------------------------------------------------------------
 %                Identification
 %-------------------------------------------------------------------------------
-\ProvidesClass{modern-tech}[2017/02/05 v1.6.1 Classic Professional Curriculum Vitae Class]
+\ProvidesClass{cover-letter}[2017/02/05 v1.6.1 Classic Professional Curriculum Vitae Class]
 \NeedsTeXFormat{LaTeX2e}
 
 
@@ -166,7 +166,7 @@
 \definecolor{awesome-nephritis}{HTML}{27AE60}
 \definecolor{awesome-concrete}{HTML}{95A5A6}
 \definecolor{awesome-darknight}{HTML}{131A28}
-\colorlet{awesome}{awesome-skyblue}
+\colorlet{awesome}{awesome-red}
 
 % Boolean value to switch section color highlighting
 \newbool{acvSectionColorHighlight}

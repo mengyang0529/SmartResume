@@ -1,4 +1,4 @@
-%% Start of file `classic-professional.cls'.
+%% Start of file `modern-tech.cls'.
 % Awesome CV Class File
 %
 % This class has been downloaded from:
@@ -12,7 +12,7 @@
 % 1) This class file defines the structure and layout of the template file (cv.tex, resume.tex).
 % 2) It has been written in such a way that under most circumstances you
 % should not need to edit it.
-% 3) It has been renamed to classic-professional.cls for this project.
+% 3) It has been renamed to modern-tech.cls for this project.
 %
 % Class license:
 % LPPL v1.3c (http://www.latex-project.org/lppl)
@@ -166,7 +166,7 @@
 \definecolor{awesome-nephritis}{HTML}{27AE60}
 \definecolor{awesome-concrete}{HTML}{95A5A6}
 \definecolor{awesome-darknight}{HTML}{131A28}
-\colorlet{awesome}{awesome-red}
+\colorlet{awesome}{awesome-skyblue}
 
 % Boolean value to switch section color highlighting
 \newbool{acvSectionColorHighlight}
@@ -466,8 +466,8 @@
 \newcommand{\acvHeaderAfterQuoteSkip}{5mm}
 
 % Others
-\newcommand{\acvSectionTopSkip}{1.5mm}
-\newcommand{\acvSectionContentTopSkip}{2.0mm}
+\newcommand{\acvSectionTopSkip}{3mm}
+\newcommand{\acvSectionContentTopSkip}{2.5mm}
 
 
 %-------------------------------------------------------------------------------
@@ -795,7 +795,7 @@
   \vspace{-2.0mm}
     \setlength\tabcolsep{1ex}
     \setlength{\extrarowheight}{0pt}
-    \tabularx{\textwidth}{L{3.2cm}>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}X}
+    \tabularx{\textwidth}{r>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}X}
 }{%
 \endtabularx\par
 }
@@ -866,12 +866,6 @@
   \letternamestyle{\@firstname\ \@lastname}
   \ifthenelse{\isundefined{\@letterenclosure}}
     {\\}
-    {%
-      \\\\\\
-      \letterenclosurestyle{\@letterenclname: \@letterenclosure} \\
-    }
-}
-\\}
     {%
       \\\\\\
       \letterenclosurestyle{\@letterenclname: \@letterenclosure} \\

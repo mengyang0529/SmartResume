@@ -23,8 +23,11 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
+      frameAncestors: ["'self'", config.corsOrigin || 'http://localhost:3000'],
+      objectSrc: ["'none'"],
     },
   },
+  xFrameOptions: false, // Disable X-Frame-Options to allow frame-ancestors to work
 }))
 
 // CORS configuration

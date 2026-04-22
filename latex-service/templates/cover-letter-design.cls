@@ -1,4 +1,4 @@
-%% Start of file `classic-professional.cls'.
+%% Start of file `cover-letter-design.cls'.
 % Awesome CV Class File
 %
 % This class has been downloaded from:
@@ -12,7 +12,7 @@
 % 1) This class file defines the structure and layout of the template file (cv.tex, resume.tex).
 % 2) It has been written in such a way that under most circumstances you
 % should not need to edit it.
-% 3) It has been renamed to classic-professional.cls for this project.
+% 3) It has been renamed to cover-letter-design.cls for this project.
 %
 % Class license:
 % LPPL v1.3c (http://www.latex-project.org/lppl)
