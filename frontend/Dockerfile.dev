@@ -10,8 +10,14 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* ./
 
+# Configure npm for better network resilience
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set registry https://registry.npmjs.org/
+
 # Install dependencies
-RUN npm install
+RUN npm install --no-audit --no-fund
 
 # Copy source code
 COPY . .
