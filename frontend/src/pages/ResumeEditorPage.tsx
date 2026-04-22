@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { 
-  FaEdit, FaDownload, FaPlus, FaTrash, FaArrowUp, FaArrowDown,
-  FaUser, FaGraduationCap, FaBriefcase, FaTools, FaSpinner, 
-  FaSave, FaPalette, FaCog, FaLayerGroup
+  FaPlus, FaTrash, FaArrowUp, FaArrowDown, FaSpinner, 
+  FaSave, FaDownload, FaChevronRight, FaTerminal, FaFingerprint,
+  FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaGraduationCap, FaUser
 } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -325,7 +325,7 @@ export default function ResumeEditorPage() {
     }
     setResumeData(prev => ({
       ...prev,
-      sections: prev.sections.map(s => s.id === sectionId ? { ...s, entries: [...s.entries, newEntry] } : s)
+      sections: prev.sections.map(s => s.id === sectionId ? { ...s, entries: [newEntry, ...s.entries] } : s)
     }))
   }
 
@@ -387,205 +387,264 @@ export default function ResumeEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col sticky top-0 h-screen shadow-sm">
-        
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
-          <div className="py-2 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base</div>
-          <NavBtn active={activeTab === 'personal'} onClick={() => setActiveTab('personal')} icon={<FaUser />} label="Personal" />
-          <NavBtn active={activeTab === 'education'} onClick={() => setActiveTab('education')} icon={<FaGraduationCap />} label="Education" />
+    <div className="min-h-screen bg-[#050505] font-sans text-gray-100 flex selection:bg-red-500/30">
+      {/* Sidebar - Now with updated fixed positioning to account for header */}
+      <aside className="w-[280px] bg-[#0A0A0A] border-r border-gray-800/30 fixed top-20 bottom-0 left-0 z-40 flex flex-col">
+        <nav className="flex-1 overflow-y-auto px-6 py-10 space-y-2 custom-scrollbar">
+          <NavTab active={activeTab === 'personal'} onClick={() => setActiveTab('personal')} num="01" label="Identity" icon={<FaFingerprint />} />
+          <NavTab active={activeTab === 'education'} onClick={() => setActiveTab('education')} num="02" label="Education" icon={<FaGraduationCap />} />
           
-          <div className="py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center justify-between">
-            <span>Custom Sections</span>
+          <div className="mt-8 flex items-center justify-between px-4 mb-2">
+            <SectionDivider label="Modules" />
+            <button onClick={addSection} className="text-gray-500 hover:text-red-500 transition-colors"><FaPlus className="text-xs" /></button>
           </div>
-          {resumeData.sections.map(sec => (
-            <NavBtn 
+          {resumeData.sections.map((sec, i) => (
+            <NavTab 
               key={sec.id}
               active={activeTab === sec.id} 
               onClick={() => setActiveTab(sec.id)} 
-              icon={<FaLayerGroup className="text-gray-400" />} 
+              num={(i + 3).toString().padStart(2, '0')}
               label={sec.title} 
+              icon={<FaLayerGroup />}
             />
           ))}
-          <button onClick={addSection} className="w-full flex items-center space-x-3 px-4 py-3 text-xs text-red-500 font-bold hover:bg-red-50 rounded-xl transition-all mt-2 border border-dashed border-red-200">
-            <FaPlus /> <span>New Section</span>
-          </button>
 
-          <div className="py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer</div>
-          <NavBtn active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} icon={<FaTools />} label="Skills" />
+          <SectionDivider label="Finalize" className="mt-8" />
+          <NavTab active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} num="--" label="Capabilities" icon={<FaUser />} />
         </nav>
 
-        <div className="p-6 border-t border-gray-100 bg-gray-50/50">
-          <button onClick={handleDownloadPdf} disabled={isGeneratingPdf} className="w-full bg-gray-900 text-white rounded-2xl py-4 flex items-center justify-center space-x-3 hover:bg-black transition-all shadow-xl active:scale-95 disabled:opacity-50">
-            {isGeneratingPdf ? <FaSpinner className="animate-spin" /> : <><FaDownload className="text-sm" /> <span className="font-bold tracking-wide">Download PDF</span></>}
+        {/* Execute Build Button moved here, made more prominent */}
+        <div className="p-8 border-t border-gray-800/30 bg-[#080808]">
+          <button 
+            onClick={handleDownloadPdf} 
+            disabled={isGeneratingPdf} 
+            className="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded uppercase tracking-widest text-[10px] flex items-center justify-center space-x-3 transition-all disabled:opacity-50 shadow-[0_10px_30px_rgba(220,38,38,0.2)]"
+          >
+            {isGeneratingPdf ? <FaSpinner className="animate-spin" /> : <><FaDownload className="text-xs" /> <span>Download PDF</span></>}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-12 bg-white/50">
-        <div className="max-w-4xl mx-auto space-y-12 pb-32">
-          {activeTab === 'personal' && (
-            <motion.section initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} className="bg-white rounded-3xl p-10 shadow-xl shadow-gray-100/50 border border-gray-100">
-              <h2 className="text-3xl font-black text-gray-900 mb-10 tracking-tight">Personal Details</h2>
-              <div className="grid grid-cols-2 gap-8">
-                <InputField label="First Name" value={resumeData.personal.firstName} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, firstName: v}}))}} />
-                <InputField label="Last Name" value={resumeData.personal.lastName} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, lastName: v}}))}} />
-                <div className="col-span-2">
-                  <InputField label="Professional Title" value={resumeData.personal.position} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, position: v}}))}} />
-                </div>
-                <InputField label="Email" value={resumeData.personal.email} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, email: v}}))}} />
-                <InputField label="Phone" value={resumeData.personal.mobile} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, mobile: v}}))}} />
-                <div className="col-span-2">
-                  <InputField label="Address" value={resumeData.personal.address} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, address: v}}))}} />
-                </div>
-                <InputField label="GitHub" value={resumeData.personal.github} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, github: v}}))}} />
-              </div>
-            </motion.section>
-          )}
-
-          {activeTab === 'education' && (
-            <motion.section initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} className="bg-white rounded-3xl p-10 shadow-xl shadow-gray-100/50 border border-gray-100">
-              <div className="flex items-center justify-between mb-10">
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Education</h2>
-                <button onClick={() => {
-                  handleChange();
-                  setResumeData(p => ({...p, education: [...p.education, { id: crypto.randomUUID(), school: "", degree: "", startDate: "", endDate: "" }]}));
-                }} className="p-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all"><FaPlus /></button>
-              </div>
-              <div className="space-y-6">
-                {resumeData.education.map(edu => (
-                  <div key={edu.id} className="p-8 bg-gray-50/50 border border-gray-100 rounded-3xl relative group">
-                    <button onClick={() => {
-                      handleChange();
-                      setResumeData(p => ({...p, education: p.education.filter(e => e.id !== edu.id)}));
-                    }} className="absolute -right-3 -top-3 w-8 h-8 bg-white text-red-400 rounded-full shadow-lg border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><FaTrash className="text-xs" /></button>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="col-span-2">
-                        <InputField label="School / University" value={edu.school} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, school: v} : e)}))} />
-                      </div>
-                      <InputField label="Degree" value={edu.degree} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, degree: v} : e)}))} />
-                      <InputField label="Location" value={edu.location} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, location: v} : e)}))} />
-                      <InputField label="Start Date" value={edu.startDate} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, startDate: v} : e)}))} />
-                      <InputField label="End Date" value={edu.endDate} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, endDate: v} : e)}))} />
-                      <div className="col-span-2">
-                         <textarea className="w-full bg-white border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-red-500 transition-all min-h-[80px]" placeholder="Extra info..." value={edu.description} onChange={e => setResumeData(p => ({...p, education: p.education.map(item => item.id === edu.id ? {...item, description: e.target.value} : item)}))} />
-                      </div>
-                    </div>
+      {/* Main Foundry Area */}
+      <main className="flex-1 ml-[280px] p-20 flex justify-center bg-[#050505]">
+        <div className="w-full max-w-4xl">
+          <AnimatePresence mode="wait">
+            {/* Identity Module */}
+            {activeTab === 'personal' && (
+              <ModuleWrapper key="personal" title="Primary Identity" subtitle="Fundamental credentials for professional interface">
+                <div className="grid grid-cols-2 gap-x-12 gap-y-12">
+                  <FoundryInput label="First Name" value={resumeData.personal.firstName} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, firstName: v}}))}} />
+                  <FoundryInput label="Last Name" value={resumeData.personal.lastName} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, lastName: v}}))}} />
+                  <div className="col-span-2">
+                    <FoundryInput label="System Designation" value={resumeData.personal.position} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, position: v}}))}} />
                   </div>
-                ))}
-              </div>
-            </motion.section>
-          )}
-
-          {resumeData.sections.map(sec => activeTab === sec.id && (
-            <motion.section key={sec.id} initial={{opacity:0, scale:0.98}} animate={{opacity:1, scale:1}} className="bg-white rounded-3xl p-10 shadow-xl shadow-gray-100/50 border border-gray-100">
-              <div className="flex items-center justify-between mb-10 pb-6 border-b border-gray-50">
-                <input 
-                  className="text-3xl font-black text-gray-900 bg-transparent border-none focus:ring-0 w-3/4 p-0" 
-                  value={sec.title} 
-                  onChange={(e) => updateSectionTitle(sec.id, e.target.value)}
-                />
-                <div className="flex space-x-2">
-                  <button onClick={() => removeSection(sec.id)} className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all"><FaTrash /></button>
+                  <FoundryInput label="Communication Layer (Email)" value={resumeData.personal.email} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, email: v}}))}} icon={<FaEnvelope />} />
+                  <FoundryInput label="Voice Node (Mobile)" value={resumeData.personal.mobile} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, mobile: v}}))}} icon={<FaPhone />} />
+                  <div className="col-span-2">
+                    <FoundryInput label="Physical Coordinates (Address)" value={resumeData.personal.address} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, address: v}}))}} icon={<FaMapMarkerAlt />} />
+                  </div>
+                  <div className="col-span-2">
+                    <FoundryInput label="Digital Repository (GitHub)" value={resumeData.personal.github} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, github: v}}))}} icon={<FaGithub />} />
+                  </div>
                 </div>
-              </div>
-              
-              <div className="space-y-8">
-                {sec.entries.map(entry => (
-                  <div key={entry.id} className="p-8 bg-gray-50/50 border border-gray-100 rounded-3xl relative group">
-                    <div className="absolute right-4 top-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-all">
-                      <button onClick={() => moveEntry(sec.id, entry.id, 'up')} className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 hover:text-red-500"><FaArrowUp className="text-[10px]" /></button>
-                      <button onClick={() => moveEntry(sec.id, entry.id, 'down')} className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 hover:text-red-500"><FaArrowDown className="text-[10px]" /></button>
-                      <button onClick={() => removeEntry(sec.id, entry.id)} className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 text-red-400 hover:bg-red-500 hover:text-white"><FaTrash className="text-[10px]" /></button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="col-span-2">
-                        <InputField label="Company / Project Name" value={entry.title} onChange={v => updateEntry(sec.id, entry.id, { title: v })} />
-                      </div>
-                      <InputField label="Position / Role" value={entry.subtitle} onChange={v => updateEntry(sec.id, entry.id, { subtitle: v })} />
-                      <InputField label="Date / Period" value={entry.startDate} onChange={v => updateEntry(sec.id, entry.id, { startDate: v })} />
-                      <div className="col-span-2">
-                        <textarea 
-                          className="w-full bg-white border-none rounded-2xl p-5 text-sm focus:ring-2 focus:ring-red-500 transition-all min-h-[120px] leading-relaxed shadow-inner"
-                          placeholder="Describe your achievements (one per line)..."
-                          value={entry.description}
-                          onChange={(e) => updateEntry(sec.id, entry.id, { description: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <button onClick={() => addEntry(sec.id)} className="w-full py-6 border-2 border-dashed border-gray-100 rounded-3xl text-gray-400 font-bold hover:bg-gray-50 hover:border-red-200 hover:text-red-400 transition-all flex items-center justify-center space-x-2">
-                  <FaPlus className="text-xs" /> <span>Add Entry to this Section</span>
-                </button>
-              </div>
-            </motion.section>
-          ))}
+              </ModuleWrapper>
+            )}
 
-          {activeTab === 'skills' && (
-            <motion.section initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} className="bg-white rounded-3xl p-10 shadow-xl shadow-gray-100/50 border border-gray-100">
-              <div className="flex items-center justify-between mb-10">
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Skills & Languages</h2>
-                <button onClick={() => {
-                  handleChange();
-                  setResumeData(p => ({...p, skills: [...p.skills, { id: crypto.randomUUID(), category: "", name: "" }]}));
-                }} className="p-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all"><FaPlus /></button>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                {resumeData.skills.map(skill => (
-                  <div key={skill.id} className="p-6 bg-gray-50 rounded-2xl relative group border border-gray-100">
-                    <button onClick={() => {
-                      handleChange();
-                      setResumeData(p => ({...p, skills: p.skills.filter(s => s.id !== skill.id)}));
-                    }} className="absolute -right-2 -top-2 w-6 h-6 bg-white text-red-400 rounded-full shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><FaTrash className="text-[10px]" /></button>
-                    <InputField label="Category" value={skill.category} onChange={v => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, category: v} : s)}))} />
-                    <div className="mt-4">
-                       <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Skills</label>
-                       <textarea className="w-full bg-white border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-red-500" value={skill.name} onChange={e => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)}))} />
+            {/* Education Module */}
+            {activeTab === 'education' && (
+              <ModuleWrapper 
+                key="education" 
+                title="Education" 
+                subtitle="Academic milestones & theoretical foundation"
+                onAdd={() => {
+                   handleChange();
+                   setResumeData(p => ({...p, education: [{ id: crypto.randomUUID(), school: "", degree: "", startDate: "", endDate: "" }, ...p.education]}));
+                }}
+              >
+                <div className="space-y-12">
+                  {resumeData.education.map((edu) => (
+                    <div key={edu.id} className="relative bg-[#0A0A0A] p-10 border border-gray-800/50 group transition-all hover:border-red-600/30">
+                      <button onClick={() => {
+                        handleChange();
+                        setResumeData(p => ({...p, education: p.education.filter(e => e.id !== edu.id)}));
+                      }} className="absolute top-4 right-4 text-gray-700 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><FaTrash className="text-xs" /></button>
+                      
+                      <div className="grid grid-cols-2 gap-10">
+                        <div className="col-span-2"><FoundryInput clean label="Institution" value={edu.school} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, school: v} : e)}))} /></div>
+                        <FoundryInput clean label="Qualification" value={edu.degree} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, degree: v} : e)}))} />
+                        <FoundryInput clean label="Honors" value={edu.location} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, location: v} : e)}))} />
+                        <FoundryInput clean label="Origin" value={edu.startDate} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, startDate: v} : e)}))} />
+                        <FoundryInput clean label="Completion" value={edu.endDate} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, endDate: v} : e)}))} />
+                        <div className="col-span-2">
+                           <label className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-3 block">Field Context</label>
+                           <textarea className="w-full bg-transparent border border-gray-800/50 p-6 text-sm text-gray-400 focus:border-red-600 focus:ring-0 transition-all min-h-[100px] resize-none leading-relaxed" placeholder="Primary research focus..." value={edu.description} onChange={e => setResumeData(p => ({...p, education: p.education.map(item => item.id === edu.id ? {...item, description: e.target.value} : item)}))} />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </motion.section>
-          )}
+                  ))}
+                </div>
+              </ModuleWrapper>
+            )}
+
+            {/* Dynamic Modules */}
+            {resumeData.sections.map(sec => activeTab === sec.id && (
+              <ModuleWrapper 
+                key={sec.id}
+                title={sec.title}
+                isTitleEditable
+                onTitleChange={(v) => updateSectionTitle(sec.id, v)}
+                onAdd={() => addEntry(sec.id)}
+              >
+                <div className="space-y-12">
+                  {sec.entries.map((entry) => (
+                    <div key={entry.id} className="relative bg-[#0A0A0A] p-10 border border-gray-800/50 group transition-all hover:border-red-600/30">
+                      <div className="absolute top-4 right-4 flex space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <ControlButton onClick={() => moveEntry(sec.id, entry.id, 'up')} icon={<FaArrowUp />} />
+                         <ControlButton onClick={() => moveEntry(sec.id, entry.id, 'down')} icon={<FaArrowDown />} />
+                         <ControlButton onClick={() => removeEntry(sec.id, entry.id)} icon={<FaTrash />} danger />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-10">
+                        <div className="col-span-2"><FoundryInput clean label="Entity / Context" value={entry.title} onChange={v => updateEntry(sec.id, entry.id, { title: v })} /></div>
+                        <FoundryInput clean label="Role / Designation" value={entry.subtitle} onChange={v => updateEntry(sec.id, entry.id, { subtitle: v })} />
+                        <FoundryInput clean label="Timeline" value={entry.startDate} onChange={v => updateEntry(sec.id, entry.id, { startDate: v })} />
+                        <div className="col-span-2">
+                           <label className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-3 block">Execution Details</label>
+                           <textarea className="w-full bg-transparent border border-gray-800/50 p-6 text-sm text-gray-400 focus:border-red-600 focus:ring-0 transition-all min-h-[180px] leading-relaxed resize-none" placeholder="Impact and achievements..." value={entry.description} onChange={e => updateEntry(sec.id, entry.id, { description: e.target.value })} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ModuleWrapper>
+            ))}
+
+            {/* Capabilities Module */}
+            {activeTab === 'skills' && (
+              <ModuleWrapper 
+                key="skills" 
+                title="Capabilities" 
+                subtitle="Technical inventory & domain expertise"
+                onAdd={() => {
+                   handleChange();
+                   setResumeData(p => ({...p, skills: [{ id: crypto.randomUUID(), category: "", name: "" }, ...p.skills]}));
+                }}
+              >
+                <div className="grid grid-cols-2 gap-10">
+                  {resumeData.skills.map(skill => (
+                    <div key={skill.id} className="bg-[#0A0A0A] p-8 border border-gray-800/50 relative group hover:border-red-600/30 transition-all">
+                      <button onClick={() => {
+                        handleChange();
+                        setResumeData(p => ({...p, skills: p.skills.filter(s => s.id !== skill.id)}));
+                      }} className="absolute top-4 right-4 text-gray-700 hover:text-red-500 opacity-0 group-hover:opacity-100"><FaTrash className="text-xs" /></button>
+                      <FoundryInput clean label="Domain" value={skill.category} onChange={v => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, category: v} : s)}))} />
+                      <div className="mt-8">
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-3 block">Protocols / Tools</label>
+                         <textarea className="w-full bg-transparent border border-gray-800/50 p-4 text-sm font-mono text-red-500 focus:border-red-600 focus:ring-0 min-h-[80px] resize-none" value={skill.name} onChange={e => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)}))} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ModuleWrapper>
+            )}
+          </AnimatePresence>
         </div>
 
+        {/* Global Commit FAB - Floating on right bottom */}
         {!isSaved && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-            <button onClick={() => saveToLocalStorage(resumeData)} className="bg-emerald-500 text-white px-10 py-5 rounded-full shadow-2xl shadow-emerald-200 flex items-center space-x-4 hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95">
-              <FaSave className="text-xl" /> <span className="text-lg font-bold">Apply Changes</span>
+          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-12 right-12 z-50">
+            <button 
+              onClick={() => saveToLocalStorage(resumeData)} 
+              className="bg-red-600 text-white px-10 py-5 rounded shadow-[0_15px_40px_rgba(220,38,38,0.4)] hover:bg-red-500 transition-all flex items-center space-x-4 active:scale-95 group border border-red-400/20"
+            >
+              <FaSave className="text-xl" />
+              <span className="font-black uppercase tracking-[0.2em] text-xs">Save Changes</span>
             </button>
-          </div>
+          </motion.div>
         )}
       </main>
     </div>
   )
 }
 
-function NavBtn({ active, onClick, icon, label }: any) {
+function SectionDivider({ label, className }: any) {
+  return (
+    <div className={clsx("flex items-center space-x-4 px-4 py-4", className)}>
+      <div className="h-[1px] flex-1 bg-gray-800/50"></div>
+      <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">{label}</span>
+      <div className="h-[1px] w-4 bg-gray-800/50"></div>
+    </div>
+  )
+}
+
+function NavTab({ active, onClick, num, label, icon }: any) {
   return (
     <button onClick={onClick} className={clsx(
-      "w-full flex items-center space-x-3 px-4 py-4 rounded-2xl transition-all duration-300 group", 
-      active ? "bg-red-500 text-white shadow-xl shadow-red-100 translate-x-1" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+      "w-full group flex items-center px-4 py-5 rounded transition-all duration-300 relative",
+      active ? "bg-[#111111] border-l-4 border-red-600" : "hover:bg-gray-900/50"
     )}>
-      <span className={clsx("text-lg transition-transform", active ? "scale-110" : "group-hover:scale-110")}>{icon}</span>
-      <span className="font-bold text-sm truncate tracking-tight">{label}</span>
-      {active && <motion.div layoutId="activeInd" className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />}
+      <span className={clsx("text-[10px] font-mono mr-4 transition-colors", active ? "text-red-500" : "text-gray-700")}>{num}</span>
+      <div className={clsx("mr-3 text-sm transition-colors", active ? "text-red-500" : "text-gray-600 group-hover:text-gray-300")}>{icon}</div>
+      <span className={clsx("text-[11px] font-black uppercase tracking-widest truncate transition-colors", active ? "text-white" : "text-gray-500 group-hover:text-gray-300")}>{label}</span>
+      {active && <motion.div layoutId="tabActive" className="absolute right-4 text-red-600"><FaChevronRight className="text-[10px]" /></motion.div>}
     </button>
   )
 }
 
-function InputField({ label, value, onChange }: any) {
+function ModuleWrapper({ title, subtitle, children, isTitleEditable, onTitleChange, onAdd }: any) {
   return (
-    <div className="flex flex-col space-y-2">
-      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">{label}</label>
+    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="pb-32">
+      <header className="mb-16 flex items-end justify-between border-b border-gray-800/50 pb-8">
+        <div className="flex-1 mr-8">
+          {isTitleEditable ? (
+            <input 
+              className="bg-transparent border-none text-5xl font-black uppercase tracking-tighter text-white p-0 focus:ring-0 w-full mb-4 caret-red-600" 
+              value={title} 
+              onChange={(e) => onTitleChange(e.target.value)} 
+            />
+          ) : (
+            <h1 className="text-5xl font-black uppercase tracking-tighter text-white mb-4">{title}</h1>
+          )}
+          <p className="text-gray-600 font-mono text-xs uppercase tracking-widest">{subtitle || 'Deployment module configuration'}</p>
+        </div>
+        <div className="flex space-x-3">
+          {onAdd && <button onClick={onAdd} className="px-8 py-3 bg-white text-black hover:bg-red-600 hover:text-white transition-all text-[10px] font-black uppercase shadow-xl">Add New Entry</button>}
+        </div>
+      </header>
+      {children}
+    </motion.div>
+  )
+}
+
+function FoundryInput({ label, value, onChange, icon, clean }: any) {
+  return (
+    <div className="flex flex-col space-y-4 group/input">
+      <div className="flex items-center space-x-2">
+        <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest group-focus-within/input:text-red-500 transition-colors">{label}</label>
+        {icon && <span className="text-[10px] text-gray-800">{icon}</span>}
+      </div>
       <input 
-        className="bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-red-500 transition-all shadow-inner" 
+        className={clsx(
+          "w-full bg-transparent p-0 text-xl font-medium text-gray-200 focus:ring-0 placeholder:text-gray-900 transition-all",
+          !clean ? "border-b border-gray-800 focus:border-red-600" : "border-none"
+        )}
         value={value || ''} 
         onChange={(e) => onChange(e.target.value)} 
       />
     </div>
+  )
+}
+
+function ControlButton({ icon, onClick, danger }: any) {
+  return (
+    <button 
+      onClick={onClick} 
+      className={clsx(
+        "w-8 h-8 flex items-center justify-center border transition-all",
+        danger ? "border-gray-800 text-gray-700 hover:bg-red-600 hover:text-white hover:border-red-600" : "border-gray-800 text-gray-700 hover:border-gray-400 hover:text-white"
+      )}
+    >
+      <span className="text-[10px]">{icon}</span>
+    </button>
   )
 }

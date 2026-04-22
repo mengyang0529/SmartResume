@@ -8,6 +8,7 @@ export interface PersonalInfo {
   homePage?: string
   linkedin?: string
   gitlab?: string
+  github?: string
   twitter?: string
   photo?: {
     url: string
