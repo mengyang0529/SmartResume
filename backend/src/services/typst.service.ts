@@ -13,6 +13,8 @@ export class TypstService {
       .replace(/_/g, '\\_')
       .replace(/\$/g, '\\$')
       .replace(/@/g, '\\@')
+      .replace(/</g, '\\<')
+      .replace(/>/g, '\\>')
   }
 
   /**
@@ -115,11 +117,19 @@ export class TypstService {
       : '  profile-picture: none,'
 
     // Build content sections
-    const summarySection = summary ? this.buildSummarySection(summary) : ''
-    const experienceSection = experience.length > 0 ? this.buildExperienceSection(experience) : ''
-    const educationSection = education.length > 0 ? this.buildEducationSection(education) : ''
-    const skillsSection = skills.length > 0 ? this.buildSkillsSection(skills) : ''
-    const projectsSection = projects.length > 0 ? this.buildProjectsSection(projects) : ''
+    const titles = data.sectionTitles || {}
+    const summarySection = summary ? this.buildSummarySection(summary, titles.summary || 'Summary') : ''
+    const educationSection = education.length > 0 ? this.buildEducationSection(education, titles.education || 'Education') : ''
+    const experienceSection = experience.length > 0 ? this.buildExperienceSection(experience, titles.experience || 'Work Experience') : ''
+    const skillsSection = skills.length > 0 ? this.buildSkillsSection(skills, titles.skills || 'Skills') : ''
+    
+    let projectsSection = ''
+    if (data.projects && data.projects.length > 0) {
+      for (const section of data.projects) {
+        projectsSection += this.buildProjectsSection(section.entries, section.title)
+      }
+    }
+    
     const languagesSection = languages.length > 0 ? this.buildLanguagesSection(languages) : ''
     const honorsSection = honors.length > 0 ? this.buildHonorsSection(honors) : ''
     const certificatesSection = certificates.length > 0 ? this.buildCertificatesSection(certificates) : ''
@@ -146,8 +156,8 @@ ${profilePictureLine}
 )
 ${quoteBlock}
 ${summarySection}
-${experienceSection}
 ${educationSection}
+${experienceSection}
 ${skillsSection}
 ${projectsSection}
 ${languagesSection}
@@ -158,8 +168,8 @@ ${publicationsSection}
     return typst
   }
 
-  private buildSummarySection(summary: string): string {
-    return `= Summary
+  private buildSummarySection(summary: string, title: string): string {
+    return `= ${title}
 
 #resume-item[
   ${this.escapeTypstContent(summary)}
@@ -167,8 +177,8 @@ ${publicationsSection}
 `
   }
 
-  private buildExperienceSection(experiences: ResumeData['experience']): string {
-    let section = `= Experience\n\n`
+  private buildExperienceSection(experiences: ResumeData['experience'], title: string): string {
+    let section = `= ${title}\n\n`
 
     experiences.forEach(exp => {
       const endDate = exp.endDate ? exp.endDate : 'Present'

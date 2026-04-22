@@ -3,707 +3,589 @@ import { useParams } from 'react-router-dom'
 import { 
   FaEdit, FaDownload, FaPlus, FaTrash, FaArrowUp, FaArrowDown,
   FaUser, FaGraduationCap, FaBriefcase, FaTools, FaSpinner, 
-  FaSave, FaChevronRight, FaPalette, FaCog, FaCheckCircle
+  FaSave, FaPalette, FaCog, FaLayerGroup
 } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { ResumeData, TemplateSettings, Experience, Education, Skill } from '../types/resume'
+import { ResumeData, TemplateSettings, Entry, ResumeSection, Education, Skill } from '../types/resume'
 import { generateResumeTypst } from '../utils/typstGenerator'
 import { pdfApi } from '../services/api'
 import clsx from 'clsx'
 
-const SECTIONS = [
-  { id: 'personal', label: 'Personal', icon: <FaUser /> },
-  { id: 'summary', label: 'Summary', icon: <FaEdit /> },
-  { id: 'experience', label: 'Experience', icon: <FaBriefcase /> },
-  { id: 'education', label: 'Education', icon: <FaGraduationCap /> },
-  { id: 'skills', label: 'Skills', icon: <FaTools /> },
-]
-
 export default function ResumeEditorPage() {
   const { templateId } = useParams()
+  
+  const defaultResumeData: ResumeData = {
+    personal: {
+      firstName: "Yang",
+      lastName: "Meng",
+      position: "Senior Engineer",
+      email: "mengyang0529@gmail.com",
+      mobile: "(+81) 080-8916-2962",
+      address: "3-23-8, Sakai, Musashino City, Tokyo, Japan",
+      github: "https://github.com/mengyang0529"
+    },
+    education: [
+      {
+        id: "edu-1",
+        school: "The University of Tokyo",
+        degree: "Doctor Candidate in Bio-Engineering",
+        startDate: "Oct. 2013",
+        endDate: "Jun. 2015",
+        location: "Achieved MEXT Scholarship",
+        description: "Researched in early lung cancer detection based on CT images"
+      },
+      {
+        id: "edu-2",
+        school: "Petroleum University of China (Beijing)",
+        degree: "M.S. in Mechanical Engineering",
+        startDate: "Sep. 2009",
+        endDate: "Jun. 2012",
+        location: "",
+        description: ""
+      },
+      {
+        id: "edu-3",
+        school: "Harbin Institute of Technology",
+        degree: "B.S. in Precision Engineering",
+        startDate: "Sep. 2003",
+        endDate: "Jun. 2007",
+        location: "",
+        description: ""
+      }
+    ],
+    sections: [
+      {
+        id: "sec-experience",
+        title: "Work Experience",
+        entries: [
+          {
+            id: "exp-1",
+            title: "Honda (Tokyo, Japan)",
+            subtitle: "Staff Engineer",
+            startDate: "Feb. 2024",
+            endDate: "Current",
+            description: "Played a key role in the design and development of perception systems for autonomous driving and advanced driver-assistance systems (ADAS).\nMaintained and strengthened supplier relationships, ensuring alignment with technical and business objectives.\nProvided technical and strategic support to outsourced teams, ensuring seamless integration of external resources.\nCollaborated with cross-functional teams to ensured AI systems were safe and compliant (Verification and Validation).\nPlanning and designing a data management platform to enable rapid deployment, validation, and version control of model data."
+          },
+          {
+            id: "exp-2",
+            title: "ARAYA (Tokyo, Japan)",
+            subtitle: "Senior Engineer | Project Manager",
+            startDate: "Nov. 2021",
+            endDate: "Feb. 2024",
+            description: "Led new AI/Computer Vision project proposals, securing business opportunities and driving innovation.\nManaged multiple AI projects, overseeing project timelines, resource allocation, and risk assessment.\nServed as primary contact for key clients, providing technical consulting and ensuring successful project delivery.\nProvided technical leadership, mentoring engineers and shaping R&D strategies."
+          },
+          {
+            id: "exp-3",
+            title: "VRAIN Solutions (Tokyo, Japan)",
+            subtitle: "Senior Engineer | R&D Lead",
+            startDate: "Aug. 2021",
+            endDate: "Oct. 2021",
+            description: "Directed R&D efforts in computer vision and deep learning, aligning research objectives with business goals.\nDeveloped innovative solutions, integrating AI algorithms into real-world industrial applications."
+          },
+          {
+            id: "exp-4",
+            title: "Ficha Inc. (Tokyo, Japan)",
+            subtitle: "Software Engineer | Project Leader",
+            startDate: "Oct. 2015",
+            endDate: "Aug. 2021",
+            description: "Led a 5-person R&D team, managing development roadmaps and delivering AI-driven computer vision solutions.\nProgressed from an engineer to a project manager.\nExperienced in both independent development and collaborative development."
+          }
+        ]
+      },
+      {
+        id: "sec-automobile",
+        title: "Automobile Industry",
+        entries: [
+          {
+            id: "auto-1",
+            title: "HONDA (Tokyo, Japan)",
+            subtitle: "Advanced ADAS Perception Systems & Compliance",
+            startDate: "Staff Engineer | Technical Lead",
+            endDate: "",
+            description: "Defined multi-dimensional performance KPIs (latency vs. precision) for deep learning models.\nEstablished systematic benchmarking protocols for algorithm refinement.\nManaged V&V workflows for international regulation compliance."
+          },
+          {
+            id: "auto-2",
+            title: "Ficha Inc.",
+            subtitle: "Real-time Drowsiness Detection System",
+            startDate: "Technical Project Lead",
+            endDate: "",
+            description: "Directed full-lifecycle development from PoC to commercial delivery.\nServed as primary technical liaison for external clients.\nOptimized core vision modules in C/C++ for resource-constrained systems."
+          },
+          {
+            id: "auto-3",
+            title: "Ficha Inc.",
+            subtitle: "Traffic Sign Recognition System",
+            startDate: "Product Owner",
+            endDate: "",
+            description: "Defined product direction and led feature planning for AI recognition.\nOversaw data annotation and managed dataset/code versioning.\nLed model optimization and system integration."
+          }
+        ]
+      },
+      {
+        id: "sec-smartcity",
+        title: "Smart City & Social Infrastructure Ecosystems",
+        entries: [
+          {
+            id: "sc-1",
+            title: "Araya Inc.",
+            subtitle: "National Expressway Intelligence & Perception Infrastructure",
+            startDate: "PoC Implementation & Management",
+            endDate: "",
+            description: "Communicated with client to define requirements and technical roadmap.\nParticipated in project development and collected feedback for continuous improvement."
+          },
+          {
+            id: "sc-2",
+            title: "Ficha Inc.",
+            subtitle: "Urban Safety & High-Precision Speed Analytics",
+            startDate: "PoC Phase to Productization",
+            endDate: "",
+            description: "Developed vision-based traffic surveillance for static scenes.\nImplemented Python toolbox for intrinsic/extrinsic camera calibration.\nDesigned monocular depth estimation with error <0.1m within 20m."
+          },
+          {
+            id: "sc-3",
+            title: "Ficha Inc.",
+            subtitle: "Taxi Driver Behavior Transformation",
+            startDate: "AI Developer",
+            endDate: "",
+            description: "Developed geometric algorithms and vehicle stop detection using optical flow.\nDesigned traffic violation detection logic; achieved 95% recall and 100% precision.\nSupported successful commercial productization."
+          }
+        ]
+      },
+      {
+        id: "sec-retail",
+        title: "Retail Industry",
+        entries: [
+          {
+            id: "ret-1",
+            title: "Araya Inc.",
+            subtitle: "Smart Retail & Inventory Intelligence",
+            startDate: "Tech Advisor",
+            endDate: "",
+            description: "Strategically pivoted roadmap from one-stage to two-stage recognition framework.\nArchitected generic detection + fine-grained classification to resolve data scarcity.\nAchieved 99% recognition accuracy in real-world testing."
+          },
+          {
+            id: "ret-2",
+            title: "Araya Inc. (Tokyo, Japan)",
+            subtitle: "Smart Retail & Sports-Tech Innovation",
+            startDate: "AI Solutions Architect",
+            endDate: "",
+            description: "Independently developed AI-powered gait analysis engine for global footwear brand.\nEngineered biometric recommender system based on pose estimation.\nBuilt full-stack prototype from data acquisition to user-facing logic."
+          }
+        ]
+      },
+      {
+        id: "sec-agri",
+        title: "Agricultural Industry",
+        entries: [
+          {
+            id: "ag-1",
+            title: "Araya Inc.",
+            subtitle: "Pig Weight Estimation PoC",
+            startDate: "Technical Lead",
+            endDate: "",
+            description: "Used RealSense D455 for depth-based weight estimation.\nProposed and trained ranking-based regression model, achieving 97% accuracy."
+          }
+        ]
+      },
+      {
+        id: "sec-research",
+        title: "Research and Study",
+        entries: [
+          {
+            id: "res-1",
+            title: "VLM (Vision-Language Model)",
+            subtitle: "Research",
+            startDate: "2024",
+            endDate: "",
+            description: "Fine-tuning models using LoRA with InternVL2 1B.\nResearching existing flowchart datasets."
+          },
+          {
+            id: "res-2",
+            title: "Flash Attention Animation",
+            subtitle: "Study",
+            startDate: "2024",
+            endDate: "",
+            description: "Created educational animation of Flash Attention using manim."
+          }
+        ]
+      },
+      {
+        id: "sec-private",
+        title: "Private Projects",
+        entries: [
+          {
+            id: "priv-1",
+            title: "PPTNinja",
+            subtitle: "AI-Driven Office Automation",
+            startDate: "https://github.com/mengyang0529/PPTNinja",
+            endDate: "",
+            description: "Eliminating design overhead to empower singular focus on core content.\nMulti-agent collaboration from idea generation to slide parsing via VLM."
+          },
+          {
+            id: "priv-2",
+            title: "hi-school",
+            subtitle: "Geospatial Data Visualization",
+            startDate: "https://koukou-japan.vercel.app",
+            endDate: "",
+            description: "Interactive web platform for high schools across Japan.\nIntegrated geographic data visualization to catalyst educational equity."
+          },
+          {
+            id: "priv-3",
+            title: "Kakuti",
+            subtitle: "Human Augmentation & Cognitive Enhancement",
+            startDate: "https://zenn.dev/ianmeng/articles/9ea26b6d0baa20",
+            endDate: "",
+            description: "Engineered RAG-based ecosystem for high-fidelity multi-language synthesis.\nDeveloped 'Magic Wand' UI for real-time contextual analysis during reading.\nFocusing on 'understanding over automation' via VLM."
+          }
+        ]
+      }
+    ],
+    skills: [
+      { id: "sk-1", category: "Programming Languages", name: "C&C++, Python" },
+      { id: "sk-2", category: "Artificial Intelligence", name: "TensorFlow, PyTorch, Huggingface, OpenAI API, ONNX, NCNN&MNN" },
+      { id: "sk-3", category: "Other Tools", name: "CMake, OpenCV, Git, Docker, Miniconda" },
+      { id: "sk-4", category: "Languages", name: "Chinese, English (Business), Japanese (Business)" }
+    ]
+  }
+
+  const defaultTemplateSettings: TemplateSettings = {
+    colorScheme: 'awesome-red',
+    fontSize: '11pt',
+    paperSize: 'a4paper',
+    sectionColorHighlight: true,
+    headerAlignment: 'C',
+  }
+
   const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData)
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings>(defaultTemplateSettings)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
-  const [activeSection, setActiveSection] = useState('personal')
+  const [activeTab, setActiveTab] = useState('personal')
   const [isSaved, setIsSaved] = useState(true)
   
-  const sectionRefs = {
-    personal: useRef<HTMLDivElement>(null),
-    summary: useRef<HTMLDivElement>(null),
-    experience: useRef<HTMLDivElement>(null),
-    education: useRef<HTMLDivElement>(null),
-    skills: useRef<HTMLDivElement>(null),
-  }
-
-  // Load template data
   useEffect(() => {
-    const savedData = localStorage.getItem('current_resume_data')
-    const savedSettings = localStorage.getItem('current_template_settings')
-    
-    if (savedData) {
+    const saved = localStorage.getItem('current_resume_data')
+    if (saved) {
       try {
-        setResumeData(JSON.parse(savedData))
+        const parsed = JSON.parse(saved)
+        if (parsed.sections && Array.isArray(parsed.sections)) {
+          setResumeData(parsed)
+        } else {
+          setResumeData(defaultResumeData)
+        }
       } catch (e) {
-        console.error('Failed to parse saved resume data', e)
+        setResumeData(defaultResumeData)
       }
     }
-    
-    if (savedSettings) {
-      try {
-        setTemplateSettings(JSON.parse(savedSettings))
-      } catch (e) {
-        console.error('Failed to parse saved template settings', e)
-      }
-    }
-  }, [templateId])
-
-  const saveToLocalStorage = (data: ResumeData, settings: TemplateSettings) => {
-    localStorage.setItem('current_resume_data', JSON.stringify(data))
-    localStorage.setItem('current_template_settings', JSON.stringify(settings))
-    setIsSaved(true)
-  }
+  }, [])
 
   const handleChange = () => setIsSaved(false)
 
-  const handlePersonalInfoChange = (field: keyof typeof resumeData.personal, value: string) => {
+  const saveToLocalStorage = (data: ResumeData) => {
+    localStorage.setItem('current_resume_data', JSON.stringify(data))
+    setIsSaved(true)
+  }
+
+  const addSection = () => {
+    handleChange()
+    const newSection: ResumeSection = {
+      id: `sec-${crypto.randomUUID()}`,
+      title: "New Section",
+      entries: []
+    }
+    setResumeData(prev => ({ ...prev, sections: [...prev.sections, newSection] }))
+  }
+
+  const updateSectionTitle = (id: string, title: string) => {
     handleChange()
     setResumeData(prev => ({
       ...prev,
-      personal: { ...prev.personal, [field]: value }
+      sections: prev.sections.map(s => s.id === id ? { ...s, title } : s)
     }))
   }
 
-  const handleTemplateSettingChange = (field: keyof TemplateSettings, value: any) => {
+  const removeSection = (id: string) => {
     handleChange()
-    setTemplateSettings(prev => ({ ...prev, [field]: value }))
+    setResumeData(prev => ({
+      ...prev,
+      sections: prev.sections.filter(s => s.id !== id)
+    }))
   }
 
-  const scrollToSection = (sectionId: string) => {
-    setActiveSection(sectionId)
-    const ref = sectionRefs[sectionId as keyof typeof sectionRefs]
-    if (ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const addEntry = (sectionId: string) => {
+    handleChange()
+    const newEntry: Entry = {
+      id: crypto.randomUUID(),
+      title: "",
+      subtitle: "",
+      startDate: "",
+      endDate: "",
+      description: ""
     }
+    setResumeData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => s.id === sectionId ? { ...s, entries: [...s.entries, newEntry] } : s)
+    }))
   }
 
-  // Generic array update helpers
-  const addItem = <T extends { id: string }>(field: keyof ResumeData, newItem: T) => {
+  const updateEntry = (sectionId: string, entryId: string, updates: Partial<Entry>) => {
     handleChange()
-    setResumeData(prev => {
-      const currentArray = (prev[field] as T[]) || []
-      return { ...prev, [field]: [...currentArray, newItem] }
-    })
+    setResumeData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => s.id === sectionId ? {
+        ...s,
+        entries: s.entries.map(e => e.id === entryId ? { ...e, ...updates } : e)
+      } : s)
+    }))
   }
 
-  const updateItem = <T extends { id: string }>(field: keyof ResumeData, id: string, updates: Partial<T>) => {
+  const moveEntry = (sectionId: string, entryId: string, direction: 'up' | 'down') => {
     handleChange()
-    setResumeData(prev => {
-      const currentArray = (prev[field] as T[]) || []
-      return {
-        ...prev,
-        [field]: currentArray.map(item => item.id === id ? { ...item, ...updates } : item)
-      }
-    })
+    setResumeData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => {
+        if (s.id !== sectionId) return s
+        const entries = [...s.entries]
+        const index = entries.findIndex(e => e.id === entryId)
+        if (index === -1) return s
+        const newIndex = direction === 'up' ? index - 1 : index + 1
+        if (newIndex < 0 || newIndex >= entries.length) return s
+        const [moved] = entries.splice(index, 1)
+        entries.splice(newIndex, 0, moved)
+        return { ...s, entries }
+      })
+    }))
   }
 
-  const removeItem = (field: keyof ResumeData, id: string) => {
+  const removeEntry = (sectionId: string, entryId: string) => {
     handleChange()
-    setResumeData(prev => {
-      const currentArray = (prev[field] as any[]) || []
-      return { ...prev, [field]: currentArray.filter(item => item.id !== id) }
-    })
+    setResumeData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => s.id === sectionId ? {
+        ...s,
+        entries: s.entries.filter(e => e.id !== entryId)
+      } : s)
+    }))
   }
 
-  const moveItem = (field: keyof ResumeData, id: string, direction: 'up' | 'down') => {
-    handleChange()
-    setResumeData(prev => {
-      const currentArray = [...((prev[field] as any[]) || [])]
-      const index = currentArray.findIndex(item => item.id === id)
-      if (index === -1) return prev
-      if (direction === 'up' && index === 0) return prev
-      if (direction === 'down' && index === currentArray.length - 1) return prev
-
-      const targetIndex = direction === 'up' ? index - 1 : index + 1
-      const [movedItem] = currentArray.splice(index, 1)
-      currentArray.splice(targetIndex, 0, movedItem)
-
-      return { ...prev, [field]: currentArray }
-    })
-  }
-
-  const handleGeneratePDF = async () => {
+  const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true)
-    const typst = generateResumeTypst(resumeData, templateSettings)
-    
     try {
-      const result = await pdfApi.generateFromTypst(typst)
-      if (result.cacheKey) {
-        window.open(pdfApi.downloadPdf(result.cacheKey), '_blank')
-        toast.success('PDF generated successfully!')
-        saveToLocalStorage(resumeData, templateSettings)
+      const typstSource = generateResumeTypst(resumeData, templateSettings)
+      const result = await pdfApi.generateFromTypst(typstSource)
+      const cacheKey = result?.cacheKey || result?.cache_key
+      if (cacheKey) {
+        window.open(pdfApi.downloadPdf(cacheKey), '_blank')
+        toast.success('PDF Generated!')
       }
     } catch (error) {
-      console.error('Failed to generate PDF', error)
-      toast.error('Failed to generate PDF. Please try again.')
+      toast.error('Generation failed')
     } finally {
       setIsGeneratingPdf(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Sticky Top Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">SmartResume Editor</h1>
-              <div className="flex items-center space-x-2 text-sm">
-                <span className={clsx(
-                  "flex items-center space-x-1",
-                  isSaved ? "text-green-600" : "text-amber-500"
-                )}>
-                  {isSaved ? <FaCheckCircle /> : <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
-                  <span>{isSaved ? 'All changes saved' : 'Unsaved changes'}</span>
-                </span>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#F8FAFC] flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col sticky top-0 h-screen shadow-sm">
+        
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
+          <div className="py-2 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base</div>
+          <NavBtn active={activeTab === 'personal'} onClick={() => setActiveTab('personal')} icon={<FaUser />} label="Personal" />
+          <NavBtn active={activeTab === 'education'} onClick={() => setActiveTab('education')} icon={<FaGraduationCap />} label="Education" />
           
-          <div className="flex items-center space-x-3">
-            <button 
-              onClick={() => {
-                saveToLocalStorage(resumeData, templateSettings)
-                toast.success('Progress saved')
-              }}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <span className="flex items-center">
-                <FaSave className="mr-2" />
-                Save
-              </span>
-            </button>
-            <button 
-              onClick={handleGeneratePDF}
-              disabled={isGeneratingPdf}
-              className="bg-[#0395DE] hover:bg-[#027bb8] text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all shadow-lg shadow-blue-500/20 flex items-center disabled:opacity-50"
-            >
-              {isGeneratingPdf ? <FaSpinner className="mr-2 animate-spin" /> : <FaDownload className="mr-2" />}
-              Generate PDF
-            </button>
+          <div className="py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center justify-between">
+            <span>Custom Sections</span>
           </div>
+          {resumeData.sections.map(sec => (
+            <NavBtn 
+              key={sec.id}
+              active={activeTab === sec.id} 
+              onClick={() => setActiveTab(sec.id)} 
+              icon={<FaLayerGroup className="text-gray-400" />} 
+              label={sec.title} 
+            />
+          ))}
+          <button onClick={addSection} className="w-full flex items-center space-x-3 px-4 py-3 text-xs text-red-500 font-bold hover:bg-red-50 rounded-xl transition-all mt-2 border border-dashed border-red-200">
+            <FaPlus /> <span>New Section</span>
+          </button>
+
+          <div className="py-4 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer</div>
+          <NavBtn active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} icon={<FaTools />} label="Skills" />
+        </nav>
+
+        <div className="p-6 border-t border-gray-100 bg-gray-50/50">
+          <button onClick={handleDownloadPdf} disabled={isGeneratingPdf} className="w-full bg-gray-900 text-white rounded-2xl py-4 flex items-center justify-center space-x-3 hover:bg-black transition-all shadow-xl active:scale-95 disabled:opacity-50">
+            {isGeneratingPdf ? <FaSpinner className="animate-spin" /> : <><FaDownload className="text-sm" /> <span className="font-bold tracking-wide">Download PDF</span></>}
+          </button>
         </div>
-      </header>
+      </aside>
 
-      <main className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-12 gap-8">
-        {/* Left Nav Rail */}
-        <aside className="col-span-2">
-          <nav className="sticky top-28 space-y-1">
-            {SECTIONS.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => scrollToSection(section.id)}
-                className={clsx(
-                  "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-sm font-medium",
-                  activeSection === section.id 
-                    ? "bg-white text-[#0395DE] shadow-sm border border-gray-100" 
-                    : "text-gray-500 hover:text-gray-900 hover:bg-white/50"
-                )}
-              >
-                <div className="flex items-center space-x-3">
-                  <span className={clsx(
-                    "text-lg",
-                    activeSection === section.id ? "text-[#0395DE]" : "text-gray-400"
-                  )}>
-                    {section.icon}
-                  </span>
-                  <span>{section.label}</span>
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-12 bg-white/50">
+        <div className="max-w-4xl mx-auto space-y-12 pb-32">
+          {activeTab === 'personal' && (
+            <motion.section initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} className="bg-white rounded-3xl p-10 shadow-xl shadow-gray-100/50 border border-gray-100">
+              <h2 className="text-3xl font-black text-gray-900 mb-10 tracking-tight">Personal Details</h2>
+              <div className="grid grid-cols-2 gap-8">
+                <InputField label="First Name" value={resumeData.personal.firstName} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, firstName: v}}))}} />
+                <InputField label="Last Name" value={resumeData.personal.lastName} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, lastName: v}}))}} />
+                <div className="col-span-2">
+                  <InputField label="Professional Title" value={resumeData.personal.position} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, position: v}}))}} />
                 </div>
-                {activeSection === section.id && <FaChevronRight className="text-[10px]" />}
-              </button>
-            ))}
-          </nav>
-        </aside>
+                <InputField label="Email" value={resumeData.personal.email} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, email: v}}))}} />
+                <InputField label="Phone" value={resumeData.personal.mobile} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, mobile: v}}))}} />
+                <div className="col-span-2">
+                  <InputField label="Address" value={resumeData.personal.address} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, address: v}}))}} />
+                </div>
+                <InputField label="GitHub" value={resumeData.personal.github} onChange={v => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, github: v}}))}} />
+              </div>
+            </motion.section>
+          )}
 
-        {/* Center Content Area */}
-        <div className="col-span-7 space-y-10 pb-32">
-          {/* Personal Info Card */}
-          <section ref={sectionRefs.personal} id="personal">
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center space-x-3 mb-8">
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-[#0395DE]">
-                  <FaUser />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Personal Information</h2>
+          {activeTab === 'education' && (
+            <motion.section initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} className="bg-white rounded-3xl p-10 shadow-xl shadow-gray-100/50 border border-gray-100">
+              <div className="flex items-center justify-between mb-10">
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Education</h2>
+                <button onClick={() => {
+                  handleChange();
+                  setResumeData(p => ({...p, education: [...p.education, { id: crypto.randomUUID(), school: "", degree: "", startDate: "", endDate: "" }]}));
+                }} className="p-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all"><FaPlus /></button>
               </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <InputField 
-                  label="First Name" 
-                  value={resumeData.personal.firstName} 
-                  onChange={(v) => handlePersonalInfoChange('firstName', v)} 
-                  placeholder="e.g. John"
-                />
-                <InputField 
-                  label="Last Name" 
-                  value={resumeData.personal.lastName} 
-                  onChange={(v) => handlePersonalInfoChange('lastName', v)} 
-                  placeholder="e.g. Doe"
-                />
-                <div className="md:col-span-2">
-                  <InputField 
-                    label="Professional Position" 
-                    value={resumeData.personal.position} 
-                    onChange={(v) => handlePersonalInfoChange('position', v)} 
-                    placeholder="e.g. Senior Software Engineer"
-                  />
-                </div>
-                <InputField 
-                  label="Email" 
-                  type="email" 
-                  value={resumeData.personal.email} 
-                  onChange={(v) => handlePersonalInfoChange('email', v)} 
-                  placeholder="john@example.com"
-                />
-                <InputField 
-                  label="Mobile" 
-                  value={resumeData.personal.mobile || ''} 
-                  onChange={(v) => handlePersonalInfoChange('mobile', v)} 
-                  placeholder="+1 234 567 890"
-                />
-                <div className="md:col-span-2">
-                  <InputField 
-                    label="Address" 
-                    value={resumeData.personal.address || ''} 
-                    onChange={(v) => handlePersonalInfoChange('address', v)} 
-                    placeholder="San Francisco, CA"
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Summary Card */}
-          <section ref={sectionRefs.summary} id="summary">
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center space-x-3 mb-8">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
-                  <FaEdit />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Professional Summary</h2>
-              </div>
-              <textarea
-                className="w-full bg-[#F8FAFC] border-none rounded-2xl p-4 min-h-[160px] text-gray-800 focus:ring-2 focus:ring-[#0395DE] transition-all"
-                placeholder="Briefly describe your professional background and key strengths..."
-                value={resumeData.summary || ''}
-                onChange={(e) => {
-                  handleChange()
-                  setResumeData(prev => ({ ...prev, summary: e.target.value }))
-                }}
-              />
-            </div>
-          </section>
-
-          {/* Experience Card */}
-          <section ref={sectionRefs.experience} id="experience">
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                    <FaBriefcase />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Work Experience</h2>
-                </div>
-                <button
-                  onClick={() => addItem<Experience>('experience', {
-                    id: crypto.randomUUID(),
-                    company: '',
-                    position: '',
-                    startDate: '',
-                    endDate: '',
-                    description: '',
-                    highlights: []
-                  })}
-                  className="flex items-center space-x-2 text-[#0395DE] font-semibold text-sm hover:opacity-80 transition-opacity"
-                >
-                  <FaPlus className="text-[10px]" />
-                  <span>Add Experience</span>
-                </button>
-              </div>
-              
               <div className="space-y-6">
-                <AnimatePresence>
-                  {resumeData.experience.map((exp, index) => (
-                    <motion.div 
-                      key={exp.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="p-6 bg-[#F8FAFC] rounded-2xl relative group"
-                    >
-                      <div className="absolute right-4 top-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ActionButton icon={<FaArrowUp />} onClick={() => moveItem('experience', exp.id, 'up')} />
-                        <ActionButton icon={<FaArrowDown />} onClick={() => moveItem('experience', exp.id, 'down')} />
-                        <ActionButton icon={<FaTrash />} onClick={() => removeItem('experience', exp.id)} variant="danger" />
+                {resumeData.education.map(edu => (
+                  <div key={edu.id} className="p-8 bg-gray-50/50 border border-gray-100 rounded-3xl relative group">
+                    <button onClick={() => {
+                      handleChange();
+                      setResumeData(p => ({...p, education: p.education.filter(e => e.id !== edu.id)}));
+                    }} className="absolute -right-3 -top-3 w-8 h-8 bg-white text-red-400 rounded-full shadow-lg border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><FaTrash className="text-xs" /></button>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="col-span-2">
+                        <InputField label="School / University" value={edu.school} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, school: v} : e)}))} />
                       </div>
-                      
-                      <div className="grid md:grid-cols-2 gap-5">
-                        <div className="md:col-span-2">
-                          <InputField 
-                            label="Company" 
-                            value={exp.company} 
-                            onChange={(v) => updateItem<Experience>('experience', exp.id, { company: v })} 
-                          />
-                        </div>
-                        <InputField 
-                          label="Position" 
-                          value={exp.position} 
-                          onChange={(v) => updateItem<Experience>('experience', exp.id, { position: v })} 
-                        />
-                        <InputField 
-                          label="Location" 
-                          value={exp.location || ''} 
-                          onChange={(v) => updateItem<Experience>('experience', exp.id, { location: v })} 
-                        />
-                        <InputField 
-                          label="Start Date" 
-                          placeholder="e.g. Jan 2020"
-                          value={exp.startDate} 
-                          onChange={(v) => updateItem<Experience>('experience', exp.id, { startDate: v })} 
-                        />
-                        <InputField 
-                          label="End Date" 
-                          placeholder="e.g. Present"
-                          value={exp.endDate || ''} 
-                          onChange={(v) => updateItem<Experience>('experience', exp.id, { endDate: v })} 
-                        />
-                        <div className="md:col-span-2">
-                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Description</label>
-                          <textarea
-                            className="w-full bg-white border-gray-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#0395DE] transition-all min-h-[100px]"
-                            value={exp.description || ''}
-                            onChange={(e) => updateItem<Experience>('experience', exp.id, { description: e.target.value })}
-                          />
-                        </div>
+                      <InputField label="Degree" value={edu.degree} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, degree: v} : e)}))} />
+                      <InputField label="Location" value={edu.location} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, location: v} : e)}))} />
+                      <InputField label="Start Date" value={edu.startDate} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, startDate: v} : e)}))} />
+                      <InputField label="End Date" value={edu.endDate} onChange={v => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, endDate: v} : e)}))} />
+                      <div className="col-span-2">
+                         <textarea className="w-full bg-white border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-red-500 transition-all min-h-[80px]" placeholder="Extra info..." value={edu.description} onChange={e => setResumeData(p => ({...p, education: p.education.map(item => item.id === edu.id ? {...item, description: e.target.value} : item)}))} />
                       </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          </section>
-
-          {/* Education Card */}
-          <section ref={sectionRefs.education} id="education">
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600">
-                    <FaGraduationCap />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Education</h2>
-                </div>
-                <button
-                  onClick={() => addItem<Education>('education', {
-                    id: crypto.randomUUID(),
-                    school: '',
-                    degree: '',
-                    field: '',
-                    startDate: '',
-                    endDate: '',
-                  })}
-                  className="flex items-center space-x-2 text-[#0395DE] font-semibold text-sm hover:opacity-80 transition-opacity"
-                >
-                  <FaPlus className="text-[10px]" />
-                  <span>Add Education</span>
-                </button>
-              </div>
-              
-              <div className="space-y-6">
-                <AnimatePresence>
-                  {resumeData.education.map((edu) => (
-                    <motion.div 
-                      key={edu.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="p-6 bg-[#F8FAFC] rounded-2xl relative group"
-                    >
-                      <div className="absolute right-4 top-4 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ActionButton icon={<FaArrowUp />} onClick={() => moveItem('education', edu.id, 'up')} />
-                        <ActionButton icon={<FaArrowDown />} onClick={() => moveItem('education', edu.id, 'down')} />
-                        <ActionButton icon={<FaTrash />} onClick={() => removeItem('education', edu.id)} variant="danger" />
-                      </div>
-                      
-                      <div className="grid md:grid-cols-2 gap-5">
-                        <div className="md:col-span-2">
-                          <InputField 
-                            label="School / University" 
-                            value={edu.school} 
-                            onChange={(v) => updateItem<Education>('education', edu.id, { school: v })} 
-                          />
-                        </div>
-                        <InputField 
-                          label="Degree" 
-                          value={edu.degree} 
-                          onChange={(v) => updateItem<Education>('education', edu.id, { degree: v })} 
-                        />
-                        <InputField 
-                          label="Field of Study" 
-                          value={edu.field || ''} 
-                          onChange={(v) => updateItem<Education>('education', edu.id, { field: v })} 
-                        />
-                        <InputField 
-                          label="Start Date" 
-                          value={edu.startDate} 
-                          onChange={(v) => updateItem<Education>('education', edu.id, { startDate: v })} 
-                        />
-                        <InputField 
-                          label="End Date" 
-                          value={edu.endDate || ''} 
-                          onChange={(v) => updateItem<Education>('education', edu.id, { endDate: v })} 
-                        />
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          </section>
-
-          {/* Skills Card */}
-          <section ref={sectionRefs.skills} id="skills">
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                    <FaTools />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Skills</h2>
-                </div>
-                <button
-                  onClick={() => addItem<Skill>('skills', {
-                    id: crypto.randomUUID(),
-                    category: '',
-                    name: '',
-                  })}
-                  className="flex items-center space-x-2 text-[#0395DE] font-semibold text-sm hover:opacity-80 transition-opacity"
-                >
-                  <FaPlus className="text-[10px]" />
-                  <span>Add Category</span>
-                </button>
-              </div>
-              
-              <div className="grid md:grid-cols-1 gap-4">
-                <AnimatePresence>
-                  {resumeData.skills.map((skill) => (
-                    <motion.div 
-                      key={skill.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 10 }}
-                      className="flex items-center space-x-4 bg-[#F8FAFC] p-4 rounded-2xl group"
-                    >
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          className="w-full bg-transparent border-none text-sm font-bold text-[#0395DE] placeholder:text-gray-300 focus:ring-0"
-                          placeholder="Category (e.g. Languages)"
-                          value={skill.category}
-                          onChange={(e) => updateItem<Skill>('skills', skill.id, { category: e.target.value })}
-                        />
-                      </div>
-                      <div className="flex-[2]">
-                        <input
-                          type="text"
-                          className="w-full bg-transparent border-none text-sm text-gray-700 placeholder:text-gray-300 focus:ring-0"
-                          placeholder="Skills (e.g. Java, Python)"
-                          value={skill.name}
-                          onChange={(e) => updateItem<Skill>('skills', skill.id, { name: e.target.value })}
-                        />
-                      </div>
-                      <button 
-                        onClick={() => removeItem('skills', skill.id)} 
-                        className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                      >
-                        <FaTrash />
-                      </button>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* Right Sidebar - Settings */}
-        <aside className="col-span-3">
-          <div className="sticky top-28 space-y-6">
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center space-x-2 mb-6 text-gray-900">
-                <FaPalette className="text-[#0395DE]" />
-                <h3 className="font-bold tracking-tight">Design Theme</h3>
-              </div>
-              
-              <div className="space-y-5">
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Color Accent</label>
-                  <select
-                    className="w-full bg-[#F8FAFC] border-none rounded-xl text-sm p-3 focus:ring-2 focus:ring-[#0395DE] transition-all"
-                    value={templateSettings.colorScheme}
-                    onChange={(e) => handleTemplateSettingChange('colorScheme', e.target.value)}
-                  >
-                    <option value="awesome-skyblue">Tech Blue</option>
-                    <option value="awesome-emerald">Emerald Green</option>
-                    <option value="awesome-pink">Modern Pink</option>
-                    <option value="awesome-red">Classic Red</option>
-                    <option value="awesome-orange">Energy Orange</option>
-                    <option value="awesome-nephritis">Soft Green</option>
-                    <option value="awesome-concrete">Professional Grey</option>
-                    <option value="awesome-darknight">Midnight Navy</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Typography Size</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['10pt', '11pt', '12pt'].map(size => (
-                      <button
-                        key={size}
-                        onClick={() => handleTemplateSettingChange('fontSize', size)}
-                        className={clsx(
-                          "py-2 rounded-xl text-xs font-bold border transition-all",
-                          templateSettings.fontSize === size 
-                            ? "bg-[#0395DE] text-white border-[#0395DE] shadow-md shadow-blue-500/20" 
-                            : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
-                        )}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <label className="flex items-center cursor-pointer group">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        className="sr-only"
-                        checked={templateSettings.sectionColorHighlight}
-                        onChange={(e) => handleTemplateSettingChange('sectionColorHighlight', e.target.checked)}
-                      />
-                      <div className={clsx(
-                        "w-10 h-6 rounded-full transition-colors",
-                        templateSettings.sectionColorHighlight ? "bg-[#0395DE]" : "bg-gray-200"
-                      )} />
-                      <div className={clsx(
-                        "absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform",
-                        templateSettings.sectionColorHighlight ? "translate-x-4" : ""
-                      )} />
                     </div>
-                    <span className="ml-3 text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Section Highlights</span>
-                  </label>
-                </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            </motion.section>
+          )}
 
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center space-x-2 mb-6 text-gray-900">
-                <FaCog className="text-[#0395DE]" />
-                <h3 className="font-bold tracking-tight">Paper & Layout</h3>
+          {resumeData.sections.map(sec => activeTab === sec.id && (
+            <motion.section key={sec.id} initial={{opacity:0, scale:0.98}} animate={{opacity:1, scale:1}} className="bg-white rounded-3xl p-10 shadow-xl shadow-gray-100/50 border border-gray-100">
+              <div className="flex items-center justify-between mb-10 pb-6 border-b border-gray-50">
+                <input 
+                  className="text-3xl font-black text-gray-900 bg-transparent border-none focus:ring-0 w-3/4 p-0" 
+                  value={sec.title} 
+                  onChange={(e) => updateSectionTitle(sec.id, e.target.value)}
+                />
+                <div className="flex space-x-2">
+                  <button onClick={() => removeSection(sec.id)} className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all"><FaTrash /></button>
+                </div>
               </div>
               
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Format</label>
-                  <select
-                    className="w-full bg-[#F8FAFC] border-none rounded-xl text-sm p-3 focus:ring-2 focus:ring-[#0395DE] transition-all"
-                    value={templateSettings.paperSize}
-                    onChange={(e) => handleTemplateSettingChange('paperSize', e.target.value as any)}
-                  >
-                    <option value="a4paper">A4 Standard</option>
-                    <option value="letterpaper">US Letter</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Header Alignment</label>
-                  <div className="flex bg-[#F8FAFC] p-1 rounded-xl">
-                    {['L', 'C', 'R'].map(align => (
-                      <button
-                        key={align}
-                        onClick={() => handleTemplateSettingChange('headerAlignment', align)}
-                        className={clsx(
-                          "flex-1 py-1.5 rounded-lg text-xs font-bold transition-all",
-                          templateSettings.headerAlignment === align 
-                            ? "bg-white text-gray-900 shadow-sm" 
-                            : "text-gray-400 hover:text-gray-600"
-                        )}
-                      >
-                        {align === 'L' ? 'Left' : align === 'C' ? 'Center' : 'Right'}
-                      </button>
-                    ))}
+              <div className="space-y-8">
+                {sec.entries.map(entry => (
+                  <div key={entry.id} className="p-8 bg-gray-50/50 border border-gray-100 rounded-3xl relative group">
+                    <div className="absolute right-4 top-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-all">
+                      <button onClick={() => moveEntry(sec.id, entry.id, 'up')} className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 hover:text-red-500"><FaArrowUp className="text-[10px]" /></button>
+                      <button onClick={() => moveEntry(sec.id, entry.id, 'down')} className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 hover:text-red-500"><FaArrowDown className="text-[10px]" /></button>
+                      <button onClick={() => removeEntry(sec.id, entry.id)} className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 text-red-400 hover:bg-red-500 hover:text-white"><FaTrash className="text-[10px]" /></button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="col-span-2">
+                        <InputField label="Company / Project Name" value={entry.title} onChange={v => updateEntry(sec.id, entry.id, { title: v })} />
+                      </div>
+                      <InputField label="Position / Role" value={entry.subtitle} onChange={v => updateEntry(sec.id, entry.id, { subtitle: v })} />
+                      <InputField label="Date / Period" value={entry.startDate} onChange={v => updateEntry(sec.id, entry.id, { startDate: v })} />
+                      <div className="col-span-2">
+                        <textarea 
+                          className="w-full bg-white border-none rounded-2xl p-5 text-sm focus:ring-2 focus:ring-red-500 transition-all min-h-[120px] leading-relaxed shadow-inner"
+                          placeholder="Describe your achievements (one per line)..."
+                          value={entry.description}
+                          onChange={(e) => updateEntry(sec.id, entry.id, { description: e.target.value })}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
+                <button onClick={() => addEntry(sec.id)} className="w-full py-6 border-2 border-dashed border-gray-100 rounded-3xl text-gray-400 font-bold hover:bg-gray-50 hover:border-red-200 hover:text-red-400 transition-all flex items-center justify-center space-x-2">
+                  <FaPlus className="text-xs" /> <span>Add Entry to this Section</span>
+                </button>
               </div>
-            </div>
+            </motion.section>
+          ))}
+
+          {activeTab === 'skills' && (
+            <motion.section initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} className="bg-white rounded-3xl p-10 shadow-xl shadow-gray-100/50 border border-gray-100">
+              <div className="flex items-center justify-between mb-10">
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Skills & Languages</h2>
+                <button onClick={() => {
+                  handleChange();
+                  setResumeData(p => ({...p, skills: [...p.skills, { id: crypto.randomUUID(), category: "", name: "" }]}));
+                }} className="p-3 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all"><FaPlus /></button>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                {resumeData.skills.map(skill => (
+                  <div key={skill.id} className="p-6 bg-gray-50 rounded-2xl relative group border border-gray-100">
+                    <button onClick={() => {
+                      handleChange();
+                      setResumeData(p => ({...p, skills: p.skills.filter(s => s.id !== skill.id)}));
+                    }} className="absolute -right-2 -top-2 w-6 h-6 bg-white text-red-400 rounded-full shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><FaTrash className="text-[10px]" /></button>
+                    <InputField label="Category" value={skill.category} onChange={v => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, category: v} : s)}))} />
+                    <div className="mt-4">
+                       <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Skills</label>
+                       <textarea className="w-full bg-white border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-red-500" value={skill.name} onChange={e => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)}))} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+        </div>
+
+        {!isSaved && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+            <button onClick={() => saveToLocalStorage(resumeData)} className="bg-emerald-500 text-white px-10 py-5 rounded-full shadow-2xl shadow-emerald-200 flex items-center space-x-4 hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95">
+              <FaSave className="text-xl" /> <span className="text-lg font-bold">Apply Changes</span>
+            </button>
           </div>
-        </aside>
+        )}
       </main>
     </div>
   )
 }
 
-// Sub-components for better readability
-function InputField({ label, value, onChange, placeholder = '', type = 'text' }: any) {
+function NavBtn({ active, onClick, icon, label }: any) {
   return (
-    <div>
-      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">{label}</label>
-      <input
-        type={type}
-        className="w-full bg-[#F8FAFC] border-none rounded-xl p-3 text-sm text-gray-800 placeholder:text-gray-300 focus:ring-2 focus:ring-[#0395DE] transition-all"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
-    </div>
-  )
-}
-
-function ActionButton({ icon, onClick, variant = 'default' }: any) {
-  return (
-    <button 
-      onClick={onClick} 
-      className={clsx(
-        "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-        variant === 'danger' 
-          ? "bg-red-50 text-red-400 hover:bg-red-500 hover:text-white" 
-          : "bg-white text-gray-400 hover:text-[#0395DE] shadow-sm"
-      )}
-    >
-      <span className="text-[10px]">{icon}</span>
+    <button onClick={onClick} className={clsx(
+      "w-full flex items-center space-x-3 px-4 py-4 rounded-2xl transition-all duration-300 group", 
+      active ? "bg-red-500 text-white shadow-xl shadow-red-100 translate-x-1" : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+    )}>
+      <span className={clsx("text-lg transition-transform", active ? "scale-110" : "group-hover:scale-110")}>{icon}</span>
+      <span className="font-bold text-sm truncate tracking-tight">{label}</span>
+      {active && <motion.div layoutId="activeInd" className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />}
     </button>
   )
 }
 
-// Default state constants
-const defaultResumeData: ResumeData = {
-  personal: {
-    firstName: '',
-    lastName: '',
-    position: '',
-    email: '',
-  },
-  education: [],
-  experience: [],
-  skills: [],
-}
-
-const defaultTemplateSettings: TemplateSettings = {
-  colorScheme: 'awesome-skyblue',
-  fontSize: '11pt',
-  paperSize: 'a4paper',
-  sectionColorHighlight: true,
-  headerAlignment: 'C',
+function InputField({ label, value, onChange }: any) {
+  return (
+    <div className="flex flex-col space-y-2">
+      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">{label}</label>
+      <input 
+        className="bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-red-500 transition-all shadow-inner" 
+        value={value || ''} 
+        onChange={(e) => onChange(e.target.value)} 
+      />
+    </div>
+  )
 }

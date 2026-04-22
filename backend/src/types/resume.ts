@@ -23,67 +23,50 @@ export interface Education {
   school: string
   degree: string
   field?: string
-  startDate: string // YYYY-MM or YYYY-MM-DD
-  endDate?: string // YYYY-MM or YYYY-MM-DD
+  startDate: string
+  endDate?: string
   description?: string
   gpa?: string
   location?: string
 }
 
-export interface Experience {
+export interface Entry {
   id: string
-  position: string
-  company: string
+  title: string       // 对应公司名或项目名
+  subtitle: string    // 对应职位或子标题
   location?: string
   startDate: string
-  endDate?: string // empty for present
+  endDate?: string
   description?: string
   highlights?: string[]
+}
+
+export interface ResumeSection {
+  id: string
+  title: string       // 区块标题，如 "Work Experience" 或 "ADAS & Autonomous Driving"
+  entries: Entry[]
 }
 
 export interface Skill {
   id: string
   category: string
   name: string
-  level?: number // 1-5
-  keywords?: string[]
-}
-
-export interface Project {
-  id: string
-  name: string
-  description: string
-  technologies?: string[]
-  url?: string
-}
-
-export interface Language {
-  id: string
-  name: string
-  level: string // e.g., 'Native', 'Fluent', 'Intermediate', 'Basic'
 }
 
 export interface ResumeData {
   personal: PersonalInfo
   education: Education[]
-  experience: Experience[]
+  sections: ResumeSection[] // 动态区块：包含工作经历、项目、研究等
   skills: Skill[]
-  projects?: Project[]
-  languages?: Language[]
   summary?: string
-  honors?: string[]
-  certificates?: string[]
-  publications?: string[]
 }
 
 export interface TemplateSettings {
-  colorScheme: 'awesome-emerald' | 'awesome-skyblue' | 'awesome-red' | 'awesome-pink' | 'awesome-orange' | 'awesome-nephritis' | 'awesome-concrete' | 'awesome-darknight' | string
+  colorScheme: string
   fontSize: '10pt' | '11pt' | '12pt'
   paperSize: 'a4paper' | 'letterpaper'
   sectionColorHighlight: boolean
   headerAlignment: 'C' | 'L' | 'R'
-  customColor?: string // hex color
-  className?: string // Added for dynamic template class support
+  customColor?: string
+  className?: string
 }
-
-export type ResumeType = 'resume' | 'cv' | 'coverletter'
