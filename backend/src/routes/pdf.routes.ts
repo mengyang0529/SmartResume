@@ -14,6 +14,68 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
   router.use(pdfRateLimit)
 
   /**
+   * @route   GET /api/v1/pdf/refresh-all-previews
+   * @desc    Force re-generate all gallery preview PDFs
+   * @access  Admin (Public for dev)
+   */
+  router.get(
+    '/refresh-all-previews',
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const templates = [
+          'classic-professional',
+          'modern-tech',
+          'academic-cv',
+          'creative-portfolio',
+          'executive-level',
+          'cover-letter'
+        ];
+
+        // 1. Clear cache
+        await axios.post(`${config.latexServiceUrl}/cache/clear`);
+
+        const sampleData = await resumeService.getSampleResume();
+        const results = [];
+
+        for (const templateName of templates) {
+          const sampleCacheKey = `sample-${templateName}`;
+          const settings = {
+            fontSize: '11pt',
+            paperSize: 'a4paper',
+            colorScheme: templateName === 'academic-cv' ? 'black' : 
+                        templateName === 'modern-tech' ? 'awesome-skyblue' :
+                        templateName === 'creative-portfolio' ? 'awesome-emerald' :
+                        templateName === 'executive-level' ? 'awesome-concrete' : 'awesome-red',
+            headerAlignment: 'C' as const,
+            sectionColorHighlight: templateName !== 'academic-cv',
+            className: templateName
+          };
+
+          const latex = latexService.generateResumeLatex(sampleData as any, settings);
+          const compileResponse = await axios.post(
+            `${config.latexServiceUrl}/compile`,
+            { latex, cacheKey: sampleCacheKey },
+            { timeout: 60000 }
+          );
+          
+          results.push({
+            template: templateName,
+            status: compileResponse.data.status
+          });
+        }
+
+        res.json({
+          status: 'success',
+          message: 'All previews refreshed',
+          results
+        });
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  /**
    * @route   GET /api/v1/pdf/preview-template/:templateName
    * @desc    Generate a preview PDF for a specific template using sample data
    * @access  Public

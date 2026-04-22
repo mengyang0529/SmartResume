@@ -4,7 +4,7 @@ export class LatexService {
   /**
    * Escape special LaTeX characters
    */
-  private escapeLatex(text: string): string {
+  private escapeLatex(text: string | undefined | null): string {
     if (!text) return ''
     return text
       .replace(/\\/g, '\\textbackslash ')
