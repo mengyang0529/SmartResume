@@ -7,7 +7,7 @@ export default function Layout() {
   const navItems = [
     { path: '/', label: 'Home', icon: <FaHome /> },
     { path: '/editor', label: 'Editor', icon: <FaEdit /> },
-    { path: '/templates', label: 'Templates', icon: <FaImages /> },
+    { path: '/gallery', label: 'Gallery', icon: <FaImages /> },
     { path: '/profile', label: 'Profile', icon: <FaUser /> },
   ]
 
@@ -114,7 +114,7 @@ export default function Layout() {
               <h4 className="text-lg font-bold mb-4">Product</h4>
               <ul className="space-y-2">
                 <li><Link to="/editor" className="text-gray-400 hover:text-white">Editor</Link></li>
-                <li><Link to="/templates" className="text-gray-400 hover:text-white">Templates</Link></li>
+                <li><Link to="/gallery" className="text-gray-400 hover:text-white">Gallery</Link></li>
               </ul>
             </div>
 

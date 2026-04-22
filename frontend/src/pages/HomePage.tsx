@@ -15,7 +15,7 @@ export default function HomePage() {
           </h1>
           <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
             The smartest way to create professional, print-ready resumes with 
-            LaTeX quality. Beautiful templates, intuitive editor, no coding required.
+            LaTeX quality. Beautiful designs, intuitive editor, no coding required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
@@ -26,11 +26,11 @@ export default function HomePage() {
               Create Your Resume
             </button>
             <button
-              onClick={() => navigate('/templates')}
+              onClick={() => navigate('/gallery')}
               className="btn-outline text-lg px-8 py-4"
             >
               <FaStar className="mr-2" />
-              Browse Templates
+              Browse Gallery
             </button>
           </div>
         </div>

@@ -108,7 +108,7 @@ router.get(
         name: 'Classic Professional',
         category: 'resume',
         description: 'Clean, traditional design suitable for all industries',
-        latexTemplate: '\\documentclass{awesome-cv}\n% Template definition...',
+        latexTemplate: '\\documentclass{classic-professional}\n% Template definition...',
         settingsSchema: {
           type: 'object',
           properties: {
@@ -344,7 +344,7 @@ router.get(
       // TODO: Generate preview LaTeX with sample data
       // Use template and optional settings
 
-      const previewLatex = '\\documentclass{awesome-cv}\n% Preview with sample data...'
+      const previewLatex = '\\documentclass{classic-professional}\n% Preview with sample data...'
 
       res.set('Content-Type', 'text/plain')
       res.send(previewLatex)

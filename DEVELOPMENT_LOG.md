@@ -17,7 +17,7 @@
 **Issue:** Hanzi (Chinese characters) were rendering as squares/crosses (missing glyphs).
 
 **Key Actions:**
-*   **`xeCJK` Integration:** Modified `awesome-cv.cls` (both in backend and latex-service) to include the `xeCJK` package.
+*   **`xeCJK` Integration:** Modified `classic-professional.cls` (both in backend and latex-service) to include the `xeCJK` package.
 *   **Font Selection:** Configured **LXGW Neo XiHei (霞鹜新晰黑)** as the primary CJK font. It provides a clean, modern aesthetic that matches the original Awesome-CV design much better than standard Ming/Song fonts.
 *   **Fake Bold Support:** Enabled `AutoFakeBold` in `xeCJK` settings to ensure bold Chinese characters render correctly.
 *   **Cache Management:** Implemented a `/cache/clear` endpoint to force re-compilation when template settings or fonts are updated.

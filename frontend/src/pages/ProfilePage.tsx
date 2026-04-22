@@ -309,7 +309,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-gray-600">Templates Saved</span>
+                  <span className="text-gray-600">Designs Saved</span>
                   <span className="font-bold">{templates.length}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">

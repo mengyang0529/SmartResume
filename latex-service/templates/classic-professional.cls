@@ -1,4 +1,4 @@
-%% Start of file `awesome-cv.cls'.
+%% Start of file `classic-professional.cls'.
 % Awesome CV Class File
 %
 % This class has been downloaded from:
@@ -12,6 +12,7 @@
 % 1) This class file defines the structure and layout of the template file (cv.tex, resume.tex).
 % 2) It has been written in such a way that under most circumstances you
 % should not need to edit it.
+% 3) It has been renamed to classic-professional.cls for this project.
 %
 % Class license:
 % LPPL v1.3c (http://www.latex-project.org/lppl)
@@ -21,7 +22,7 @@
 %-------------------------------------------------------------------------------
 %                Identification
 %-------------------------------------------------------------------------------
-\ProvidesClass{awesome-cv}[2017/02/05 v1.6.1 Awesome Curriculum Vitae Class]
+\ProvidesClass{classic-professional}[2017/02/05 v1.6.1 Classic Professional Curriculum Vitae Class]
 \NeedsTeXFormat{LaTeX2e}
 
 

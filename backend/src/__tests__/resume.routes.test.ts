@@ -349,7 +349,7 @@ describe('Resume API Routes', () => {
 
       expect(response.headers['content-type']).toContain('text/plain')
       expect(response.headers['content-disposition']).toContain(`filename="resume_${resumeId}.tex"`)
-      expect(response.text).toContain('\\documentclass{awesome-cv}')
+      expect(response.text).toContain('\\documentclass{classic-professional}')
     })
 
     it('should validate UUID parameter', async () => {

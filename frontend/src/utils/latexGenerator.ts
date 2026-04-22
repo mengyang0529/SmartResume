@@ -44,7 +44,7 @@ export function generateResumeLatex(data: ResumeData, settings: TemplateSettings
 %-------------------------------------------------------------------------------
 % CONFIGURATIONS
 %-------------------------------------------------------------------------------
-\\documentclass[${settings.fontSize}, ${settings.paperSize}]{awesome-cv}
+\\documentclass[${settings.fontSize}, ${settings.paperSize}]{classic-professional}
 
 % Configure page margins with geometry
 \\geometry{left=1.4cm, top=.8cm, right=1.4cm, bottom=1.8cm, footskip=.5cm}

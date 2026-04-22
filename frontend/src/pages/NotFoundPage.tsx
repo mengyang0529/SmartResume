@@ -44,10 +44,10 @@ export default function NotFoundPage() {
               {' '}– Create or edit your resume
             </li>
             <li>
-              <Link to="/templates" className="text-primary-600 hover:underline">
-                Templates
+              <Link to="/gallery" className="text-primary-600 hover:underline">
+                Gallery
               </Link>
-              {' '}– Browse professional templates
+              {' '}– Browse professional designs
             </li>
             <li>
               <Link to="/profile" className="text-primary-600 hover:underline">

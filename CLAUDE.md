@@ -149,7 +149,7 @@ web-resume/
 ## Important Files
 
 ### Template Files
-- `backend/src/templates/awesome-cv.cls` - Modified Awesome-CV class file
+- `backend/src/templates/classic-professional.cls` - Modified LaTeX class file
 - `backend/src/templates/resume.tex.j2` - Jinja2 template for resume generation
 - `frontend/src/templates/resume-schema.json` - JSON schema for form validation
 
