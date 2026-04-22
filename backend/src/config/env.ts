@@ -12,7 +12,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   SESSION_SECRET: z.string().min(32),
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
-  LATEX_SERVICE_URL: z.string().url().default('http://localhost:5050'),
+  TYPST_SERVICE_URL: z.string().url().default('http://localhost:5050'),
   REDIS_URL: z.string().url().optional(),
   RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default('900000'), // 15 minutes
   RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).default('100'),
@@ -34,7 +34,7 @@ export const config = {
   jwtSecret: envParseResult.data.JWT_SECRET,
   sessionSecret: envParseResult.data.SESSION_SECRET,
   corsOrigin: envParseResult.data.CORS_ORIGIN,
-  latexServiceUrl: envParseResult.data.LATEX_SERVICE_URL,
+  typstServiceUrl: envParseResult.data.TYPST_SERVICE_URL,
   redisUrl: envParseResult.data.REDIS_URL,
   rateLimitWindowMs: envParseResult.data.RATE_LIMIT_WINDOW_MS,
   rateLimitMaxRequests: envParseResult.data.RATE_LIMIT_MAX_REQUESTS,

@@ -108,7 +108,7 @@ router.get(
         name: 'Classic Professional',
         category: 'resume',
         description: 'Clean, traditional design suitable for all industries',
-        latexTemplate: '\\documentclass{classic-professional}\n% Template definition...',
+        typstTemplate: '#import "@preview/modern-cv:0.10.0": *\n% Template definition...',
         settingsSchema: {
           type: 'object',
           properties: {
@@ -159,7 +159,7 @@ router.post(
     body('name').trim().notEmpty(),
     body('category').isIn(['resume', 'cv', 'cover-letter']),
     body('description').optional().trim(),
-    body('latexTemplate').notEmpty(),
+    body('typstTemplate').notEmpty(),
     body('settingsSchema').optional().isObject(),
     body('isPublic').optional().isBoolean(),
   ],
@@ -170,17 +170,17 @@ router.post(
         throw new ValidationError(errors.mapped())
       }
 
-      const { name, category, description, latexTemplate, settingsSchema, isPublic } = req.body
+      const { name, category, description, typstTemplate, settingsSchema, isPublic } = req.body
 
       // TODO: Create template in database
-      // Validate LaTeX template syntax?
+      // Validate Typst template syntax?
 
       const newTemplate = {
         id: 'new-template-id',
         name,
         category,
         description: description || '',
-        latexTemplate,
+        typstTemplate,
         settingsSchema: settingsSchema || {},
         isPublic: isPublic !== undefined ? isPublic : false,
         isDefault: false,
@@ -213,7 +213,7 @@ router.put(
     param('id').isUUID(),
     body('name').optional().trim().notEmpty(),
     body('description').optional().trim(),
-    body('latexTemplate').optional().notEmpty(),
+    body('typstTemplate').optional().notEmpty(),
     body('settingsSchema').optional().isObject(),
     body('isPublic').optional().isBoolean(),
   ],
@@ -341,7 +341,7 @@ router.get(
       const { id } = req.params
       const { settings: _settings } = req.query
 
-      // TODO: Generate preview LaTeX with sample data
+      // TODO: Generate preview Typst with sample data
       // Use template and optional settings
 
       const previewLatex = '\\documentclass{classic-professional}\n% Preview with sample data...'
@@ -356,13 +356,13 @@ router.get(
 
 /**
  * @route   POST /api/v1/templates/import
- * @desc    Import a template from LaTeX file
+ * @desc    Import a template from Typst file
  * @access  Private (admin)
  */
 router.post(
   '/import',
   [
-    body('latexContent').notEmpty(),
+    body('typstContent').notEmpty(),
     body('name').trim().notEmpty(),
     body('category').isIn(['resume', 'cv', 'cover-letter']),
   ],
@@ -373,10 +373,10 @@ router.post(
         throw new ValidationError(errors.mapped())
       }
 
-      const { latexContent, name, category } = req.body
+      const { typstContent, name, category } = req.body
 
-      // TODO: Parse LaTeX content and create template
-      // Extract settings schema from LaTeX comments?
+      // TODO: Parse Typst content and create template
+      // Extract settings schema from Typst comments?
 
       res.status(201).json({
         status: 'success',
@@ -386,7 +386,7 @@ router.post(
             id: 'imported-template-id',
             name,
             category,
-            latexTemplate: latexContent,
+            typstTemplate: typstContent,
             // ... other template data
           },
         },

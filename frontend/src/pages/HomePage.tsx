@@ -15,7 +15,7 @@ export default function HomePage() {
           </h1>
           <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
             The smartest way to create professional, print-ready resumes with 
-            LaTeX quality. Beautiful designs, intuitive editor, no coding required.
+            Typst quality. Beautiful designs, intuitive editor, no coding required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
@@ -47,14 +47,14 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold mb-3">Easy Visual Editor</h3>
               <p className="text-gray-600">
-                Fill out simple forms and see real-time previews. No LaTeX knowledge required.
+                Fill out simple forms and see real-time previews. No Typst knowledge required.
               </p>
             </div>
             <div className="card text-center">
               <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaMagic className="text-3xl text-accent-600" />
               </div>
-              <h3 className="text-xl font-bold mb-3">LaTeX Quality Output</h3>
+              <h3 className="text-xl font-bold mb-3">Typst Quality Output</h3>
               <p className="text-gray-600">
                 Get print-ready PDFs with professional typography and perfect formatting.
               </p>

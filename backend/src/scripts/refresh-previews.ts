@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ResumeService } from '../services/resume.service';
-import { LatexService } from '../services/latex.service';
+import { TypstService } from '../services/typst.service';
 import { config } from '../config/env';
 
 /**
@@ -9,7 +9,7 @@ import { config } from '../config/env';
  */
 async function refreshPreviews() {
   const resumeService = new ResumeService();
-  const latexService = new LatexService();
+  const typstService = new TypstService();
 
   const templates = [
     'classic-professional',
@@ -23,9 +23,9 @@ async function refreshPreviews() {
   console.log('🚀 Starting forced refresh of all template previews...');
 
   try {
-    // 1. Clear existing cache in LaTeX service
-    console.log('🧹 Clearing LaTeX service cache...');
-    await axios.post(`${config.latexServiceUrl}/cache/clear`);
+    // 1. Clear existing cache in Typst service
+    console.log('🧹 Clearing Typst service cache...');
+    await axios.post(`${config.typstServiceUrl}/cache/clear`);
     console.log('✅ Cache cleared.');
 
     // 2. Get sample data
@@ -49,11 +49,11 @@ async function refreshPreviews() {
         className: templateName
       };
 
-      const latex = latexService.generateResumeLatex(sampleData as any, settings);
+      const typst = typstService.generateResumeTypst(sampleData as any, settings);
 
       try {
-        const response = await axios.post(`${config.latexServiceUrl}/compile`, {
-          latex,
+        const response = await axios.post(`${config.typstServiceUrl}/compile`, {
+          typst,
           cacheKey: sampleCacheKey
         }, { timeout: 60000 });
 

@@ -1,4 +1,4 @@
-import { LatexService } from '../services/latex.service'
+import { TypstService } from '../services/typst.service'
 import { ResumeData, TemplateSettings } from '../types/resume'
 
 // Sample resume data
@@ -111,12 +111,12 @@ const settings: TemplateSettings = {
 }
 
 function runTest() {
-  console.log('Testing LaTeX generation...\n')
+  console.log('Testing Typst generation...\n')
 
-  const latexService = new LatexService()
+  const typstService = new TypstService()
 
   try {
-    const latex = latexService.generateResumeLatex(sampleResume, settings)
+    const typst = typstService.generateResumeTypst(sampleResume, settings)
 
     // Save to file for inspection
     const fs = require('fs')
@@ -127,21 +127,21 @@ function runTest() {
       fs.mkdirSync(outputPath, { recursive: true })
     }
 
-    const latexFile = path.join(outputPath, 'generated-resume.tex')
-    fs.writeFileSync(latexFile, latex)
+    const typstFile = path.join(outputPath, 'generated-resume.typ')
+    fs.writeFileSync(typstFile, typst)
 
-    console.log(`✅ LaTeX generated successfully!`)
-    console.log(`📁 Output saved to: ${latexFile}`)
-    console.log(`📏 Length: ${latex.length} characters`)
+    console.log(`✅ Typst generated successfully!`)
+    console.log(`📁 Output saved to: ${typstFile}`)
+    console.log(`📏 Length: ${typst.length} characters`)
 
     // Show first 20 lines
-    const lines = latex.split('\n').slice(0, 20).join('\n')
+    const lines = typst.split('\n').slice(0, 20).join('\n')
     console.log('\nFirst 20 lines:\n')
     console.log(lines)
     console.log('\n...\n')
 
   } catch (error) {
-    console.error('❌ Error generating LaTeX:', error)
+    console.error('❌ Error generating Typst:', error)
     process.exit(1)
   }
 }

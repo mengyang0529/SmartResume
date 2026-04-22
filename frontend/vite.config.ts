@@ -23,8 +23,8 @@ export default defineConfig({
         target: 'http://backend:5001',
         changeOrigin: true,
       },
-      '/latex': {
-        target: 'http://latex:5050',
+      '/typst': {
+        target: 'http://typst:5050',
         changeOrigin: true,
       },
     },

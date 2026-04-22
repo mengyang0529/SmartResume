@@ -106,7 +106,7 @@ export default function Layout() {
                 <span className="text-xl font-bold">SmartResume</span>
               </div>
               <p className="text-gray-400">
-                Create professional resumes with LaTeX quality. Free and open source.
+                Create professional resumes with Typst quality. Free and open source.
               </p>
             </div>
 

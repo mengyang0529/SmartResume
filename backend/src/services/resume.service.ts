@@ -1,14 +1,14 @@
 import { PrismaClient } from '@prisma/client'
-import { LatexService } from './latex.service'
+import { TypstService } from './typst.service'
 import { ResumeData, TemplateSettings } from '../types/resume'
 
 export class ResumeService {
   private prisma: PrismaClient
-  private latexService: LatexService
+  private typstService: TypstService
 
-  constructor(prisma?: PrismaClient, latexService?: LatexService) {
+  constructor(prisma?: PrismaClient, typstService?: TypstService) {
     this.prisma = prisma || new PrismaClient()
-    this.latexService = latexService || new LatexService()
+    this.typstService = typstService || new TypstService()
   }
   /**
    * Get sample resume data for previews
@@ -23,7 +23,7 @@ export class ResumeService {
         mobile: '+1 234 567 8900',
         address: '123 Innovation Drive, Silicon Valley, CA',
       },
-      summary: 'Innovative software architect with over 10 years of experience in building scalable web applications and AI-powered tools. Expert in TypeScript, React, Node.js, and LaTeX automation.',
+      summary: 'Innovative software architect with over 10 years of experience in building scalable web applications and AI-powered tools. Expert in TypeScript, React, Node.js, and Typst automation.',
       experience: [
         {
           id: '1',
@@ -75,13 +75,13 @@ export class ResumeService {
       skills: [
         { id: '1', category: 'Languages', name: 'TypeScript, JavaScript, Python, Go, C++' },
         { id: '2', category: 'Frameworks', name: 'React, Next.js, Express, FastAPI, Tailwind CSS' },
-        { id: '3', category: 'Tools', name: 'Docker, Kubernetes, AWS, Git, LaTeX, PostgreSQL' },
+        { id: '3', category: 'Tools', name: 'Docker, Kubernetes, AWS, Git, Typst, PostgreSQL' },
       ],
     }
   }
 
   /**
-   * Create a new resume with generated LaTeX source
+   * Create a new resume with generated Typst source
    */
   async createResume(
     userId: string,
@@ -104,15 +104,15 @@ export class ResumeService {
       ...settings
     }
 
-    // Generate LaTeX source
-    const latexSource = this.latexService.generateResumeLatex(content, fullSettings)
+    // Generate Typst source
+    const typstSource = this.typstService.generateResumeTypst(content, fullSettings)
 
     // Create resume in database
     const resume = await this.prisma.resume.create({
       data: {
         title,
         content: content as any, // Prisma JSON type
-        latexSource,
+        typstSource,
         templateId,
         settings: fullSettings as any,
         userId,
@@ -125,7 +125,7 @@ export class ResumeService {
   }
 
   /**
-   * Update an existing resume and regenerate LaTeX if content changed
+   * Update an existing resume and regenerate Typst if content changed
    */
   async updateResume(
     resumeId: string,
@@ -157,7 +157,7 @@ export class ResumeService {
     if (title !== undefined) updateData.title = title
     if (isPublic !== undefined) updateData.isPublic = isPublic
 
-    // Regenerate LaTeX if content or settings changed
+    // Regenerate Typst if content or settings changed
     if (content || settings) {
       const currentContent = (existing.content || {}) as unknown as ResumeData
       const currentSettings = (existing.settings || {}) as unknown as TemplateSettings
@@ -165,12 +165,12 @@ export class ResumeService {
       const newContent = content || currentContent
       const newSettings = settings ? { ...currentSettings, ...settings } : currentSettings
 
-      // Generate new LaTeX
-      const latexSource = this.latexService.generateResumeLatex(newContent, newSettings)
+      // Generate new Typst
+      const typstSource = this.typstService.generateResumeTypst(newContent, newSettings)
 
       updateData.content = newContent as any
       updateData.settings = newSettings as any
-      updateData.latexSource = latexSource
+      updateData.typstSource = typstSource
     }
 
     updateData.updatedAt = new Date()
@@ -288,7 +288,7 @@ export class ResumeService {
       data: {
         title: newTitle || `Copy of ${original.title}`,
         content: original.content as any,
-        latexSource: original.latexSource,
+        typstSource: original.typstSource,
         templateId: original.templateId,
         settings: original.settings as any,
         userId,

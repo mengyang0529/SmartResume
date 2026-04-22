@@ -98,9 +98,9 @@ export const resumeApi = {
 
 // PDF API
 export const pdfApi = {
-  generateFromLaTeX: async (latex: string, resumeId?: string) => {
+  generateFromTypst: async (typst: string, resumeId?: string) => {
     const { data } = await apiClient.post('/api/v1/pdf/generate', {
-      latex,
+      typst,
       resumeId,
     })
     return data.data

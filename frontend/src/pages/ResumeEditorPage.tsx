@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { ResumeData, TemplateSettings, Experience, Education, Skill } from '../types/resume'
-import { generateResumeLatex } from '../utils/latexGenerator'
+import { generateResumeTypst } from '../utils/typstGenerator'
 import { pdfApi } from '../services/api'
 import clsx from 'clsx'
 
@@ -134,10 +134,10 @@ export default function ResumeEditorPage() {
 
   const handleGeneratePDF = async () => {
     setIsGeneratingPdf(true)
-    const latex = generateResumeLatex(resumeData, templateSettings)
+    const typst = generateResumeTypst(resumeData, templateSettings)
     
     try {
-      const result = await pdfApi.generateFromLaTeX(latex)
+      const result = await pdfApi.generateFromTypst(typst)
       if (result.cacheKey) {
         window.open(pdfApi.downloadPdf(result.cacheKey), '_blank')
         toast.success('PDF generated successfully!')

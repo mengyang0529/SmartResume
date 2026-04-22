@@ -136,7 +136,7 @@ export default function GalleryPage() {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Resume Gallery</h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Choose from professionally designed LaTeX templates in our gallery. All designs are based on the
+          Choose from professionally designed Typst templates in our gallery. All designs are based on the
           popular Classic Professional framework.
         </p>
       </div>
@@ -287,7 +287,7 @@ export default function GalleryPage() {
             <h3 className="font-bold text-lg mb-2">Are these designs really free?</h3>
             <p className="text-gray-600">
               Yes, all designs in our gallery are completely free to use. They are based on our
-              Classic Professional LaTeX design and can be used for personal or commercial purposes.
+              Classic Professional Typst design and can be used for personal or commercial purposes.
             </p>
           </div>
           <div>
@@ -298,7 +298,7 @@ export default function GalleryPage() {
             </p>
           </div>
           <div>
-            <h3 className="font-bold text-lg mb-2">Do I need LaTeX knowledge?</h3>
+            <h3 className="font-bold text-lg mb-2">Do I need Typst knowledge?</h3>
             <p className="text-gray-600">
               No, our web-based editor handles all the complexity for you. You just need to
               fill in your information, and we'll generate a professional PDF.
@@ -340,7 +340,7 @@ export default function GalleryPage() {
               {isLoadingPreview ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-                  <p className="text-gray-500">Compiling professional LaTeX preview...</p>
+                  <p className="text-gray-500">Compiling professional Typst preview...</p>
                 </div>
               ) : previewPdfUrl ? (
                 <iframe
@@ -358,7 +358,7 @@ export default function GalleryPage() {
             {/* Modal Footer */}
             <div className="p-4 bg-gray-50 text-center border-t border-gray-100">
               <p className="text-xs text-gray-400">
-                This is a real-time LaTeX render. The final PDF will look exactly as shown above.
+                This is a real-time Typst render. The final PDF will look exactly as shown above.
               </p>
             </div>
           </div>

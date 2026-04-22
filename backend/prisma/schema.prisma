@@ -31,7 +31,7 @@ model Resume {
   title         String
   description   String?
   content       Json      // Structured resume data
-  latexSource   String?   // Generated LaTeX source
+  typstSource   String?   // Generated Typst source
   settings      Json      // Template settings (colors, fonts, etc.)
   isPublic      Boolean   @default(false)
   downloadCount Int       @default(0)
@@ -57,7 +57,7 @@ model Template {
   description   String?
   category      String    // "resume", "cv", "cover-letter"
   thumbnail     String?   // URL to thumbnail image
-  latexTemplate String    // LaTeX template with placeholders
+  typstTemplate String    // Typst template with placeholders
   settingsSchema Json     // JSON schema for template settings
   isPublic      Boolean   @default(true)
   isDefault     Boolean   @default(false)
@@ -79,7 +79,7 @@ model Template {
 model PdfJob {
   id            String    @id @default(uuid())
   resumeId      String?
-  latexSource   String
+  typstSource   String
   status        String    @default("pending") // pending, processing, completed, failed
   error         String?
   pdfUrl        String?

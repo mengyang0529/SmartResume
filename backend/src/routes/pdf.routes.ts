@@ -5,9 +5,10 @@ import { pdfRateLimit } from '../middleware/rateLimiter'
 import { ValidationError, NotFoundError } from '../middleware/errorHandler'
 import { config } from '../config/env'
 import { ResumeService } from '../services/resume.service'
-import { LatexService } from '../services/latex.service'
+import { TypstService } from '../services/typst.service'
+import { TemplateSettings } from '../types/resume'
 
-export function createPdfRoutes(resumeService: ResumeService, latexService: LatexService) {
+export function createPdfRoutes(resumeService: ResumeService, typstService: TypstService) {
   const router = Router()
 
   // Apply PDF-specific rate limiting
@@ -32,7 +33,7 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
         ];
 
         // 1. Clear cache
-        await axios.post(`${config.latexServiceUrl}/cache/clear`);
+        await axios.post(`${config.typstServiceUrl}/cache/clear`);
 
         const sampleData = await resumeService.getSampleResume();
         const results = [];
@@ -40,21 +41,21 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
         for (const templateName of templates) {
           const sampleCacheKey = `sample-${templateName}`;
           const settings = {
-            fontSize: '11pt',
-            paperSize: 'a4paper',
-            colorScheme: templateName === 'academic-cv' ? 'black' : 
+            fontSize: '11pt' as const,
+            paperSize: 'a4paper' as const,
+            colorScheme: (templateName === 'academic-cv' ? 'black' : 
                         templateName === 'modern-tech' ? 'awesome-skyblue' :
                         templateName === 'creative-portfolio' ? 'awesome-emerald' :
-                        templateName === 'executive-level' ? 'awesome-concrete' : 'awesome-red',
+                        templateName === 'executive-level' ? 'awesome-concrete' : 'awesome-red') as TemplateSettings['colorScheme'],
             headerAlignment: 'C' as const,
             sectionColorHighlight: templateName !== 'academic-cv',
             className: templateName
           };
 
-          const latex = latexService.generateResumeLatex(sampleData as any, settings);
+          const typst = typstService.generateResumeTypst(sampleData as any, settings);
           const compileResponse = await axios.post(
-            `${config.latexServiceUrl}/compile`,
-            { latex, cacheKey: sampleCacheKey },
+            `${config.typstServiceUrl}/compile`,
+            { typst, cacheKey: sampleCacheKey },
             { timeout: 60000 }
           );
           
@@ -97,22 +98,22 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
         const sampleData = await resumeService.getSampleResume()
         
         const settings = {
-          fontSize: '11pt',
-          paperSize: 'a4paper',
-          colorScheme: templateName === 'academic-cv' ? 'black' : 'awesome-skyblue',
+          fontSize: '11pt' as const,
+          paperSize: 'a4paper' as const,
+          colorScheme: (templateName === 'academic-cv' ? 'black' : 'awesome-skyblue') as TemplateSettings['colorScheme'],
           headerAlignment: 'C' as const,
           sectionColorHighlight: templateName !== 'academic-cv',
           className: templateName
         }
 
-        const latex = latexService.generateResumeLatex(sampleData as any, settings)
+        const typst = typstService.generateResumeTypst(sampleData as any, settings)
 
-        // Call LaTeX compilation service with our specific cacheKey
-        const latexServiceUrl = config.latexServiceUrl
+        // Call Typst compilation service with our specific cacheKey
+        const typstServiceUrl = config.typstServiceUrl
         const compileResponse = await axios.post(
-          `${latexServiceUrl}/compile`,
+          `${typstServiceUrl}/compile`,
           { 
-            latex, 
+            typst, 
             cacheKey: sampleCacheKey // Force the use of our deterministic key
           },
           { timeout: 60000 }
@@ -121,7 +122,7 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
         if (compileResponse.data.status !== 'success') {
           return res.status(500).json({
             status: 'error',
-            message: 'LaTeX compilation failed',
+            message: 'Typst compilation failed',
             error: compileResponse.data.error,
           })
         }
@@ -143,13 +144,13 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
 
   /**
    * @route   POST /api/v1/pdf/generate
-   * @desc    Generate PDF from LaTeX source
+   * @desc    Generate PDF from Typst source
    * @access  Private (or Public with API key)
    */
   router.post(
     '/generate',
     [
-      body('latex').notEmpty(),
+      body('typst').notEmpty(),
       body('resumeId').optional().isUUID(),
       body('cacheKey').optional().isString(),
     ],
@@ -160,13 +161,13 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
           throw new ValidationError(errors.mapped())
         }
 
-        const { latex, resumeId, cacheKey } = req.body
+        const { typst, resumeId, cacheKey } = req.body
 
-        // Call LaTeX compilation service
-        const latexServiceUrl = config.latexServiceUrl
+        // Call Typst compilation service
+        const typstServiceUrl = config.typstServiceUrl
         const compileResponse = await axios.post(
-          `${latexServiceUrl}/compile`,
-          { latex, cacheKey },
+          `${typstServiceUrl}/compile`,
+          { typst, cacheKey },
           { timeout: 60000 }
         )
 
@@ -175,7 +176,7 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
         if (compileData.status !== 'success') {
           return res.status(500).json({
             status: 'error',
-            message: compileData.message || 'LaTeX compilation failed',
+            message: compileData.message || 'Typst compilation failed',
             error: compileData.error,
           })
         }
@@ -196,12 +197,20 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
         })
       } catch (error) {
         if (axios.isAxiosError(error)) {
+          console.error('Typst Service Axios Error:', {
+            message: error.message,
+            status: error.response?.status,
+            data: error.response?.data,
+            url: error.config?.url,
+          })
           return res.status(502).json({
             status: 'error',
-            message: 'LaTeX compilation service unavailable',
+            message: 'Typst compilation service unavailable',
             error: error.message,
+            details: error.response?.data
           })
         }
+        console.error('PDF Generation Unexpected Error:', error)
         next(error)
       }
     }
@@ -231,8 +240,8 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
         // TODO:
         // 1. Fetch resume from database
         // 2. Apply settings overrides if provided
-        // 3. Generate LaTeX from template
-        // 4. Send to LaTeX compilation service
+        // 3. Generate Typst from template
+        // 4. Send to Typst compilation service
 
         res.status(202).json({
           status: 'success',
@@ -313,10 +322,10 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
 
         const { cacheKey } = req.params
 
-        // Proxy download request to LaTeX service
-        const latexServiceUrl = config.latexServiceUrl
+        // Proxy download request to Typst service
+        const typstServiceUrl = config.typstServiceUrl
         const pdfResponse = await axios.get(
-          `${latexServiceUrl}/download/${cacheKey}`,
+          `${typstServiceUrl}/download/${cacheKey}`,
           { responseType: 'stream', timeout: 30000 }
         )
 
@@ -359,10 +368,10 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
 
         const { cacheKey } = req.params
 
-        // Proxy download request to LaTeX service but with inline disposition
-        const latexServiceUrl = config.latexServiceUrl
+        // Proxy download request to Typst service but with inline disposition
+        const typstServiceUrl = config.typstServiceUrl
         const pdfResponse = await axios.get(
-          `${latexServiceUrl}/download/${cacheKey}`,
+          `${typstServiceUrl}/download/${cacheKey}`,
           { responseType: 'stream', timeout: 30000 }
         )
 
@@ -399,7 +408,7 @@ export function createPdfRoutes(resumeService: ResumeService, latexService: Late
     '/batch',
     [
       body('jobs').isArray({ min: 1, max: 10 }),
-      body('jobs.*.latex').notEmpty(),
+      body('jobs.*.typst').notEmpty(),
       body('jobs.*.id').optional().isString(),
     ],
     async (req: Request, res: Response, next: NextFunction) => {
@@ -437,6 +446,6 @@ let pdfRoutes: Router
 if (process.env.NODE_ENV === 'test') {
   pdfRoutes = createPdfRoutes({} as any, {} as any)
 } else {
-  pdfRoutes = createPdfRoutes(new ResumeService(), new LatexService())
+  pdfRoutes = createPdfRoutes(new ResumeService(), new TypstService())
 }
 export { pdfRoutes }

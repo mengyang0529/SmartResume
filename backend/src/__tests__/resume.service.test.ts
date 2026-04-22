@@ -4,14 +4,14 @@ import { ResumeData } from '../types/resume'
 
 describe('ResumeService', () => {
   let resumeService: ResumeService
-  let mockLatexService: any
+  let mockTypstService: any
   let mockPrisma: any
 
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockLatexService = {
-      generateResumeLatex: vi.fn().mockReturnValue('mock-latex-source')
+    mockTypstService = {
+      generateResumeTypst: vi.fn().mockReturnValue('mock-typst-source')
     }
 
     mockPrisma = {
@@ -26,11 +26,11 @@ describe('ResumeService', () => {
     }
 
     // Create ResumeService with mocked dependencies
-    resumeService = new ResumeService(mockPrisma as any, mockLatexService as any)
+    resumeService = new ResumeService(mockPrisma as any, mockTypstService as any)
   })
 
   describe('createResume', () => {
-    it('should create a resume with generated LaTeX', async () => {
+    it('should create a resume with generated Typst', async () => {
       const userId = 'user-123'
       const resumeData = {
         title: 'My Resume',
@@ -54,7 +54,7 @@ describe('ResumeService', () => {
         id: 'resume-456',
         title: 'My Resume',
         content: resumeData.content,
-        latexSource: 'mock-latex-source',
+        typstSource: 'mock-typst-source',
         templateId: 'template-123',
         settings: {},
         userId: 'user-123',
@@ -64,11 +64,11 @@ describe('ResumeService', () => {
         updatedAt: new Date()
       })
 
-      mockLatexService.generateResumeLatex.mockReturnValue('mock-latex-source')
+      mockTypstService.generateResumeTypst.mockReturnValue('mock-typst-source')
 
       const result = await resumeService.createResume(userId, resumeData)
 
-      expect(mockLatexService.generateResumeLatex).toHaveBeenCalledWith(
+      expect(mockTypstService.generateResumeTypst).toHaveBeenCalledWith(
         resumeData.content,
         expect.objectContaining({
           colorScheme: 'awesome-red',
@@ -81,7 +81,7 @@ describe('ResumeService', () => {
         data: {
           title: 'My Resume',
           content: resumeData.content,
-          latexSource: 'mock-latex-source',
+          typstSource: 'mock-typst-source',
           templateId: 'template-123',
           settings: expect.any(Object),
           userId: 'user-123',
@@ -225,7 +225,7 @@ describe('ResumeService', () => {
   })
 
   describe('updateResume', () => {
-    it('should update resume and regenerate LaTeX when content changes', async () => {
+    it('should update resume and regenerate Typst when content changes', async () => {
       const resumeId = 'resume-123'
       const userId = 'user-123'
       const updates = {
@@ -245,7 +245,7 @@ describe('ResumeService', () => {
         title: 'Old Title',
         content: { personal: { firstName: 'John', lastName: 'Doe', email: 'john@example.com' } },
         settings: { colorScheme: 'awesome-red' },
-        latexSource: 'old-latex'
+        typstSource: 'old-typst'
       }
 
       mockPrisma.resume.findFirst.mockResolvedValue(existingResume)
@@ -254,7 +254,7 @@ describe('ResumeService', () => {
         title: 'Updated Title'
       })
 
-      mockLatexService.generateResumeLatex.mockReturnValue('new-latex-source')
+      mockTypstService.generateResumeTypst.mockReturnValue('new-typst-source')
 
       const result = await resumeService.updateResume(resumeId, userId, updates)
 
@@ -262,7 +262,7 @@ describe('ResumeService', () => {
         where: { id: resumeId, userId }
       })
 
-      expect(mockLatexService.generateResumeLatex).toHaveBeenCalled()
+      expect(mockTypstService.generateResumeTypst).toHaveBeenCalled()
 
       expect(mockPrisma.resume.update).toHaveBeenCalledWith({
         where: { id: resumeId },
@@ -270,7 +270,7 @@ describe('ResumeService', () => {
           title: 'Updated Title',
           content: updates.content,
           settings: expect.any(Object),
-          latexSource: 'new-latex-source',
+          typstSource: 'new-typst-source',
           updatedAt: expect.any(Date)
         }
       })

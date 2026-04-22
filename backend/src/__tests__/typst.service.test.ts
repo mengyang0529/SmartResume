@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { LatexService } from '../services/latex.service'
+import { TypstService } from '../services/typst.service'
 import { ResumeData, TemplateSettings } from '../types/resume'
 
-describe('LatexService', () => {
-  const latexService = new LatexService()
+describe('TypstService', () => {
+  const typstService = new TypstService()
 
   const sampleResume: ResumeData = {
     personal: {
@@ -69,47 +69,47 @@ describe('LatexService', () => {
     headerAlignment: 'C'
   }
 
-  it('should generate LaTeX source code', () => {
-    const latex = latexService.generateResumeLatex(sampleResume, defaultSettings)
+  it('should generate Typst source code', () => {
+    const typst = typstService.generateResumeTypst(sampleResume, defaultSettings)
 
-    expect(latex).toBeDefined()
-    expect(latex).toContain('%!TEX TS-program = xelatex')
-    expect(latex).toContain('\\documentclass')
-    expect(latex).toContain('John')
-    expect(latex).toContain('Doe')
+    expect(typst).toBeDefined()
+    expect(typst).toContain('#import "@preview/modern-cv:0.10.0": *')
+    expect(typst).toContain('#show: resume.with(')
+    expect(typst).toContain('John')
+    expect(typst).toContain('Doe')
   })
 
-  it('should include personal information commands', () => {
-    const latex = latexService.generateResumeLatex(sampleResume, defaultSettings)
+  it('should include personal information in author block', () => {
+    const typst = typstService.generateResumeTypst(sampleResume, defaultSettings)
 
-    expect(latex).toContain('\\name{John}{Doe}')
-    expect(latex).toContain('\\position{Senior Software Engineer}')
-    expect(latex).toContain('\\email{john.doe@example.com}')
-    expect(latex).toContain('\\github{johndoe}')
+    expect(typst).toContain('firstname: "John"')
+    expect(typst).toContain('lastname: "Doe"')
+    expect(typst).toContain('positions: ("Senior Software Engineer")')
+    expect(typst).toContain('email: "john.doe@example.com"')
   })
 
   it('should include education section', () => {
-    const latex = latexService.generateResumeLatex(sampleResume, defaultSettings)
+    const typst = typstService.generateResumeTypst(sampleResume, defaultSettings)
 
-    expect(latex).toContain('\\cvsection{Education}')
-    expect(latex).toContain('Stanford University')
-    expect(latex).toContain('Master of Science in Computer Science')
+    expect(typst).toContain('= Education')
+    expect(typst).toContain('Stanford University')
+    expect(typst).toContain('Master of Science in Computer Science')
   })
 
   it('should include experience section', () => {
-    const latex = latexService.generateResumeLatex(sampleResume, defaultSettings)
+    const typst = typstService.generateResumeTypst(sampleResume, defaultSettings)
 
-    expect(latex).toContain('\\cvsection{Experience}')
-    expect(latex).toContain('Tech Corp Inc.')
-    expect(latex).toContain('Senior Software Engineer')
+    expect(typst).toContain('= Experience')
+    expect(typst).toContain('Tech Corp Inc.')
+    expect(typst).toContain('Senior Software Engineer')
   })
 
   it('should include skills section', () => {
-    const latex = latexService.generateResumeLatex(sampleResume, defaultSettings)
+    const typst = typstService.generateResumeTypst(sampleResume, defaultSettings)
 
-    expect(latex).toContain('\\cvsection{Skills}')
-    expect(latex).toContain('Programming Languages')
-    expect(latex).toContain('TypeScript, Python, Go')
+    expect(typst).toContain('= Skills')
+    expect(typst).toContain('Programming Languages')
+    expect(typst).toContain('TypeScript, Python, Go')
   })
 
   it('should handle empty optional sections', () => {
@@ -122,27 +122,26 @@ describe('LatexService', () => {
       publications: undefined as any
     }
 
-    const latex = latexService.generateResumeLatex(resumeWithoutOptional, defaultSettings)
+    const typst = typstService.generateResumeTypst(resumeWithoutOptional, defaultSettings)
 
-    expect(latex).toBeDefined()
+    expect(typst).toBeDefined()
     // Should not crash when optional arrays are undefined
   })
 
   it('should apply template settings', () => {
     const customSettings: TemplateSettings = {
-      colorScheme: 'awesome-darkblue',
+      colorScheme: 'awesome-skyblue',
       fontSize: '12pt',
       paperSize: 'letterpaper',
       sectionColorHighlight: false,
       headerAlignment: 'L'
     }
 
-    const latex = latexService.generateResumeLatex(sampleResume, customSettings)
+    const typst = typstService.generateResumeTypst(sampleResume, customSettings)
 
-    expect(latex).toContain('\\documentclass[12pt, letterpaper]')
-    expect(latex).toContain('\\colorlet{awesome}{awesome-darkblue}')
-    expect(latex).toContain('\\setbool{acvSectionColorHighlight}{false}')
-    expect(latex).toContain('\\makecvheader[L]')
+    expect(typst).toContain('paper-size: "us-letter"')
+    expect(typst).toContain('accent-color: "#0395DE"')
+    expect(typst).toContain('colored-headers: false')
   })
 
   it('should handle custom color hex code', () => {
@@ -151,8 +150,14 @@ describe('LatexService', () => {
       customColor: '#FF5733'
     }
 
-    const latex = latexService.generateResumeLatex(sampleResume, settingsWithCustomColor)
+    const typst = typstService.generateResumeTypst(sampleResume, settingsWithCustomColor)
 
-    expect(latex).toContain('\\definecolor{awesome}{HTML}{FF5733}')
+    expect(typst).toContain('accent-color: "#FF5733"')
+  })
+
+  it('should include correct font configuration', () => {
+    const typst = typstService.generateResumeTypst(sampleResume, defaultSettings)
+
+    expect(typst).toContain('font: ("Source Sans 3", "LXGW Neo XiHei", "sans-serif")')
   })
 })

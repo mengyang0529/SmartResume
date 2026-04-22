@@ -1,12 +1,12 @@
 import fs from 'fs'
 import path from 'path'
 import axios from 'axios'
-import { LatexService } from '../services/latex.service'
+import { TypstService } from '../services/typst.service'
 import { ResumeData, TemplateSettings } from '../types/resume'
 
-const latexService = new LatexService()
-// Updated to match the actual latex-service port and endpoints
-const LATEX_SERVICE_URL = 'http://localhost:5050'
+const typstService = new TypstService()
+// Updated to match the actual typst-service port and endpoints
+const TYPST_SERVICE_URL = 'http://localhost:5050'
 const OUTPUT_DIR = path.join(__dirname, '../../../frontend/public/previews')
 
 // Sample data for preview (Smart Resume)
@@ -19,7 +19,7 @@ const previewData: ResumeData = {
     mobile: '+1 234 567 8900',
     address: '123 Innovation Drive, Silicon Valley, CA',
   },
-  summary: 'Innovative software architect with over 10 years of experience in building scalable web applications and AI-powered tools. Expert in TypeScript, React, Node.js, and LaTeX automation.',
+  summary: 'Innovative software architect with over 10 years of experience in building scalable web applications and AI-powered tools. Expert in TypeScript, React, Node.js, and Typst automation.',
   experience: [
     {
       id: '1',
@@ -70,7 +70,7 @@ const previewData: ResumeData = {
   skills: [
     { id: '1', category: 'Languages', name: 'TypeScript, JavaScript, Python, Go, C++' },
     { id: '2', category: 'Frameworks', name: 'React, Next.js, Express, FastAPI, Tailwind CSS' },
-    { id: '3', category: 'Tools', name: 'Docker, Kubernetes, AWS, Git, LaTeX, PostgreSQL' },
+    { id: '3', category: 'Tools', name: 'Docker, Kubernetes, AWS, Git, Typst, PostgreSQL' },
   ],
 }
 
@@ -103,17 +103,17 @@ async function generatePreview(templateName: string) {
     settings.colorScheme = 'awesome-skyblue'
   }
 
-  const latex = latexService.generateResumeLatex(previewData, settings)
+  const typst = typstService.generateResumeTypst(previewData, settings)
   
-  // Save LaTeX for debugging
-  const debugTexPath = path.join(__dirname, `../../../debug_${templateName}.tex`)
-  fs.writeFileSync(debugTexPath, latex)
-  console.log(`Saved debug LaTeX to: ${debugTexPath}`)
+  // Save Typst for debugging
+  const debugTypPath = path.join(__dirname, `../../../debug_${templateName}.typ`)
+  fs.writeFileSync(debugTypPath, typst)
+  console.log(`Saved debug Typst to: ${debugTypPath}`)
   
   try {
     // 1. Request compilation
-    const compileResponse = await axios.post(`${LATEX_SERVICE_URL}/compile`, {
-      latex
+    const compileResponse = await axios.post(`${TYPST_SERVICE_URL}/compile`, {
+      typst
     })
 
     if (compileResponse.data.status !== 'success') {
@@ -124,7 +124,7 @@ async function generatePreview(templateName: string) {
     console.log(`Compiled ${templateName}, cache_key: ${cacheKey}. Downloading...`)
 
     // 2. Download the resulting PDF
-    const downloadResponse = await axios.get(`${LATEX_SERVICE_URL}/download/${cacheKey}`, {
+    const downloadResponse = await axios.get(`${TYPST_SERVICE_URL}/download/${cacheKey}`, {
       responseType: 'arraybuffer'
     })
 

@@ -32,23 +32,22 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:password@db:5432/resume_db
-      - LATEX_SERVICE_URL=http://latex:5050
+      - TYPST_SERVICE_URL=http://typst:5050
     depends_on:
       - db
-      - latex
+      - typst
     networks:
       - resume-network
 
-  # LaTeX compilation service
-  latex:
+  # Typst compilation service
+  typst:
     build:
-      context: ./latex-service
+      context: ./typst-service
       dockerfile: Dockerfile
     ports:
       - "5050:5050"
     volumes:
-      - ./latex-service/templates:/templates
-      - latex-cache:/cache
+      - typst-cache:/cache
     environment:
       - MAX_COMPILE_TIME=30
       - CACHE_ENABLED=true
@@ -94,4 +93,4 @@ networks:
 
 volumes:
   postgres-data:
-  latex-cache:
+  typst-cache:
