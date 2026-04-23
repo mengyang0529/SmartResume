@@ -13,7 +13,7 @@ interface EditableBlockProps {
 }
 
 const typeStyles: Record<BlockType, string> = {
-  h1: 'text-2xl font-black text-gray-300 tracking-tight mt-4 mb-2',
+  h1: 'text-xl font-black text-gray-200 tracking-[0.2em] uppercase mt-4 mb-2 px-4 py-2 bg-white/5 border-l-4 border-gray-600 rounded-r',
   h2: 'text-lg font-bold text-gray-300 mt-3 mb-1',
   h3: 'text-sm font-semibold text-gray-300 mt-2 mb-1',
   bullet: 'text-sm text-gray-400 pl-4 relative before:content-["•"] before:absolute before:left-0 before:text-red-500',
@@ -64,8 +64,9 @@ export default function EditableBlock({
   return (
     <div
       className={clsx(
-        'group/block relative rounded px-2 py-1 transition-colors',
-        isActive ? 'bg-[#32323a]' : 'hover:bg-[#26262c]'
+        'group/block relative rounded transition-colors',
+        block.type === 'h1' ? 'px-0 py-0 mb-1' : 'px-2 py-1',
+        isActive ? (block.type === 'h1' ? 'bg-transparent' : 'bg-[#32323a]') : 'hover:bg-[#26262c]'
       )}
     >
       <div className="flex items-start gap-2">
