@@ -34,7 +34,7 @@ ${authorBlock}
 )
 
 // Disable automatic uppercase for headings to respect user input
-#set heading(upper: false)
+// Note: awesome-cv.typ handles this via styling if needed, but 'upper' is not a valid parameter for heading in Typst
 
 `
 
