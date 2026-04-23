@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { 
   FaPlus, FaTrash, FaSpinner, 
   FaSave, FaDownload, FaChevronRight, FaFingerprint,
-  FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaGraduationCap, FaUser, FaEye, FaUpload
+  FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaGraduationCap, FaWrench, FaEye, FaUpload
 } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -300,7 +300,7 @@ export default function ResumeEditorPage() {
           ))}
 
           <SectionDivider label="Finalize" className="mt-6" />
-          <NavTab active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} num="--" label="Skills" icon={<FaUser />} />
+          <NavTab active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} num="--" label="Skills" icon={<FaWrench />} />
         </nav>
       </aside>
 
