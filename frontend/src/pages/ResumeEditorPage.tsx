@@ -241,22 +241,6 @@ export default function ResumeEditorPage() {
     setActiveTab(newSectionId)
   }
 
-  const updateSectionTitle = (id: string, title: string) => {
-    handleChange()
-    setResumeData(prev => ({
-      ...prev,
-      sections: prev.sections.map(s => s.id === id ? { ...s, title } : s)
-    }))
-    setEditorBlocks(prev => {
-      const blocks = prev[id]
-      if (!blocks) return prev
-      return {
-        ...prev,
-        [id]: blocks.map(b => b.type === 'h1' ? { ...b, content: title } : b)
-      }
-    })
-  }
-
   const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true)
     try {
@@ -276,16 +260,17 @@ export default function ResumeEditorPage() {
 
   return (
     <div className="min-h-screen bg-[#1e1e22] font-sans text-gray-400 flex selection:bg-red-500/30">
-      {/* Sidebar - Now with updated fixed positioning to account for header */}
       <aside className="w-[280px] bg-[#3a3a44] border-r border-gray-700/30 fixed top-20 bottom-0 left-0 z-40 flex flex-col">
         <nav className="flex-1 overflow-y-auto px-6 py-10 space-y-2 custom-scrollbar">
           <NavTab active={activeTab === 'personal'} onClick={() => setActiveTab('personal')} num="01" label="Identity" icon={<FaFingerprint />} />
-          <NavTab active={activeTab === 'education'} onClick={() => setActiveTab('education')} num="02" label="Education" icon={<FaGraduationCap />} />
           
           <div className="mt-8 flex items-center justify-between px-4 mb-2">
             <SectionDivider label="Modules" />
             <button onClick={addSection} className="text-gray-500 hover:text-red-500 transition-colors"><FaPlus className="text-xs" /></button>
           </div>
+          
+          <NavTab active={activeTab === 'education'} onClick={() => setActiveTab('education')} num="02" label="Education" icon={<FaGraduationCap />} />
+          
           {resumeData.sections.map((sec, i) => (
             <NavTab 
               key={sec.id}
@@ -298,10 +283,9 @@ export default function ResumeEditorPage() {
           ))}
 
           <SectionDivider label="Finalize" className="mt-8" />
-          <NavTab active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} num="--" label="Capabilities" icon={<FaUser />} />
+          <NavTab active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} num="--" label="Skills" icon={<FaUser />} />
         </nav>
 
-        {/* Execute Build Button moved here, made more prominent */}
         <div className="p-8 border-t border-gray-700/30 bg-[#3a3a44] space-y-3">
           <button
             onClick={openJsonFile}
@@ -327,11 +311,9 @@ export default function ResumeEditorPage() {
         </div>
       </aside>
 
-      {/* Main Foundry Area */}
       <main className="flex-1 ml-[280px] p-20 flex justify-center bg-[#1e1e22]">
         <div className="w-full max-w-4xl">
           <AnimatePresence mode="wait">
-            {/* Identity Module */}
             {activeTab === 'personal' && (
               <ModuleWrapper key="personal">
                 <div className="grid grid-cols-2 gap-x-12 gap-y-12 mt-8">
@@ -352,7 +334,6 @@ export default function ResumeEditorPage() {
               </ModuleWrapper>
             )}
 
-            {/* Education Module */}
             {activeTab === 'education' && (
               <ModuleWrapper key="education">
                 <RichTextEditor
@@ -366,24 +347,7 @@ export default function ResumeEditorPage() {
               </ModuleWrapper>
             )}
 
-            {/* Dynamic Modules */}
-            {resumeData.sections.map(sec => activeTab === sec.id && (
-              <ModuleWrapper key={sec.id}>
-                <RichTextEditor
-                  blocks={editorBlocks[sec.id] || sectionToBlocks(sec)}
-                  onChange={(blocks) => {
-                    handleChange();
-                    setEditorBlocks(prev => ({...prev, [sec.id]: blocks}));
-                    setResumeData(prev => ({
-                      ...prev,
-                      sections: prev.sections.map(s => s.id === sec.id ? blocksToSection(blocks, sec.id) : s)
-                    }));
-                  }}
-                />
-              </ModuleWrapper>
-            ))}
-
-            {/* Capabilities Module */}
+            {/* Skills Module */}
             {activeTab === 'skills' && (
               <ModuleWrapper key="skills">
                 <div className="grid grid-cols-2 gap-10 mt-8">
@@ -403,14 +367,29 @@ export default function ResumeEditorPage() {
                   <button onClick={() => {
                      handleChange();
                      setResumeData(p => ({...p, skills: [...p.skills, { id: crypto.randomUUID(), category: "", name: "" }]}));
-                  }} className="col-span-2 py-8 border border-dashed border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-500 uppercase font-black tracking-widest text-[10px]">+ Add New Capability</button>
+                  }} className="col-span-2 py-8 border border-dashed border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-500 uppercase font-black tracking-widest text-[10px]">+ Add New Skill</button>
                 </div>
               </ModuleWrapper>
             )}
+
+            {resumeData.sections.map(sec => activeTab === sec.id && (
+              <ModuleWrapper key={sec.id}>
+                <RichTextEditor
+                  blocks={editorBlocks[sec.id] || sectionToBlocks(sec)}
+                  onChange={(blocks) => {
+                    handleChange();
+                    setEditorBlocks(prev => ({...prev, [sec.id]: blocks}));
+                    setResumeData(prev => ({
+                      ...prev,
+                      sections: prev.sections.map(s => s.id === sec.id ? blocksToSection(blocks, sec.id) : s)
+                    }));
+                  }}
+                />
+              </ModuleWrapper>
+            ))}
           </AnimatePresence>
         </div>
 
-        {/* Global Commit FAB - Floating on right bottom */}
         {!isSaved && (
           <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-12 right-12 z-50">
             <button 
@@ -477,5 +456,3 @@ function FoundryInput({ label, value, onChange, icon, clean }: any) {
     </div>
   )
 }
-
-

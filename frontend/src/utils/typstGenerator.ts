@@ -41,11 +41,13 @@ ${authorBlock}
 
   // 1. Education
   if (education && education.length > 0) {
-    typst += `= Education\n\n`
-    education.forEach(edu => {
-      if (edu.blocks && edu.blocks.length > 0) {
-        typst += renderBlocksAsEntries(edu.blocks)
-      } else {
+    if (education[0].blocks && education[0].blocks.length > 0) {
+      // Use rich blocks (which should include H1)
+      typst += renderBlocksAsEntries(education[0].blocks)
+    } else {
+      // Fallback to legacy education data
+      typst += `= Education\n\n`
+      education.forEach(edu => {
         typst += `#resume-entry(
   title: "${escapeTypstString(edu.school)}",
   location: "${escapeTypstString(edu.location || '')}",
@@ -53,20 +55,14 @@ ${authorBlock}
   description: "${escapeTypstString(edu.degree)}",
 )\n`
         if (edu.description) typst += `#resume-item[\n  - ${escapeTypstContent(edu.description)}\n]\n\n`
-      }
-    })
+      })
+    }
   }
 
   // 2. Dynamic Sections
   sections.forEach(sec => {
     if (sec.blocks && sec.blocks.length > 0) {
-      // For dynamic sections, H1 is the title
-      const blocksWithoutH1 = sec.blocks.filter(b => b.type !== 'h1')
-      const h1Block = sec.blocks.find(b => b.type === 'h1')
-      const title = h1Block ? h1Block.content : sec.title
-      
-      typst += `= ${title}\n\n`
-      typst += renderBlocksAsEntries(blocksWithoutH1)
+      typst += renderBlocksAsEntries(sec.blocks)
     } else if (sec.entries && sec.entries.length > 0) {
       typst += `= ${sec.title}\n\n`
       sec.entries.forEach(entry => {
@@ -87,7 +83,7 @@ ${authorBlock}
     }
   })
 
-  // 3. Fixed Skills
+  // 3. Skills
   if (skills && skills.length > 0) {
     typst += `= Skills\n\n`
     const byCategory: any = {}
@@ -128,7 +124,10 @@ function renderBlocksAsEntries(blocks: RichTextBlock[]): string {
   }
 
   blocks.forEach(block => {
-    if (block.type === 'h2') {
+    if (block.type === 'h1') {
+      flush()
+      typst += `= ${escapeTypstContent(block.content)}\n\n`
+    } else if (block.type === 'h2') {
       flush()
       currentEntry = {
         title: renderFormattedText(block.content, block.bold, block.color),
