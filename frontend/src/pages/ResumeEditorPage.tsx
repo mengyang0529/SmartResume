@@ -241,6 +241,21 @@ export default function ResumeEditorPage() {
     setActiveTab(newSectionId)
   }
 
+  const removeSection = (sectionId: string) => {
+    handleChange()
+    setResumeData(prev => ({
+      ...prev,
+      sections: prev.sections.filter(s => s.id !== sectionId)
+    }))
+    setEditorBlocks(prev => {
+      const { [sectionId]: _, ...rest } = prev
+      return rest
+    })
+    if (activeTab === sectionId) {
+      setActiveTab('personal')
+    }
+  }
+
   const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true)
     try {
@@ -296,6 +311,7 @@ export default function ResumeEditorPage() {
               num={(i + 3).toString().padStart(2, '0')}
               label={sec.title} 
               icon={<FaLayerGroup />}
+              onDelete={() => removeSection(sec.id)}
             />
           ))}
 
@@ -446,17 +462,27 @@ function SectionDivider({ label, className }: any) {
   )
 }
 
-function NavTab({ active, onClick, num, label, icon }: any) {
+function NavTab({ active, onClick, num, label, icon, onDelete }: any) {
   return (
-    <button onClick={onClick} className={clsx(
-      "w-full group flex items-center px-4 py-5 rounded transition-all duration-300 relative",
+    <div className={clsx(
+      "w-full group flex items-center rounded transition-all duration-300 relative pr-2",
       active ? "bg-[#3a3a44] border-l-4 border-red-600" : "hover:bg-white/5"
     )}>
-      <span className={clsx("text-[10px] font-mono mr-4 transition-colors", active ? "text-red-500" : "text-gray-700")}>{num}</span>
-      <div className={clsx("mr-3 text-sm transition-colors", active ? "text-red-500" : "text-gray-600 group-hover:text-gray-400")}>{icon}</div>
-      <span className={clsx("text-[11px] font-black uppercase tracking-widest truncate transition-colors", active ? "text-gray-400" : "text-gray-500 group-hover:text-gray-400")}>{label}</span>
+      <button onClick={onClick} className="flex-1 flex items-center px-4 py-5 min-w-0">
+        <span className={clsx("text-[10px] font-mono mr-4 transition-colors shrink-0", active ? "text-red-500" : "text-gray-700")}>{num}</span>
+        <div className={clsx("mr-3 text-sm transition-colors shrink-0", active ? "text-red-500" : "text-gray-600 group-hover:text-gray-400")}>{icon}</div>
+        <span className={clsx("text-[11px] font-black uppercase tracking-widest truncate transition-colors text-left", active ? "text-gray-400" : "text-gray-500 group-hover:text-gray-400")}>{label}</span>
+      </button>
+      {onDelete && (
+        <button 
+          onClick={onDelete}
+          className={clsx("px-2 py-5 text-gray-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0", active && "mr-6")}
+        >
+          <FaTrash className="text-xs" />
+        </button>
+      )}
       {active && <motion.div layoutId="tabActive" className="absolute right-4 text-red-600"><FaChevronRight className="text-[10px]" /></motion.div>}
-    </button>
+    </div>
   )
 }
 
