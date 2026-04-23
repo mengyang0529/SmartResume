@@ -1,15 +1,18 @@
 import { useState, useRef, useEffect, type ChangeEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { 
-  FaPlus, FaTrash, FaArrowUp, FaArrowDown, FaSpinner, 
+  FaPlus, FaTrash, FaSpinner, 
   FaSave, FaDownload, FaChevronRight, FaFingerprint,
   FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaGraduationCap, FaUser
 } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { ResumeData, TemplateSettings, Entry, ResumeSection } from '../types/resume'
+import { ResumeData, TemplateSettings, ResumeSection } from '../types/resume'
+import type { RichTextBlock } from '../types/richText'
 import { generateResumeTypst } from '../utils/typstGenerator'
 import { pdfApi } from '../services/api'
+import { educationToBlocks, blocksToEducation, sectionToBlocks, blocksToSection } from '../utils/resumeTransforms'
+import { RichTextEditor } from '../components/RichTextEditor'
 import clsx from 'clsx'
 
 export default function ResumeEditorPage() {
@@ -42,6 +45,7 @@ export default function ResumeEditorPage() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [activeTab, setActiveTab] = useState('personal')
   const [isSaved, setIsSaved] = useState(true)
+  const [editorBlocks, setEditorBlocks] = useState<Record<string, RichTextBlock[]>>({})
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
@@ -198,6 +202,7 @@ export default function ResumeEditorPage() {
           return
         }
         setResumeData(normalizeResumeData(parsed))
+        setEditorBlocks({})
         setIsSaved(true)
         toast.success('Resume loaded from JSON.')
       } catch (error) {
@@ -220,12 +225,18 @@ export default function ResumeEditorPage() {
 
   const addSection = () => {
     handleChange()
+    const newSectionId = `sec-${crypto.randomUUID()}`
     const newSection: ResumeSection = {
-      id: `sec-${crypto.randomUUID()}`,
+      id: newSectionId,
       title: "New Section",
       entries: []
     }
     setResumeData(prev => ({ ...prev, sections: [...prev.sections, newSection] }))
+    setEditorBlocks(prev => ({
+      ...prev,
+      [newSectionId]: [{ id: `block-${crypto.randomUUID()}`, type: 'h1' as const, content: 'New Section' }]
+    }))
+    setActiveTab(newSectionId)
   }
 
   const updateSectionTitle = (id: string, title: string) => {
@@ -234,62 +245,14 @@ export default function ResumeEditorPage() {
       ...prev,
       sections: prev.sections.map(s => s.id === id ? { ...s, title } : s)
     }))
-  }
-
-  const addEntry = (sectionId: string) => {
-    handleChange()
-    const newEntry: Entry = {
-      id: crypto.randomUUID(),
-      title: "",
-      subtitle: "",
-      startDate: "",
-      endDate: "",
-      description: ""
-    }
-    setResumeData(prev => ({
-      ...prev,
-      sections: prev.sections.map(s => s.id === sectionId ? { ...s, entries: [newEntry, ...s.entries] } : s)
-    }))
-  }
-
-  const updateEntry = (sectionId: string, entryId: string, updates: Partial<Entry>) => {
-    handleChange()
-    setResumeData(prev => ({
-      ...prev,
-      sections: prev.sections.map(s => s.id === sectionId ? {
-        ...s,
-        entries: s.entries.map(e => e.id === entryId ? { ...e, ...updates } : e)
-      } : s)
-    }))
-  }
-
-  const moveEntry = (sectionId: string, entryId: string, direction: 'up' | 'down') => {
-    handleChange()
-    setResumeData(prev => ({
-      ...prev,
-      sections: prev.sections.map(s => {
-        if (s.id !== sectionId) return s
-        const entries = [...s.entries]
-        const index = entries.findIndex(e => e.id === entryId)
-        if (index === -1) return s
-        const newIndex = direction === 'up' ? index - 1 : index + 1
-        if (newIndex < 0 || newIndex >= entries.length) return s
-        const [moved] = entries.splice(index, 1)
-        entries.splice(newIndex, 0, moved)
-        return { ...s, entries }
-      })
-    }))
-  }
-
-  const removeEntry = (sectionId: string, entryId: string) => {
-    handleChange()
-    setResumeData(prev => ({
-      ...prev,
-      sections: prev.sections.map(s => s.id === sectionId ? {
-        ...s,
-        entries: s.entries.filter(e => e.id !== entryId)
-      } : s)
-    }))
+    setEditorBlocks(prev => {
+      const blocks = prev[id]
+      if (!blocks) return prev
+      return {
+        ...prev,
+        [id]: blocks.map(b => b.type === 'h1' ? { ...b, content: title } : b)
+      }
+    })
   }
 
   const handleDownloadPdf = async () => {
@@ -395,31 +358,21 @@ export default function ResumeEditorPage() {
                 subtitle="Academic milestones & theoretical foundation"
                 onAdd={() => {
                    handleChange();
-                   setResumeData(p => ({...p, education: [{ id: crypto.randomUUID(), school: "", degree: "", startDate: "", endDate: "" }, ...p.education]}));
+                   const newBlock: RichTextBlock = { id: `block-${crypto.randomUUID()}`, type: 'h2', content: '', rightContent: '' };
+                   const currentBlocks = editorBlocks['education'] || educationToBlocks(resumeData.education);
+                   const updatedBlocks = [...currentBlocks, { ...newBlock, type: 'h2' as const }, { id: `block-${crypto.randomUUID()}`, type: 'h3' as const, content: '', rightContent: '' }];
+                   setEditorBlocks(prev => ({...prev, education: updatedBlocks}));
+                   setResumeData(prev => ({...prev, education: blocksToEducation(updatedBlocks)}));
                 }}
               >
-                <div className="space-y-12">
-                  {resumeData.education.map((edu) => (
-                    <div key={edu.id} className="relative bg-[#0A0A0A] p-10 border border-gray-800/50 group transition-all hover:border-red-600/30">
-                      <button onClick={() => {
-                        handleChange();
-                        setResumeData(p => ({...p, education: p.education.filter(e => e.id !== edu.id)}));
-                      }} className="absolute top-4 right-4 text-gray-700 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><FaTrash className="text-xs" /></button>
-                      
-                      <div className="grid grid-cols-2 gap-10">
-                        <div className="col-span-2"><FoundryInput clean label="Institution" value={edu.school} onChange={(v: string) => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, school: v} : e)}))} /></div>
-                        <FoundryInput clean label="Qualification" value={edu.degree} onChange={(v: string) => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, degree: v} : e)}))} />
-                        <FoundryInput clean label="Honors" value={edu.location} onChange={(v: string) => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, location: v} : e)}))} />
-                        <FoundryInput clean label="Origin" value={edu.startDate} onChange={(v: string) => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, startDate: v} : e)}))} />
-                        <FoundryInput clean label="Completion" value={edu.endDate} onChange={(v: string) => setResumeData(p => ({...p, education: p.education.map(e => e.id === edu.id ? {...e, endDate: v} : e)}))} />
-                        <div className="col-span-2">
-                           <label className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-3 block">Field Context</label>
-                           <textarea className="w-full bg-transparent border border-gray-800/50 p-6 text-sm text-gray-400 focus:border-red-600 focus:ring-0 transition-all min-h-[100px] resize-none leading-relaxed" placeholder="Primary research focus..." value={edu.description} onChange={e => setResumeData(p => ({...p, education: p.education.map(item => item.id === edu.id ? {...item, description: e.target.value} : item)}))} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <RichTextEditor
+                  blocks={editorBlocks['education'] || educationToBlocks(resumeData.education)}
+                  onChange={(blocks) => {
+                    handleChange();
+                    setEditorBlocks(prev => ({...prev, education: blocks}));
+                    setResumeData(prev => ({...prev, education: blocksToEducation(blocks)}));
+                  }}
+                />
               </ModuleWrapper>
             )}
 
@@ -430,29 +383,32 @@ export default function ResumeEditorPage() {
                 title={sec.title}
                 isTitleEditable
                 onTitleChange={(v: string) => updateSectionTitle(sec.id, v)}
-                onAdd={() => addEntry(sec.id)}
+                onAdd={() => {
+                  handleChange();
+                  const currentBlocks = editorBlocks[sec.id] || sectionToBlocks(sec);
+                  const updatedBlocks = [
+                    ...currentBlocks,
+                    { id: `block-${crypto.randomUUID()}`, type: 'h2' as const, content: '', rightContent: '' },
+                    { id: `block-${crypto.randomUUID()}`, type: 'h3' as const, content: '', rightContent: '' },
+                  ];
+                  setEditorBlocks(prev => ({...prev, [sec.id]: updatedBlocks}));
+                  setResumeData(prev => ({
+                    ...prev,
+                    sections: prev.sections.map(s => s.id === sec.id ? blocksToSection(updatedBlocks, sec.id) : s)
+                  }));
+                }}
               >
-                <div className="space-y-12">
-                  {sec.entries.map((entry) => (
-                    <div key={entry.id} className="relative bg-[#0A0A0A] p-10 border border-gray-800/50 group transition-all hover:border-red-600/30">
-                      <div className="absolute top-4 right-4 flex space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <ControlButton onClick={() => moveEntry(sec.id, entry.id, 'up')} icon={<FaArrowUp />} />
-                         <ControlButton onClick={() => moveEntry(sec.id, entry.id, 'down')} icon={<FaArrowDown />} />
-                         <ControlButton onClick={() => removeEntry(sec.id, entry.id)} icon={<FaTrash />} danger />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-10">
-                        <div className="col-span-2"><FoundryInput clean label="Entity / Context" value={entry.title} onChange={(v: string) => updateEntry(sec.id, entry.id, { title: v })} /></div>
-                        <FoundryInput clean label="Role / Designation" value={entry.subtitle} onChange={(v: string) => updateEntry(sec.id, entry.id, { subtitle: v })} />
-                        <FoundryInput clean label="Timeline" value={entry.startDate} onChange={(v: string) => updateEntry(sec.id, entry.id, { startDate: v })} />
-                        <div className="col-span-2">
-                           <label className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-3 block">Execution Details</label>
-                           <textarea className="w-full bg-transparent border border-gray-800/50 p-6 text-sm text-gray-400 focus:border-red-600 focus:ring-0 transition-all min-h-[180px] leading-relaxed resize-none" placeholder="Impact and achievements..." value={entry.description} onChange={e => updateEntry(sec.id, entry.id, { description: e.target.value })} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <RichTextEditor
+                  blocks={editorBlocks[sec.id] || sectionToBlocks(sec)}
+                  onChange={(blocks) => {
+                    handleChange();
+                    setEditorBlocks(prev => ({...prev, [sec.id]: blocks}));
+                    setResumeData(prev => ({
+                      ...prev,
+                      sections: prev.sections.map(s => s.id === sec.id ? blocksToSection(blocks, sec.id) : s)
+                    }));
+                  }}
+                />
               </ModuleWrapper>
             ))}
 
@@ -572,16 +528,4 @@ function FoundryInput({ label, value, onChange, icon, clean }: any) {
   )
 }
 
-function ControlButton({ icon, onClick, danger }: any) {
-  return (
-    <button 
-      onClick={onClick} 
-      className={clsx(
-        "w-8 h-8 flex items-center justify-center border transition-all",
-        danger ? "border-gray-800 text-gray-700 hover:bg-red-600 hover:text-white hover:border-red-600" : "border-gray-800 text-gray-700 hover:border-gray-400 hover:text-white"
-      )}
-    >
-      <span className="text-[10px]">{icon}</span>
-    </button>
-  )
-}
+

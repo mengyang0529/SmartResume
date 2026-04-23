@@ -18,7 +18,8 @@ cd "$WORK_DIR"
 cp "$INPUT_FILE" ./input.typ
 
 # Copy template files to working directory
-cp -r /app/templates/awesome-cv/* ./
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cp -r "$SCRIPT_DIR/templates/awesome-cv/"* ./
 
 # Run typst compile with timeout
 set +e

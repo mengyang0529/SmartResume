@@ -20,7 +20,7 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Configuration
-CACHE_DIR = Path(os.getenv("CACHE_DIR", "/cache"))
+CACHE_DIR = Path(os.getenv("CACHE_DIR", "/tmp/typst-cache"))
 CACHE_ENABLED = os.getenv("CACHE_ENABLED", "true").lower() == "true"
 MAX_COMPILE_TIME = int(os.getenv("MAX_COMPILE_TIME", "30"))
 
@@ -112,7 +112,7 @@ def compile_typst(typst_content, cache_key=None):
         pdf_file = tmpdir_path / "document.pdf"
 
         # Prepare compile command
-        compile_script = Path("/app/compile.sh")
+        compile_script = Path(__file__).parent / "compile.sh"
         cmd = [str(compile_script), str(typ_file), str(pdf_file)]
 
         # Set environment for security
