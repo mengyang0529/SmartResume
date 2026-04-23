@@ -99,26 +99,27 @@ Important components on this page:
 
 ### Profile Page (`/profile`)
 
-The Profile page is a control center for user-like metadata, saved resume units, and workspace stats.
+The Profile page is a **job application tracking dashboard**. It provides an overview of job applications, interview timelines, and application statistics.
 
-Buttons and actions:
-- `Modify Credentials`
-  - Enables profile form editing
-- `Commit Changes`
-  - Saves profile edits and switches out of edit mode
-- Resume list actions:
-  - `Edit` icon takes the user to the editor
-  - `Download` icon (placeholder)
-  - `Delete` icon (placeholder)
-- `Inject New Template`
-  - Placeholder for future custom template creation
+**Statistics panel:**
+- Total applications count
+- Active applications count
+- Interview count
+- Offer/rejection rate summary
 
-Cards and panels:
-- System credentials card with profile fields
-- Saved resume units list
-- Resource usage metrics
-- Custom modules list
-- Recent event logs
+**Application list:**
+- Displays all job applications with company, job title, status, and applied date
+- Status badges: `applied`, `interview`, `offer`, `rejected`, etc.
+- Supports filtering and quick actions
+
+**Application timeline:**
+- Visual timeline showing the progression of each application
+- Interview rounds and outcomes
+
+**Data flow:**
+- Fetches applications from `GET /api/v1/applications`
+- Creates new applications via `POST /api/v1/applications`
+- Manages interview records via `/api/v1/applications/:id/interviews`
 
 ## Components
 
