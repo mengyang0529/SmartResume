@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { 
   FaPlus, FaTrash, FaSpinner, 
   FaSave, FaDownload, FaChevronRight, FaFingerprint,
-  FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaGraduationCap, FaUser
+  FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaGraduationCap, FaUser, FaEye, FaUpload
 } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -249,10 +249,27 @@ export default function ResumeEditorPage() {
       const cacheKey = result?.cacheKey || result?.cache_key
       if (cacheKey) {
         window.open(pdfApi.downloadPdf(cacheKey), '_blank')
-        toast.success('PDF Generated!')
+        toast.success('PDF Download started')
       }
     } catch (error) {
-      toast.error('Generation failed')
+      toast.error('Download failed')
+    } finally {
+      setIsGeneratingPdf(false)
+    }
+  }
+
+  const handlePreviewPdf = async () => {
+    setIsGeneratingPdf(true)
+    try {
+      const typstSource = generateResumeTypst(resumeData, templateSettings)
+      const result = await pdfApi.generateFromTypst(typstSource)
+      const cacheKey = result?.cacheKey || result?.cache_key
+      if (cacheKey) {
+        window.open(pdfApi.previewPdf(cacheKey), '_blank')
+        toast.success('Preview ready')
+      }
+    } catch (error) {
+      toast.error('Preview failed')
     } finally {
       setIsGeneratingPdf(false)
     }
@@ -260,16 +277,16 @@ export default function ResumeEditorPage() {
 
   return (
     <div className="min-h-screen bg-[#1e1e22] font-sans text-gray-400 flex selection:bg-red-500/30">
-      <aside className="w-[280px] bg-[#3a3a44] border-r border-gray-700/30 fixed top-20 bottom-0 left-0 z-40 flex flex-col">
-        <nav className="flex-1 overflow-y-auto px-6 py-10 space-y-2 custom-scrollbar">
+      <aside className="w-[280px] bg-[#3a3a44] border-r border-gray-700/30 fixed top-14 bottom-0 left-0 z-40 flex flex-col">
+        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1 custom-scrollbar">
           <NavTab active={activeTab === 'personal'} onClick={() => setActiveTab('personal')} num="01" label="Identity" icon={<FaFingerprint />} />
           
-          <div className="mt-8 flex items-center justify-between px-4 mb-2">
+          <div className="mt-6 flex items-center justify-between px-4 mb-2">
             <SectionDivider label="Modules" />
             <button onClick={addSection} className="text-gray-500 hover:text-red-500 transition-colors"><FaPlus className="text-xs" /></button>
           </div>
           
-          <NavTab active={activeTab === 'education'} onClick={() => setActiveTab('education')} num="02" label="Education" icon={<FaGraduationCap />} />
+          <NavTab active={activeTab === 'education'} onClick={() => setActiveTab('education')} num="02" label="Education" icon={<FaLayerGroup />} />
           
           {resumeData.sections.map((sec, i) => (
             <NavTab 
@@ -282,36 +299,50 @@ export default function ResumeEditorPage() {
             />
           ))}
 
-          <SectionDivider label="Finalize" className="mt-8" />
+          <SectionDivider label="Finalize" className="mt-6" />
           <NavTab active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} num="--" label="Skills" icon={<FaUser />} />
         </nav>
-
-        <div className="p-8 border-t border-gray-700/30 bg-[#3a3a44] space-y-3">
-          <button
-            onClick={openJsonFile}
-            className="w-full bg-[#3a3a44] border border-gray-700 hover:border-red-500 hover:bg-[#464650] text-gray-400 font-black py-4 rounded uppercase tracking-widest text-[10px] flex items-center justify-center space-x-3 transition-all"
-          >
-            <FaPlus className="text-xs" />
-            <span>Create Resume</span>
-          </button>
-          <button 
-            onClick={handleDownloadPdf} 
-            disabled={isGeneratingPdf} 
-            className="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded uppercase tracking-widest text-[10px] flex items-center justify-center space-x-3 transition-all disabled:opacity-50 shadow-[0_10px_30px_rgba(220,38,38,0.2)]"
-          >
-            {isGeneratingPdf ? <FaSpinner className="animate-spin" /> : <><FaDownload className="text-xs" /> <span>Download PDF</span></>}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json,.json"
-            className="hidden"
-            onChange={handleJsonFileUpload}
-          />
-        </div>
       </aside>
 
-      <main className="flex-1 ml-[280px] p-20 flex justify-center bg-[#1e1e22]">
+      <main className="flex-1 ml-[280px] p-4 flex flex-col items-center bg-[#1e1e22]">
+        {/* Top Header Navigation for Actions */}
+        <div className="w-full max-w-4xl flex items-center justify-between mb-2 bg-[#26262c] p-3 border border-gray-700/30 rounded-lg shadow-2xl">
+          <div className="flex items-center space-x-4">
+             <button
+              onClick={openJsonFile}
+              className="px-4 py-2 bg-[#3a3a44] border border-gray-700 hover:border-red-500 hover:bg-[#464650] text-gray-300 font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest"
+            >
+              <FaUpload className="text-xs" />
+              <span>Import JSON</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={handleJsonFileUpload}
+            />
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={handlePreviewPdf} 
+              disabled={isGeneratingPdf} 
+              className="px-5 py-2 bg-[#3a3a44] border border-gray-700 hover:border-blue-500 hover:bg-[#464650] text-gray-300 font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest disabled:opacity-50"
+            >
+              {isGeneratingPdf ? <FaSpinner className="animate-spin" /> : <><FaEye className="text-xs" /> <span>Preview</span></>}
+            </button>
+
+            <button 
+              onClick={handleDownloadPdf} 
+              disabled={isGeneratingPdf} 
+              className="px-5 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest disabled:opacity-50 shadow-[0_10px_30px_rgba(220,38,38,0.2)]"
+            >
+              {isGeneratingPdf ? <FaSpinner className="animate-spin" /> : <><FaDownload className="text-xs" /> <span>Download PDF</span></>}
+            </button>
+          </div>
+        </div>
+
         <div className="w-full max-w-4xl">
           <AnimatePresence mode="wait">
             {activeTab === 'personal' && (
@@ -347,7 +378,6 @@ export default function ResumeEditorPage() {
               </ModuleWrapper>
             )}
 
-            {/* Skills Module */}
             {activeTab === 'skills' && (
               <ModuleWrapper key="skills">
                 <div className="grid grid-cols-2 gap-10 mt-8">
@@ -432,7 +462,7 @@ function NavTab({ active, onClick, num, label, icon }: any) {
 
 function ModuleWrapper({ children }: any) {
   return (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="pb-32">
+    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="pb-4">
       {children}
     </motion.div>
   )
@@ -440,7 +470,7 @@ function ModuleWrapper({ children }: any) {
 
 function FoundryInput({ label, value, onChange, icon, clean }: any) {
   return (
-    <div className="flex flex-col space-y-4 group/input">
+    <div className="flex flex-col space-y-1 group/input">
       <div className="flex items-center space-x-2">
         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest group-focus-within/input:text-red-500 transition-colors">{label}</label>
         {icon && <span className="text-[10px] text-gray-600">{icon}</span>}

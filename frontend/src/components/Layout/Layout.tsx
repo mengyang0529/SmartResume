@@ -31,56 +31,51 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-[#1e1e22] text-gray-400 font-sans flex flex-col">
       {/* Global Horizontal Header */}
-      <header className="fixed top-0 left-0 right-0 h-20 bg-[#32323a]/90 backdrop-blur-xl border-b border-gray-700/30 z-[100] flex items-center justify-between px-10">
+      <header className="fixed top-0 left-0 right-0 h-14 bg-[#32323a]/90 backdrop-blur-xl border-b border-gray-700/30 z-[100] flex items-center justify-between px-8">
         {/* Logo Section */}
-        <Link to="/" className="flex items-center space-x-4 group shrink-0">
-          <div className="w-10 h-10 bg-red-600 rounded flex items-center justify-center text-gray-300 shadow-[0_0_15px_rgba(220,38,38,0.2)] group-hover:shadow-[0_0_25px_rgba(220,38,38,0.4)] transition-all">
-            <FaTerminal className="text-lg" />
+        <Link to="/" className="flex items-center space-x-3 group shrink-0">
+          <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-gray-300 shadow-[0_0_10px_rgba(220,38,38,0.2)] group-hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-all">
+            <FaTerminal className="text-base" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-black uppercase tracking-[0.2em] group-hover:text-red-500 transition-colors leading-none">Smart Resume</span>
-            <span className="text-[9px] font-mono text-gray-600 uppercase tracking-widest mt-1">Foundry OS v2.4</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-red-500 transition-colors leading-none">Smart Resume</span>
+            <span className="text-[8px] font-mono text-gray-600 uppercase tracking-widest mt-1">Foundry OS v2.4</span>
           </div>
         </Link>
 
         {/* Navigation Items */}
-        <nav className="flex items-center space-x-2">
+        <nav className="flex items-center space-x-1">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className={clsx(
-                "group relative flex items-center px-6 py-3 rounded transition-all duration-300",
+                "group relative flex items-center px-4 py-2 rounded transition-all duration-300",
                 isActive(item.path) 
                   ? "bg-[#32323a] text-gray-300 border-b-2 border-red-600" 
                   : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
               )}
             >
-              <span className={clsx("text-[9px] font-mono mr-3 transition-colors", isActive(item.path) ? "text-red-500" : "text-gray-700")}>{item.num}</span>
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] transition-colors">{item.label}</span>
+              <span className={clsx("text-[8px] font-mono mr-2 transition-colors", isActive(item.path) ? "text-red-500" : "text-gray-700")}>{item.num}</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.15em] transition-colors">{item.label}</span>
               {isActive(item.path) && (
-                <motion.div layoutId="headerActiveGlow" className="absolute inset-x-0 bottom-[-2px] h-[2px] bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.8)]" />
+                <motion.div layoutId="headerActiveGlow" className="absolute inset-x-0 bottom-[-2px] h-[2px] bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
               )}
             </Link>
           ))}
         </nav>
 
         {/* System & Social Section */}
-        <div className="flex items-center space-x-8 shrink-0">
-          <div className="hidden lg:flex items-center space-x-3">
-             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-             <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Compiler Online</span>
-          </div>
-          <div className="flex items-center space-x-4 border-l border-gray-700/50 pl-8">
-            <button onClick={handleCreateResume} className="bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2.5 rounded transition-all shadow-[0_10px_20px_rgba(220,38,38,0.2)]">
-               Create Resume
-            </button>
+        <div className="flex items-center space-x-6 shrink-0">
+          <div className="hidden lg:flex items-center space-x-2">
+             <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.5)]"></div>
+             <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Compiler Online</span>
           </div>
         </div>
       </header>
 
       {/* Content Area */}
-      <main className="flex-1 mt-20">
+      <main className="flex-1 mt-14">
         <Outlet />
       </main>
 

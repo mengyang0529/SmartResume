@@ -172,7 +172,7 @@ export default function RichTextEditor({ blocks, onChange, placeholder }: RichTe
         canMoveDown={activeIndex >= 0 && activeIndex < blocks.length - 1}
       />
 
-      <div ref={editorRef} className="p-4 space-y-0.5 min-h-[200px]">
+      <div ref={editorRef} className="p-3 space-y-0.5 min-h-[150px]">
         {blocks.length === 0 && placeholder && (
           <div className="text-gray-800 text-sm italic">{placeholder}</div>
         )}
@@ -192,7 +192,7 @@ export default function RichTextEditor({ blocks, onChange, placeholder }: RichTe
       </div>
 
       {/* Add block at bottom */}
-      <div className="px-4 pb-4">
+      <div className="px-3 pb-3">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
