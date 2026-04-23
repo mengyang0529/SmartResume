@@ -146,7 +146,3 @@ See [`backend/API.md`](backend/API.md) for details, including request/response d
 ## Notes
 
 The current project has completed the Typst migration and Profile page refactoring into a job application tracker. Core features include resume generation and job application management. Database migrations have been verified, backend routes have been tested, and both frontend and backend builds are error-free.
-
-## License
-
-MIT
