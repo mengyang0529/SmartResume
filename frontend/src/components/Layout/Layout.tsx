@@ -29,12 +29,12 @@ export default function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-100 font-sans flex flex-col">
+    <div className="min-h-screen bg-[#1e1e22] text-gray-400 font-sans flex flex-col">
       {/* Global Horizontal Header */}
-      <header className="fixed top-0 left-0 right-0 h-20 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-gray-800/30 z-[100] flex items-center justify-between px-10">
+      <header className="fixed top-0 left-0 right-0 h-20 bg-[#32323a]/90 backdrop-blur-xl border-b border-gray-700/30 z-[100] flex items-center justify-between px-10">
         {/* Logo Section */}
         <Link to="/" className="flex items-center space-x-4 group shrink-0">
-          <div className="w-10 h-10 bg-red-600 rounded flex items-center justify-center text-white shadow-[0_0_15px_rgba(220,38,38,0.2)] group-hover:shadow-[0_0_25px_rgba(220,38,38,0.4)] transition-all">
+          <div className="w-10 h-10 bg-red-600 rounded flex items-center justify-center text-gray-300 shadow-[0_0_15px_rgba(220,38,38,0.2)] group-hover:shadow-[0_0_25px_rgba(220,38,38,0.4)] transition-all">
             <FaTerminal className="text-lg" />
           </div>
           <div className="flex flex-col">
@@ -52,8 +52,8 @@ export default function Layout() {
               className={clsx(
                 "group relative flex items-center px-6 py-3 rounded transition-all duration-300",
                 isActive(item.path) 
-                  ? "bg-[#111111] text-white border-b-2 border-red-600" 
-                  : "text-gray-500 hover:text-gray-200 hover:bg-white/5"
+                  ? "bg-[#32323a] text-gray-300 border-b-2 border-red-600" 
+                  : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
               )}
             >
               <span className={clsx("text-[9px] font-mono mr-3 transition-colors", isActive(item.path) ? "text-red-500" : "text-gray-700")}>{item.num}</span>
@@ -71,7 +71,7 @@ export default function Layout() {
              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
              <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Compiler Online</span>
           </div>
-          <div className="flex items-center space-x-4 border-l border-gray-800/50 pl-8">
+          <div className="flex items-center space-x-4 border-l border-gray-700/50 pl-8">
             <button onClick={handleCreateResume} className="bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2.5 rounded transition-all shadow-[0_10px_20px_rgba(220,38,38,0.2)]">
                Create Resume
             </button>
@@ -85,7 +85,7 @@ export default function Layout() {
       </main>
 
       {/* Industrial Footer */}
-      <footer className="bg-[#0A0A0A] border-t border-gray-800/20 py-12 px-10">
+      <footer className="bg-[#1e1e22] border-t border-gray-700/20 py-12 px-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex flex-col items-center md:items-start space-y-2">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-600">

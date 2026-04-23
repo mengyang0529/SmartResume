@@ -273,9 +273,9 @@ export default function ResumeEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] font-sans text-gray-100 flex selection:bg-red-500/30">
+    <div className="min-h-screen bg-[#1e1e22] font-sans text-gray-400 flex selection:bg-red-500/30">
       {/* Sidebar - Now with updated fixed positioning to account for header */}
-      <aside className="w-[280px] bg-[#0A0A0A] border-r border-gray-800/30 fixed top-20 bottom-0 left-0 z-40 flex flex-col">
+      <aside className="w-[280px] bg-[#3a3a44] border-r border-gray-700/30 fixed top-20 bottom-0 left-0 z-40 flex flex-col">
         <nav className="flex-1 overflow-y-auto px-6 py-10 space-y-2 custom-scrollbar">
           <NavTab active={activeTab === 'personal'} onClick={() => setActiveTab('personal')} num="01" label="Identity" icon={<FaFingerprint />} />
           <NavTab active={activeTab === 'education'} onClick={() => setActiveTab('education')} num="02" label="Education" icon={<FaGraduationCap />} />
@@ -300,10 +300,10 @@ export default function ResumeEditorPage() {
         </nav>
 
         {/* Execute Build Button moved here, made more prominent */}
-        <div className="p-8 border-t border-gray-800/30 bg-[#080808] space-y-3">
+        <div className="p-8 border-t border-gray-700/30 bg-[#3a3a44] space-y-3">
           <button
             onClick={openJsonFile}
-            className="w-full bg-[#111111] border border-gray-700 hover:border-red-500 hover:bg-[#181818] text-gray-200 font-black py-4 rounded uppercase tracking-widest text-[10px] flex items-center justify-center space-x-3 transition-all"
+            className="w-full bg-[#3a3a44] border border-gray-700 hover:border-red-500 hover:bg-[#464650] text-gray-400 font-black py-4 rounded uppercase tracking-widest text-[10px] flex items-center justify-center space-x-3 transition-all"
           >
             <FaPlus className="text-xs" />
             <span>Create Resume</span>
@@ -326,7 +326,7 @@ export default function ResumeEditorPage() {
       </aside>
 
       {/* Main Foundry Area */}
-      <main className="flex-1 ml-[280px] p-20 flex justify-center bg-[#050505]">
+      <main className="flex-1 ml-[280px] p-20 flex justify-center bg-[#1e1e22]">
         <div className="w-full max-w-4xl">
           <AnimatePresence mode="wait">
             {/* Identity Module */}
@@ -425,7 +425,7 @@ export default function ResumeEditorPage() {
               >
                 <div className="grid grid-cols-2 gap-10">
                   {resumeData.skills.map(skill => (
-                    <div key={skill.id} className="bg-[#0A0A0A] p-8 border border-gray-800/50 relative group hover:border-red-600/30 transition-all">
+                    <div key={skill.id} className="bg-[#3a3a44] p-8 border border-gray-700/50 relative group hover:border-red-600/30 transition-all">
                       <button onClick={() => {
                         handleChange();
                         setResumeData(p => ({...p, skills: p.skills.filter(s => s.id !== skill.id)}));
@@ -433,7 +433,7 @@ export default function ResumeEditorPage() {
                       <FoundryInput clean label="Domain" value={skill.category} onChange={(v: string) => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, category: v} : s)}))} />
                       <div className="mt-8">
                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-3 block">Protocols / Tools</label>
-                         <textarea className="w-full bg-transparent border border-gray-800/50 p-4 text-sm font-mono text-red-500 focus:border-red-600 focus:ring-0 min-h-[80px] resize-none" value={skill.name} onChange={e => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)}))} />
+                         <textarea className="w-full bg-transparent border border-gray-700/50 p-4 text-sm font-mono text-red-500 focus:border-red-600 focus:ring-0 min-h-[80px] resize-none" value={skill.name} onChange={e => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)}))} />
                       </div>
                     </div>
                   ))}
@@ -464,7 +464,7 @@ function SectionDivider({ label, className }: any) {
   return (
     <div className={clsx("flex items-center space-x-4 px-4 py-4", className)}>
       <div className="h-[1px] flex-1 bg-gray-800/50"></div>
-      <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">{label}</span>
+      <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</span>
       <div className="h-[1px] w-4 bg-gray-800/50"></div>
     </div>
   )
@@ -474,11 +474,11 @@ function NavTab({ active, onClick, num, label, icon }: any) {
   return (
     <button onClick={onClick} className={clsx(
       "w-full group flex items-center px-4 py-5 rounded transition-all duration-300 relative",
-      active ? "bg-[#111111] border-l-4 border-red-600" : "hover:bg-gray-900/50"
+      active ? "bg-[#3a3a44] border-l-4 border-red-600" : "hover:bg-white/5"
     )}>
       <span className={clsx("text-[10px] font-mono mr-4 transition-colors", active ? "text-red-500" : "text-gray-700")}>{num}</span>
-      <div className={clsx("mr-3 text-sm transition-colors", active ? "text-red-500" : "text-gray-600 group-hover:text-gray-300")}>{icon}</div>
-      <span className={clsx("text-[11px] font-black uppercase tracking-widest truncate transition-colors", active ? "text-white" : "text-gray-500 group-hover:text-gray-300")}>{label}</span>
+      <div className={clsx("mr-3 text-sm transition-colors", active ? "text-red-500" : "text-gray-600 group-hover:text-gray-400")}>{icon}</div>
+      <span className={clsx("text-[11px] font-black uppercase tracking-widest truncate transition-colors", active ? "text-gray-400" : "text-gray-500 group-hover:text-gray-400")}>{label}</span>
       {active && <motion.div layoutId="tabActive" className="absolute right-4 text-red-600"><FaChevronRight className="text-[10px]" /></motion.div>}
     </button>
   )
@@ -487,7 +487,7 @@ function NavTab({ active, onClick, num, label, icon }: any) {
 function ModuleWrapper({ title, subtitle, children, isTitleEditable, onTitleChange, onAdd }: any) {
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="pb-32">
-      <header className="mb-16 flex items-end justify-between border-b border-gray-800/50 pb-8">
+      <header className="mb-16 flex items-end justify-between border-b border-gray-700/50 pb-8">
         <div className="flex-1 mr-8">
           {isTitleEditable ? (
             <input 
@@ -496,9 +496,9 @@ function ModuleWrapper({ title, subtitle, children, isTitleEditable, onTitleChan
               onChange={(e) => onTitleChange(e.target.value)} 
             />
           ) : (
-            <h1 className="text-5xl font-black uppercase tracking-tighter text-white mb-4">{title}</h1>
+            <h1 className="text-5xl font-black uppercase tracking-tighter text-gray-400 mb-4">{title}</h1>
           )}
-          <p className="text-gray-600 font-mono text-xs uppercase tracking-widest">{subtitle || 'Deployment module configuration'}</p>
+          <p className="text-gray-500 font-mono text-xs uppercase tracking-widest">{subtitle || 'Deployment module configuration'}</p>
         </div>
         <div className="flex space-x-3">
           {onAdd && <button onClick={onAdd} className="px-8 py-3 bg-white text-black hover:bg-red-600 hover:text-white transition-all text-[10px] font-black uppercase shadow-xl">Add New Entry</button>}
@@ -513,13 +513,13 @@ function FoundryInput({ label, value, onChange, icon, clean }: any) {
   return (
     <div className="flex flex-col space-y-4 group/input">
       <div className="flex items-center space-x-2">
-        <label className="text-[10px] font-black text-gray-700 uppercase tracking-widest group-focus-within/input:text-red-500 transition-colors">{label}</label>
-        {icon && <span className="text-[10px] text-gray-800">{icon}</span>}
+        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest group-focus-within/input:text-red-500 transition-colors">{label}</label>
+        {icon && <span className="text-[10px] text-gray-600">{icon}</span>}
       </div>
       <input 
         className={clsx(
-          "w-full bg-transparent p-0 text-xl font-medium text-gray-200 focus:ring-0 placeholder:text-gray-900 transition-all",
-          !clean ? "border-b border-gray-800 focus:border-red-600" : "border-none"
+          "w-full bg-transparent p-0 text-xl font-medium text-gray-400 focus:ring-0 placeholder:text-gray-900 transition-all",
+          !clean ? "border-b border-gray-700 focus:border-red-600" : "border-none"
         )}
         value={value || ''} 
         onChange={(e) => onChange(e.target.value)} 

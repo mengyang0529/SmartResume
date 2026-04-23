@@ -6,7 +6,7 @@ export default function HomePage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center overflow-hidden relative">
+    <div className="min-h-screen bg-[#1e1e22] flex flex-col items-center justify-center overflow-hidden relative">
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,59,48,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,59,48,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
       
@@ -25,7 +25,7 @@ export default function HomePage() {
              <span className="text-[10px] font-black uppercase tracking-[0.2em]">System Initialized: Forge v2.0</span>
           </div>
 
-          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-white mb-8 leading-[0.9]">
+          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-gray-300 mb-8 leading-[0.9]">
             Build Resumes <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-red-500 to-red-400">Like Engineering.</span>
           </h1>
@@ -44,14 +44,14 @@ export default function HomePage() {
             </button>
             <button
               onClick={() => navigate('/gallery')}
-              className="px-12 py-5 bg-[#111111] border border-gray-800 hover:border-gray-600 text-gray-300 font-black uppercase tracking-widest text-xs rounded transition-all hover:bg-[#1A1A1A]"
+              className="px-12 py-5 bg-[#32323a] border border-gray-700 hover:border-gray-600 text-gray-300 font-black uppercase tracking-widest text-xs rounded transition-all hover:bg-[#3e3e48]"
             >
               Browse Templates
             </button>
           </div>
 
           {/* Industrial Metric Section */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 border-t border-gray-800/50 pt-16 w-full">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 border-t border-gray-700/50 pt-16 w-full">
             <Metric label="Latency" value="250ms" />
             <Metric label="Output" value="Typst PDF" />
             <Metric label="System" value="Modular" />

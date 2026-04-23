@@ -55,9 +55,9 @@ export default function RichTextToolbar({
   canMoveDown,
 }: RichTextToolbarProps) {
   return (
-    <div className="sticky top-0 z-10 bg-[#0A0A0A] border-b border-gray-800/50 px-4 py-3 flex flex-wrap items-center gap-2">
+    <div className="sticky top-0 z-10 bg-[#26262c] border-b border-gray-700/50 px-4 py-3 flex flex-wrap items-center gap-2">
       {/* Block type selector */}
-      <div className="flex items-center gap-1 bg-[#111111] rounded p-1">
+      <div className="flex items-center gap-1 bg-[#32323a] rounded p-1">
         {blockTypes.map(({ type, label }) => (
           <button
             key={type}
@@ -65,7 +65,7 @@ export default function RichTextToolbar({
             className={clsx(
               'px-3 py-1.5 rounded text-[11px] font-bold transition-all',
               activeBlockType === type
-                ? 'bg-red-600 text-white'
+                ? 'bg-red-600 text-gray-300'
                 : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
             )}
             title={`Convert to ${type}`}
@@ -114,7 +114,7 @@ export default function RichTextToolbar({
       {/* Block operations */}
       <button
         onClick={onAddBlock}
-        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-white hover:bg-gray-800 transition-all"
+        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-all"
         title="Add block below"
       >
         <FaPlus className="text-[10px]" />
@@ -122,7 +122,7 @@ export default function RichTextToolbar({
       <button
         onClick={() => onMoveBlock('up')}
         disabled={!canMoveUp}
-        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-white hover:bg-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         title="Move up"
       >
         <FaArrowUp className="text-[10px]" />
@@ -130,7 +130,7 @@ export default function RichTextToolbar({
       <button
         onClick={() => onMoveBlock('down')}
         disabled={!canMoveDown}
-        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-white hover:bg-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         title="Move down"
       >
         <FaArrowDown className="text-[10px]" />

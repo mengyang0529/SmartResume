@@ -154,7 +154,7 @@ export default function RichTextEditor({ blocks, onChange, placeholder }: RichTe
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="border border-gray-800/50 rounded bg-[#050505]">
+    <div className="border border-gray-700/50 rounded bg-[#26262c]">
       <RichTextToolbar
         activeBlockType={activeBlock?.type || null}
         activeBlockBold={activeBlock?.bold || false}
@@ -197,7 +197,7 @@ export default function RichTextEditor({ blocks, onChange, placeholder }: RichTe
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => addBlock(undefined, 'paragraph')}
-          className="w-full py-3 border border-dashed border-gray-800 text-gray-700 hover:text-gray-400 hover:border-gray-600 rounded text-[11px] font-bold uppercase tracking-widest transition-all"
+          className="w-full py-3 border border-dashed border-gray-700 text-gray-700 hover:text-gray-400 hover:border-gray-600 rounded text-[11px] font-bold uppercase tracking-widest transition-all"
         >
           + Add Block
         </motion.button>

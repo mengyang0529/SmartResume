@@ -132,7 +132,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] py-24 px-10">
+    <div className="min-h-screen bg-[#1e1e22] py-24 px-10">
       <div className="max-w-7xl mx-auto">
         <header className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div>
@@ -140,7 +140,7 @@ export default function ProfilePage() {
               <div className="h-[2px] w-12 bg-red-600"></div>
               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-red-500">Career Operations</span>
             </div>
-            <h1 className="text-6xl font-black uppercase tracking-tighter text-white leading-none">
+            <h1 className="text-6xl font-black uppercase tracking-tighter text-gray-300 leading-none">
               Job Application <br /> <span className="text-gray-600">Tracker</span>
             </h1>
           </div>
@@ -165,7 +165,7 @@ export default function ProfilePage() {
                 <div className="md:col-span-2">
                   <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4 block">Search Notes</label>
                   <textarea
-                    className="w-full bg-[#050505] border border-gray-800 p-6 text-sm text-gray-400 focus:ring-1 focus:ring-red-600 transition-all min-h-[140px] resize-none leading-relaxed"
+                    className="w-full bg-[#26262c] border border-gray-700 p-6 text-sm text-gray-400 focus:ring-1 focus:ring-red-600 transition-all min-h-[140px] resize-none leading-relaxed"
                     value={jobProfile.notes}
                     onChange={(e) => handleJobProfileChange('notes', e.target.value)}
                     disabled={!isEditing}
@@ -183,11 +183,11 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.04 }}
-                    className="group p-6 bg-[#050505] border border-gray-800/50 hover:border-red-600 transition-all"
+                    className="group p-6 bg-[#26262c] border border-gray-700/50 hover:border-red-600 transition-all"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h3 className="text-sm font-black uppercase tracking-widest text-white">{application.company}</h3>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-300">{application.company}</h3>
                         <p className="text-[11px] text-gray-500 mt-2">{application.jobTitle} · {application.location || 'Remote'}</p>
                       </div>
                       <span className="text-[10px] font-mono uppercase text-red-500">{application.stage}</span>
@@ -233,12 +233,12 @@ export default function ProfilePage() {
             <ProfileCard title="Interview Pipeline" icon={<FaSearchLocation />}>
               <div className="space-y-4">
                 {applications.flatMap((app) => app.interviews || []).slice(0, 3).map((interview) => (
-                  <div key={interview.id} className="p-5 bg-[#050505] border border-gray-800/50 transition-all">
+                  <div key={interview.id} className="p-5 bg-[#26262c] border border-gray-700/50 transition-all">
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-[10px] uppercase tracking-[0.3em] text-gray-500">Round {interview.round}</span>
                       <span className="text-[10px] font-black uppercase text-red-500">{interview.outcome}</span>
                     </div>
-                    <p className="text-sm text-white">{interview.interviewType} with {interview.interviewer}</p>
+                    <p className="text-sm text-gray-300">{interview.interviewType} with {interview.interviewer}</p>
                     <p className="text-[11px] text-gray-500 mt-2">{interview.scheduledAt ? interview.scheduledAt.slice(0, 16).replace('T', ' ') : 'TBD'}</p>
                   </div>
                 ))}
@@ -270,7 +270,7 @@ export default function ProfilePage() {
 
 function ProfileCard({ title, icon, children }: any) {
   return (
-    <div className="bg-[#0A0A0A] border border-gray-800/50 p-10 relative overflow-hidden group hover:border-red-600/50 transition-all duration-500">
+    <div className="bg-[#26262c] border border-gray-700/50 p-10 relative overflow-hidden group hover:border-red-600/50 transition-all duration-500">
       <div className="absolute top-0 right-0 w-24 h-24 bg-red-600/5 rotate-45 translate-x-12 -translate-y-12 transition-colors group-hover:bg-red-600/10"></div>
       <header className="flex items-center space-x-4 mb-10">
         <div className="text-gray-600 group-hover:text-red-500 transition-colors">{icon}</div>
@@ -286,7 +286,7 @@ function FoundryInput({ label, value, onChange, disabled }: any) {
     <div className="flex flex-col space-y-3 group/input">
       <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest group-focus-within/input:text-red-500 transition-colors">{label}</label>
       <input
-        className="w-full bg-transparent p-0 text-lg font-medium text-gray-200 border-b border-gray-800 focus:border-red-600 focus:ring-0 transition-all disabled:text-gray-600 disabled:border-transparent"
+        className="w-full bg-transparent p-0 text-lg font-medium text-gray-300 border-b border-gray-700 focus:border-red-600 focus:ring-0 transition-all disabled:text-gray-600 disabled:border-transparent"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
@@ -299,7 +299,7 @@ function ActionButton({ label, onClick }: any) {
   return (
     <button
       onClick={onClick}
-      className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] border border-gray-800 text-gray-400 hover:border-red-500 hover:text-white transition-all"
+      className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] border border-gray-700 text-gray-400 hover:border-red-500 hover:text-white transition-all"
     >
       {label}
     </button>
