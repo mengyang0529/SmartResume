@@ -1,4 +1,5 @@
 import { ResumeData, TemplateSettings } from '../types/resume'
+import { RichTextBlock } from '../types/richText'
 
 export function generateResumeTypst(data: ResumeData, settings: TemplateSettings): string {
   const { personal, education, sections, skills, summary } = data
@@ -38,23 +39,35 @@ ${authorBlock}
     typst += `= Summary\n\n#resume-item[\n  ${escapeTypstContent(summary)}\n]\n\n`
   }
 
-  // 1. Fixed Education
+  // 1. Education
   if (education && education.length > 0) {
     typst += `= Education\n\n`
     education.forEach(edu => {
-      typst += `#resume-entry(
+      if (edu.blocks && edu.blocks.length > 0) {
+        typst += renderBlocksAsEntries(edu.blocks)
+      } else {
+        typst += `#resume-entry(
   title: "${escapeTypstString(edu.school)}",
   location: "${escapeTypstString(edu.location || '')}",
   date: "${escapeTypstString(edu.startDate)} -- ${escapeTypstString(edu.endDate || '')}",
   description: "${escapeTypstString(edu.degree)}",
 )\n`
-      if (edu.description) typst += `#resume-item[\n  - ${escapeTypstContent(edu.description)}\n]\n\n`
+        if (edu.description) typst += `#resume-item[\n  - ${escapeTypstContent(edu.description)}\n]\n\n`
+      }
     })
   }
 
-  // 2. Dynamic Sections (Work, ADAS, Projects, etc.)
+  // 2. Dynamic Sections
   sections.forEach(sec => {
-    if (sec.entries && sec.entries.length > 0) {
+    if (sec.blocks && sec.blocks.length > 0) {
+      // For dynamic sections, H1 is the title
+      const blocksWithoutH1 = sec.blocks.filter(b => b.type !== 'h1')
+      const h1Block = sec.blocks.find(b => b.type === 'h1')
+      const title = h1Block ? h1Block.content : sec.title
+      
+      typst += `= ${title}\n\n`
+      typst += renderBlocksAsEntries(blocksWithoutH1)
+    } else if (sec.entries && sec.entries.length > 0) {
       typst += `= ${sec.title}\n\n`
       sec.entries.forEach(entry => {
         typst += `#resume-entry(
@@ -91,11 +104,80 @@ ${authorBlock}
   return typst
 }
 
+function renderBlocksAsEntries(blocks: RichTextBlock[]): string {
+  let typst = ''
+  let currentEntry: { title?: string, location?: string, date?: string, description?: string, items: string[] } | null = null
+
+  const flush = () => {
+    if (currentEntry) {
+      typst += `#resume-entry(
+  title: [${currentEntry.title || ''}],
+  location: [${currentEntry.location || ''}],
+  date: [${currentEntry.date || ''}],
+  description: [${currentEntry.description || ''}],
+)\n`
+      if (currentEntry.items.length > 0) {
+        typst += `#resume-item[\n`
+        currentEntry.items.forEach(item => {
+          typst += `  - ${item}\n`
+        })
+        typst += `]\n\n`
+      }
+    }
+    currentEntry = null
+  }
+
+  blocks.forEach(block => {
+    if (block.type === 'h2') {
+      flush()
+      currentEntry = {
+        title: renderFormattedText(block.content, block.bold, block.color),
+        location: block.rightContent ? escapeTypstContent(block.rightContent) : '',
+        items: []
+      }
+    } else if (block.type === 'h3') {
+      if (!currentEntry) {
+        currentEntry = { items: [] }
+      }
+      currentEntry.description = renderFormattedText(block.content, block.bold, block.color)
+      currentEntry.date = block.rightContent ? escapeTypstContent(block.rightContent) : ''
+    } else if (block.type === 'bullet' || block.type === 'paragraph') {
+      if (!currentEntry) {
+        currentEntry = { items: [] }
+      }
+      currentEntry.items.push(renderFormattedText(block.content, block.bold, block.color))
+    }
+  })
+
+  flush()
+  return typst
+}
+
+function renderFormattedText(content: string, bold?: boolean, color?: string): string {
+  let text = escapeTypstContent(content)
+  if (bold) {
+    text = `*${text}*`
+  }
+  if (color) {
+    text = `#text(fill: rgb("${color}"))[${text}]`
+  }
+  return text
+}
+
 function escapeTypstContent(text: string): string {
-  return text.replace(/\\/g, '\\\\').replace(/#/g, '\\#').replace(/\*/g, '\\*').replace(/_/g, '\\_').replace(/</g, '\\<').replace(/>/g, '\\>')
+  if (!text) return ''
+  return text
+    .replace(/\\/g, '\\\\')
+    .replace(/#/g, '\\#')
+    .replace(/\*/g, '\\*')
+    .replace(/_/g, '\\_')
+    .replace(/</g, '\\<')
+    .replace(/>/g, '\\>')
+    .replace(/"/g, '\\"')
 }
 
 function escapeTypstString(text: string): string {
+  if (!text) return ''
   return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 

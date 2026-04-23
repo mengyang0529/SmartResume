@@ -6,9 +6,18 @@ import type { Education, ResumeSection, Entry } from '../types/resume'
 /* ------------------------------------------------------------------ */
 
 export function educationToBlocks(education: Education[]): RichTextBlock[] {
-  const blocks: RichTextBlock[] = []
+  // If all education entries have saved blocks, use them directly
+  if (education.length > 0 && education.every(edu => edu.blocks && edu.blocks.length > 0)) {
+    return education.flatMap(edu => edu.blocks!)
+  }
 
+  const blocks: RichTextBlock[] = []
   education.forEach((edu) => {
+    if (edu.blocks && edu.blocks.length > 0) {
+      blocks.push(...edu.blocks)
+      return
+    }
+
     blocks.push({
       id: `edu-h2-${edu.id}`,
       type: 'h2',
@@ -44,7 +53,10 @@ export function educationToBlocks(education: Education[]): RichTextBlock[] {
 
 export function blocksToEducation(blocks: RichTextBlock[]): Education[] {
   const education: Education[] = []
-  let current: Partial<Education> & { id: string } = { id: crypto.randomUUID() }
+  let current: Partial<Education> & { id: string; blocks: RichTextBlock[] } = { 
+    id: crypto.randomUUID(),
+    blocks: [] 
+  }
   let hasCurrent = false
 
   const flush = () => {
@@ -57,9 +69,10 @@ export function blocksToEducation(blocks: RichTextBlock[]): Education[] {
         endDate: current.endDate,
         location: current.location,
         description: current.description,
+        blocks: current.blocks.length > 0 ? [...current.blocks] : undefined
       })
     }
-    current = { id: crypto.randomUUID() }
+    current = { id: crypto.randomUUID(), blocks: [] }
     hasCurrent = false
   }
 
@@ -68,9 +81,11 @@ export function blocksToEducation(blocks: RichTextBlock[]): Education[] {
       flush()
       current.school = block.content
       current.location = block.rightContent || undefined
+      current.blocks.push(block)
       hasCurrent = true
-    } else if (block.type === 'h3') {
+    } else if (block.type === 'h3' && hasCurrent) {
       current.degree = block.content
+      current.blocks.push(block)
       const rc = block.rightContent || ''
       const m = rc.match(/^(.+?)\s*--\s*(.*)$/)
       if (m) {
@@ -80,10 +95,13 @@ export function blocksToEducation(blocks: RichTextBlock[]): Education[] {
       } else {
         current.startDate = rc.trim()
       }
-    } else if (block.type === 'bullet' || block.type === 'paragraph') {
-      current.description = current.description
-        ? current.description + '\n' + block.content
-        : block.content
+    } else if (hasCurrent) {
+      current.blocks.push(block)
+      if (block.type === 'bullet' || block.type === 'paragraph') {
+        current.description = current.description
+          ? current.description + '\n' + block.content
+          : block.content
+      }
     }
   })
 
@@ -96,6 +114,10 @@ export function blocksToEducation(blocks: RichTextBlock[]): Education[] {
 /* ------------------------------------------------------------------ */
 
 export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
+  if (section.blocks && section.blocks.length > 0) {
+    return section.blocks
+  }
+
   const blocks: RichTextBlock[] = []
 
   blocks.push({
@@ -149,7 +171,13 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
 }
 
 export function blocksToSection(blocks: RichTextBlock[], sectionId: string): ResumeSection {
-  const section: ResumeSection = { id: sectionId, title: '', entries: [] }
+  const section: ResumeSection = { 
+    id: sectionId, 
+    title: '', 
+    entries: [],
+    blocks: [...blocks] // Persist the full block array
+  }
+  
   let current: Partial<Entry> & { id: string } = { id: crypto.randomUUID() }
   let inEntry = false
 
@@ -179,7 +207,7 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
       current.title = block.content
       current.location = block.rightContent || undefined
       inEntry = true
-    } else if (block.type === 'h3') {
+    } else if (block.type === 'h3' && inEntry) {
       current.subtitle = block.content
       const rc = block.rightContent || ''
       const m = rc.match(/^(.+?)\s*--\s*(.*)$/)
@@ -190,7 +218,7 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
       } else {
         current.startDate = rc.trim()
       }
-    } else if (block.type === 'bullet' || block.type === 'paragraph') {
+    } else if (inEntry && (block.type === 'bullet' || block.type === 'paragraph')) {
       current.description = current.description
         ? current.description + '\n' + block.content
         : block.content

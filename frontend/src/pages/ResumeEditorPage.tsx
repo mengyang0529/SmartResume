@@ -94,10 +94,12 @@ export default function ResumeEditorPage() {
         description: edu.description ? String(edu.description) : undefined,
         gpa: edu.gpa ? String(edu.gpa) : undefined,
         location: edu.location ? String(edu.location) : undefined,
+        blocks: Array.isArray(edu.blocks) ? edu.blocks : undefined,
       })) : [],
       sections: Array.isArray(data.sections) ? data.sections.map((section: any, sectionIndex: number) => ({
         id: ensureId(section.id || `section-${sectionIndex}`, 'sec'),
         title: String(section.title || `Section ${sectionIndex + 1}`),
+        blocks: Array.isArray(section.blocks) ? section.blocks : undefined,
         entries: Array.isArray(section.entries) ? section.entries.map((entry: any, entryIndex: number) => ({
           id: ensureId(entry.id || `entry-${entryIndex}`, 'entry'),
           title: String(entry.title || ''),

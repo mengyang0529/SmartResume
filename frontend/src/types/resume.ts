@@ -1,3 +1,5 @@
+import type { RichTextBlock } from './richText'
+
 export interface PersonalInfo {
   firstName: string
   lastName: string
@@ -29,6 +31,7 @@ export interface Education {
   description?: string
   gpa?: string
   location?: string
+  blocks?: RichTextBlock[]
 }
 
 export interface Entry {
@@ -46,6 +49,7 @@ export interface ResumeSection {
   id: string
   title: string
   entries: Entry[]
+  blocks?: RichTextBlock[]
 }
 
 export interface Skill {
