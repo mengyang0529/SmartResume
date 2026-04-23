@@ -180,6 +180,33 @@ export const userApi = {
   },
 }
 
+export const applicationApi = {
+  listApplications: async () => {
+    const { data } = await apiClient.get('/api/v1/applications')
+    return data.data.applications
+  },
+
+  getApplication: async (id: string) => {
+    const { data } = await apiClient.get(`/api/v1/applications/${id}`)
+    return data.data.application
+  },
+
+  createApplication: async (payload: Record<string, unknown>) => {
+    const { data } = await apiClient.post('/api/v1/applications', payload)
+    return data.data.application
+  },
+
+  listInterviews: async (applicationId: string) => {
+    const { data } = await apiClient.get(`/api/v1/applications/${applicationId}/interviews`)
+    return data.data.interviews
+  },
+
+  createInterview: async (applicationId: string, payload: Record<string, unknown>) => {
+    const { data } = await apiClient.post(`/api/v1/applications/${applicationId}/interviews`, payload)
+    return data.data.interview
+  },
+}
+
 // Health check
 export const healthApi = {
   check: async () => {

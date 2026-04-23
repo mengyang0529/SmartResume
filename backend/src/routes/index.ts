@@ -4,6 +4,7 @@ import { resumeRoutes } from './resume.routes'
 import { templateRoutes } from './template.routes'
 import { pdfRoutes } from './pdf.routes'
 import { userRoutes } from './user.routes'
+import { applicationRoutes } from './application.routes'
 
 export const setupRoutes = (app: Express) => {
   // API prefix
@@ -22,6 +23,7 @@ export const setupRoutes = (app: Express) => {
       endpoints: {
         auth: `${apiPrefix}/auth`,
         resumes: `${apiPrefix}/resumes`,
+        applications: `${apiPrefix}/applications`,
         templates: `${apiPrefix}/templates`,
         pdf: `${apiPrefix}/pdf`,
         users: `${apiPrefix}/users`,
@@ -33,6 +35,7 @@ export const setupRoutes = (app: Express) => {
   // Register route modules
   app.use(`${apiPrefix}/auth`, authRoutes)
   app.use(`${apiPrefix}/resumes`, resumeRoutes)
+  app.use(`${apiPrefix}/applications`, applicationRoutes)
   app.use(`${apiPrefix}/templates`, templateRoutes)
   app.use(`${apiPrefix}/pdf`, pdfRoutes)
   app.use(`${apiPrefix}/users`, userRoutes)

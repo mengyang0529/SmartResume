@@ -20,6 +20,7 @@ model User {
   resumes       Resume[]
   templates     Template[]
   pdfJobs       PdfJob[]
+  applications  Application[]
   sessions      Session[]
 
   @@map("users")
@@ -44,6 +45,7 @@ model Resume {
   templateId    String?
   template      Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   pdfJobs       PdfJob[]
+  applications  Application[]
 
   @@map("resumes")
   @@index([userId])
@@ -97,6 +99,52 @@ model PdfJob {
   @@index([status])
   @@index([createdAt])
   @@index([userId])
+}
+
+model Application {
+  id            String    @id @default(uuid())
+  userId        String
+  company       String
+  jobTitle      String
+  location      String?
+  status        String    @default("applied")
+  stage         String?
+  appliedAt     DateTime  @default(now())
+  source        String?
+  notes         String?
+  resumeId      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume        Resume?   @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  interviews    Interview[]
+
+  @@map("applications")
+  @@index([userId])
+  @@index([company])
+  @@index([status])
+}
+
+model Interview {
+  id            String    @id @default(uuid())
+  applicationId String
+  round         Int       @default(1)
+  interviewType String?
+  interviewer   String?
+  scheduledAt   DateTime?
+  outcome       String?   @default("pending")
+  feedback      String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("interviews")
+  @@index([applicationId])
+  @@index([scheduledAt])
 }
 
 // User Session
