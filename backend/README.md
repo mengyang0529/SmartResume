@@ -18,11 +18,13 @@
 - `src/routes/`：路由模块注册
   - `auth.routes.ts`：当前版本禁用登录注册，返回 `503`
   - `resume.routes.ts`：简历 CRUD、采样数据、复制、删除
+  - `application.routes.ts`：工作申请和面试 CRUD
   - `template.routes.ts`：模板列表、模板详情、模板管理接口（当前为模拟数据/占位实现）
   - `pdf.routes.ts`：PDF 生成、预览、刷新预览缓存
   - `user.routes.ts`：用户相关接口（可以扩展）
 - `src/services/`：业务逻辑层
   - `resume.service.ts`：简历创建、更新、查询、删除、复制、下载计数等业务逻辑
+  - `application.service.ts`：工作申请和面试创建、更新、查询、删除等业务逻辑
   - `typst.service.ts`：将结构化简历数据转换为 Typst 源码
 - `src/middleware/`：通用中间件
   - `errorHandler.ts`：统一异常处理、Zod/Prisma 错误转换、开发环境堆栈输出
@@ -76,6 +78,8 @@
 
 - `User`
 - `Resume`
+- `Application`
+- `Interview`
 - `Template`
 - `PdfJob`
 - `Session`
@@ -116,6 +120,7 @@
 - `GET /api/docs`：简单 API 文档路由
 - `/api/v1/auth`：认证占位接口，当前返回 `503`
 - `/api/v1/resumes`：简历管理接口
+- `/api/v1/applications`：工作申请和面试管理接口
 - `/api/v1/templates`：模板管理接口，当前仍以 mock 和 stub 实现
 - `/api/v1/pdf`：PDF / Typst 编译接口
 - `/api/v1/users`：用户接口占位
@@ -129,6 +134,14 @@
 - `PUT /api/v1/resumes/:id`：更新简历并按需重新生成 Typst
 - `DELETE /api/v1/resumes/:id`：删除简历
 - `POST /api/v1/resumes/:id/duplicate`：复制简历
+
+### 8.3 Application 路由亮点
+
+- `GET /api/v1/applications`：分页查询用户工作申请（当前使用 mock userId）
+- `POST /api/v1/applications`：新建工作申请
+- `GET /api/v1/applications/:id`：读取工作申请详情
+- `PUT /api/v1/applications/:id`：更新工作申请
+- `DELETE /api/v1/applications/:id`：删除工作申请
 
 ## 9. 中间件与安全
 
@@ -189,10 +202,11 @@ npm run test:coverage
 
 - `auth.routes.ts` 目前是占位实现，真正用户认证尚未启用
 - `template.routes.ts` 仍为 mock 数据与模拟创建
-- `resume.routes.ts` 中 `userId` 当前硬编码为 `user-id-mock`
+- `resume.routes.ts` 和 `application.routes.ts` 中 `userId` 当前硬编码为 `user-id-mock`
 - `user.routes.ts` 目前未实现完整用户生命周期
 - 可以补充 `Jwt` 认证中间件，并将请求用户从 token 中解析到 `req.user`
 - 数据库事务与 Typst 生成失败回滚逻辑可进一步强化
+- 工作申请跟踪功能已实现，包括 Application 和 Interview 模型
 
 ## 12. 细节说明
 
