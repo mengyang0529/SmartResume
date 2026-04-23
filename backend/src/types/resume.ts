@@ -32,8 +32,8 @@ export interface Education {
 
 export interface Entry {
   id: string
-  title: string       // 对应公司名或项目名
-  subtitle: string    // 对应职位或子标题
+  title: string       // Corresponding to company name or project name
+  subtitle: string    // Corresponding to position or sub-title
   location?: string
   startDate: string
   endDate?: string
@@ -43,7 +43,7 @@ export interface Entry {
 
 export interface ResumeSection {
   id: string
-  title: string       // 区块标题，如 "Work Experience" 或 "ADAS & Autonomous Driving"
+  title: string       // Section title, e.g., "Work Experience" or "ADAS & Autonomous Driving"
   entries: Entry[]
 }
 
@@ -85,7 +85,7 @@ export interface Language {
 export interface ResumeData {
   personal: PersonalInfo
   education: Education[]
-  sections: ResumeSection[] // 动态区块：包含工作经历、项目、研究等
+  sections: ResumeSection[] // Dynamic sections: includes work experience, projects, research, etc.
   skills: Skill[]
   summary?: string
   experience?: Experience[]

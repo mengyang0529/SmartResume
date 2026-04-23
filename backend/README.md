@@ -1,80 +1,80 @@
 # Web Resume Backend
 
-本 `backend` 模块负责 Web Resume 应用的 API、数据库访问、Typst 简历生成与 PDF 编译协调。
+The `backend` module is responsible for the Web Resume application's API, database access, Typst resume generation, and PDF compilation coordination.
 
-## 1. 项目概览
+## 1. Project Overview
 
-- 框架：`Express` + `TypeScript`
-- ORM：`Prisma`（PostgreSQL）
-- 文档校验：`express-validator`、`zod`
-- 安全与性能：`helmet`、`cors`、`compression`、`express-rate-limit`
-- Typst 集成：后端调用外部 Typst 编译服务生成 PDF/预览
-- 运行模式：开发使用 `tsx watch`，生产使用 `tsc` 编译后执行
+- Framework: `Express` + `TypeScript`
+- ORM: `Prisma` (PostgreSQL)
+- Validation: `express-validator`, `zod`
+- Security & Performance: `helmet`, `cors`, `compression`, `express-rate-limit`
+- Typst Integration: Backend calls an external Typst compilation service to generate PDFs/previews.
+- Run Mode: Development uses `tsx watch`, production uses `tsc` for compilation followed by execution.
 
-## 2. 目录结构
+## 2. Directory Structure
 
-- `src/index.ts`：Express 应用入口，注册中间件、路由、错误处理和健康检查
-- `src/config/env.ts`：环境变量加载与验证
-- `src/routes/`：路由模块注册
-  - `auth.routes.ts`：当前版本禁用登录注册，返回 `503`
-  - `resume.routes.ts`：简历 CRUD、采样数据、复制、删除
-  - `application.routes.ts`：工作申请和面试 CRUD
-  - `template.routes.ts`：模板列表、模板详情、模板管理接口（当前为模拟数据/占位实现）
-  - `pdf.routes.ts`：PDF 生成、预览、刷新预览缓存
-  - `user.routes.ts`：用户相关接口（可以扩展）
-- `src/services/`：业务逻辑层
-  - `resume.service.ts`：简历创建、更新、查询、删除、复制、下载计数等业务逻辑
-  - `application.service.ts`：工作申请和面试创建、更新、查询、删除等业务逻辑
-  - `typst.service.ts`：将结构化简历数据转换为 Typst 源码
-- `src/middleware/`：通用中间件
-  - `errorHandler.ts`：统一异常处理、Zod/Prisma 错误转换、开发环境堆栈输出
-  - `rateLimiter.ts`：通用限流、PDF 上传限流、认证/API key 限流
-- `prisma/schema.prisma`：数据库模型定义
+- `src/index.ts`: Express application entry point, registers middleware, routes, error handling, and health checks.
+- `src/config/env.ts`: Environment variable loading and validation.
+- `src/routes/`: Route module registration.
+  - `auth.routes.ts`: Currently disables login/registration, returns `503`.
+  - `resume.routes.ts`: Resume CRUD, sample data, duplication, deletion.
+  - `application.routes.ts`: Job application and interview CRUD.
+  - `template.routes.ts`: Template list, template details, template management interface (currently mock/placeholder implementation).
+  - `pdf.routes.ts`: PDF generation, preview, refreshing preview cache.
+  - `user.routes.ts`: User-related endpoints (extensible).
+- `src/services/`: Business logic layer.
+  - `resume.service.ts`: Business logic for resume creation, update, query, deletion, duplication, download counting, etc.
+  - `application.service.ts`: Business logic for job application and interview creation, update, query, deletion, etc.
+  - `typst.service.ts`: Converts structured resume data into Typst source code.
+- `src/middleware/`: Common middleware.
+  - `errorHandler.ts`: Unified exception handling, Zod/Prisma error conversion, stack output in development environment.
+  - `rateLimiter.ts`: General rate limiting, PDF upload rate limiting, auth/API key rate limiting.
+- `prisma/schema.prisma`: Database model definitions.
 
-## 3. 核心运行流程
+## 3. Core Execution Flow
 
-1. `src/index.ts` 初始化 Express 应用
-2. 加载安全中间件：`helmet`、`cors`、`compression`
-3. 使用 `express.json()` 解析请求体
-4. 启用日志：`morgan`
-5. 启用限流：全局 `rateLimiter`，PDF 路由额外 `pdfRateLimit`
-6. 注册路由模块：`/api/v1/*`
-7. 未命中路由进入 `notFoundHandler`
-8. 统一异常由 `errorHandler` 处理并返回标准 JSON
+1. `src/index.ts` initializes the Express application.
+2. Load security middleware: `helmet`, `cors`, `compression`.
+3. Use `express.json()` to parse request bodies.
+4. Enable logging: `morgan`.
+5. Enable rate limiting: Global `rateLimiter`, plus `pdfRateLimit` for PDF routes.
+6. Register route modules: `/api/v1/*`.
+7. Unmatched routes enter `notFoundHandler`.
+8. Unified exceptions are handled by `errorHandler` and return standard JSON.
 
-## 4. 重要配置与环境变量
+## 4. Important Configuration & Environment Variables
 
-在 `backend/.env` 或部署环境中需要设置：
+Must be set in `backend/.env` or the deployment environment:
 
-- `NODE_ENV`：`development` / `production` / `test`
-- `PORT`：服务监听端口，默认 `5000`
-- `DATABASE_URL`：PostgreSQL 连接字符串
-- `JWT_SECRET`：JWT 签名密钥（当前 auth 未启用，但仍校验存在性）
-- `SESSION_SECRET`：会话加密密钥
-- `CORS_ORIGIN`：允许跨域请求来源，默认 `http://localhost:3000`
-- `TYPST_SERVICE_URL`：Typst 服务地址，默认 `http://localhost:5050`
-- `REDIS_URL`：可选 Redis 地址，用于限流持久化
-- `RATE_LIMIT_WINDOW_MS`：限流窗口，默认 `900000`（15 min）
-- `RATE_LIMIT_MAX_REQUESTS`：限流请求上限，默认 `100`
-- `API_KEY`：可选 API key，用于未来外部访问授权
+- `NODE_ENV`: `development` / `production` / `test`
+- `PORT`: Service port, defaults to `5000`.
+- `DATABASE_URL`: PostgreSQL connection string.
+- `JWT_SECRET`: JWT signing secret (currently auth not enabled, but still checked for existence).
+- `SESSION_SECRET`: Session encryption secret.
+- `CORS_ORIGIN`: Allowed origin for cross-origin requests, defaults to `http://localhost:3000`.
+- `TYPST_SERVICE_URL`: Typst service address, defaults to `http://localhost:5050`.
+- `REDIS_URL`: Optional Redis address for rate limiting persistence.
+- `RATE_LIMIT_WINDOW_MS`: Rate limiting window, defaults to `900000` (15 min).
+- `RATE_LIMIT_MAX_REQUESTS`: Rate limiting request limit, defaults to `100`.
+- `API_KEY`: Optional API key for future external access authorization.
 
-## 5. 主要依赖
+## 5. Main Dependencies
 
-- `express`：HTTP 服务
-- `@prisma/client` / `prisma`：数据库 ORM
-- `zod`：环境变量规范校验
-- `express-validator`：请求参数与 body 校验
-- `axios`：调用外部 Typst 服务
-- `helmet`：安全响应头
-- `cors`：CORS 控制
-- `express-rate-limit`：API 限流
-- `compression`：响应压缩
-- `cookie-parser`：解析 Cookie
-- `morgan`：请求日志
+- `express`: HTTP service.
+- `@prisma/client` / `prisma`: Database ORM.
+- `zod`: Environment variable schema validation.
+- `express-validator`: Request parameter and body validation.
+- `axios`: Calls external Typst service.
+- `helmet`: Security response headers.
+- `cors`: CORS control.
+- `express-rate-limit`: API rate limiting.
+- `compression`: Response compression.
+- `cookie-parser`: Cookie parsing.
+- `morgan`: Request logging.
 
-## 6. 数据库与 Prisma
+## 6. Database & Prisma
 
-`prisma/schema.prisma` 定义了以下模型：
+`prisma/schema.prisma` defines the following models:
 
 - `User`
 - `Resume`
@@ -84,91 +84,91 @@
 - `PdfJob`
 - `Session`
 
-当前后端核心使用 `Resume` 表存储：
+The current backend core uses the `Resume` table to store:
 
-- `content`：简历 JSON 数据
-- `typstSource`：生成后的 Typst 文本
-- `settings`：模板/配色配置
-- `downloadCount`、`isPublic`、`userId` 等
+- `content`: Resume JSON data.
+- `typstSource`: Generated Typst text.
+- `settings`: Template/color configuration.
+- `downloadCount`, `isPublic`, `userId`, etc.
 
-### 常用 Prisma 命令
+### Common Prisma Commands
 
-- `npm run db:generate`：生成 Prisma Client
-- `npm run db:migrate`：运行迁移
-- `npm run db:studio`：打开 Prisma Studio
+- `npm run db:generate`: Generate Prisma Client.
+- `npm run db:migrate`: Run migrations.
+- `npm run db:studio`: Open Prisma Studio.
 
-## 7. Typst 集成
+## 7. Typst Integration
 
-后端通过 `TypstService` 将结构化简历数据转换为 Typst 源码。关键点：
+The backend converts structured resume data into Typst source code via `TypstService`. Key points:
 
-- 自动转义 Typst 字符串与内容
-- 根据 `TemplateSettings` 映射颜色、纸张尺寸和头部对齐
-- 支持个人信息、简介、工作经历、教育、技能、项目、语言、荣誉、证书、出版物等模块
-- 生成的 Typst 由后端 `pdf.routes.ts` 调用 `TYPST_SERVICE_URL/compile`
+- Automatic escaping of Typst strings and content.
+- Map colors, paper sizes, and header alignment based on `TemplateSettings`.
+- Supports modules for personal information, introduction, work experience, education, skills, projects, languages, honors, certificates, publications, etc.
+- Generated Typst is sent to `TYPST_SERVICE_URL/compile` via `pdf.routes.ts`.
 
-### PDF 生成相关路由
+### PDF Generation Routes
 
-- `GET /api/v1/pdf/refresh-all-previews`：刷新多个模板的预览缓存
-- `GET /api/v1/pdf/preview-template/:templateName`：为指定模板生成/获取预览缓存
-- `POST /api/v1/pdf/generate`：直接请求 Typst 编译并返回缓存 key
+- `GET /api/v1/pdf/refresh-all-previews`: Refreshes preview cache for multiple templates.
+- `GET /api/v1/pdf/preview-template/:templateName`: Generates/gets preview cache for a specific template.
+- `POST /api/v1/pdf/generate`: Directly requests Typst compilation and returns a cache key.
 
-## 8. 路由设计
+## 8. API Design
 
-### 8.1 通用路由注册
+### 8.1 General Route Registration
 
-- `GET /health`：健康检查
-- `GET /api/docs`：简单 API 文档路由
-- `/api/v1/auth`：认证占位接口，当前返回 `503`
-- `/api/v1/resumes`：简历管理接口
-- `/api/v1/applications`：工作申请和面试管理接口
-- `/api/v1/templates`：模板管理接口，当前仍以 mock 和 stub 实现
-- `/api/v1/pdf`：PDF / Typst 编译接口
-- `/api/v1/users`：用户接口占位
+- `GET /health`: Health check.
+- `GET /api/docs`: Simple API documentation route.
+- `/api/v1/auth`: Authentication placeholder, currently returns `503`.
+- `/api/v1/resumes`: Resume management endpoints.
+- `/api/v1/applications`: Job application and interview management endpoints.
+- `/api/v1/templates`: Template management endpoints (mock/stub implementation).
+- `/api/v1/pdf`: PDF / Typst compilation endpoints.
+- `/api/v1/users`: User endpoints placeholder.
 
-### 8.2 Resume 路由亮点
+### 8.2 Resume Route Highlights
 
-- `GET /api/v1/resumes/sample`：返回演示简历数据
-- `GET /api/v1/resumes`：分页查询用户简历（当前使用 mock userId）
-- `POST /api/v1/resumes`：新建简历并生成 Typst
-- `GET /api/v1/resumes/:id`：读取简历
-- `PUT /api/v1/resumes/:id`：更新简历并按需重新生成 Typst
-- `DELETE /api/v1/resumes/:id`：删除简历
-- `POST /api/v1/resumes/:id/duplicate`：复制简历
+- `GET /api/v1/resumes/sample`: Returns sample resume data.
+- `GET /api/v1/resumes`: Paginated query for user resumes (currently using mock userId).
+- `POST /api/v1/resumes`: Create new resume and generate Typst.
+- `GET /api/v1/resumes/:id`: Read resume.
+- `PUT /api/v1/resumes/:id`: Update resume and regenerate Typst as needed.
+- `DELETE /api/v1/resumes/:id`: Delete resume.
+- `POST /api/v1/resumes/:id/duplicate`: Duplicate resume.
 
-### 8.3 Application 路由亮点
+### 8.3 Application Route Highlights
 
-- `GET /api/v1/applications`：分页查询用户工作申请（当前使用 mock userId）
-- `POST /api/v1/applications`：新建工作申请
-- `GET /api/v1/applications/:id`：读取工作申请详情
-- `PUT /api/v1/applications/:id`：更新工作申请
-- `DELETE /api/v1/applications/:id`：删除工作申请
+- `GET /api/v1/applications`: Paginated query for user job applications (currently using mock userId).
+- `POST /api/v1/applications`: Create new job application.
+- `GET /api/v1/applications/:id`: Read job application details.
+- `PUT /api/v1/applications/:id`: Update job application.
+- `DELETE /api/v1/applications/:id`: Delete job application.
 
-## 9. 中间件与安全
+## 9. Middleware & Security
 
 ### 9.1 `errorHandler`
 
-- 捕获 `AppError`、`ValidationError`、`ZodError`、Prisma 错误
-- 开发环境返回详细 `stack`
-- 统一响应格式：
+- Captures `AppError`, `ValidationError`, `ZodError`, and Prisma errors.
+- Returns detailed `stack` in development environment.
+- Unified response format:
   - `status: error`
   - `message`
-  - `errors`（可选）
+  - `errors` (optional)
 
 ### 9.2 `rateLimiter`
 
-- 全局请求限流
-- PDF 生成请求使用更高阈值但单独限流
-- Auth 登录请求也预留专用限流
-- 支持 Redis 存储，未配置时回退内存存储
+- Global request rate limiting.
+- PDF generation requests use a higher threshold but separate rate limiting.
+- Auth login requests also have reserved dedicated rate limiting.
+- Supports Redis storage, falls back to memory storage if not configured.
 
-### 9.3 `helmet` 与 `cors`
+### 9.3 `helmet` & `cors`
 
-- `helmet` 已启用跨域策略与内容安全策略
-- `cors` 限制来源为 `CORS_ORIGIN`
+- `helmet` enabled with cross-origin and content security policies.
+- `cors` limits origins to `CORS_ORIGIN`.
 
-## 10. 开发与测试
+## 10. Development & Testing
 
-### 10.1 本地开发
+### 10.1 Local Development
 
 ```bash
 cd backend
@@ -176,14 +176,14 @@ npm install
 npm run dev
 ```
 
-### 10.2 构建发布
+### 10.2 Build & Release
 
 ```bash
 npm run build
 npm start
 ```
 
-### 10.3 类型检查与格式化
+### 10.3 Type Checking & Formatting
 
 ```bash
 npm run type-check
@@ -191,39 +191,39 @@ npm run lint
 npm run format
 ```
 
-### 10.4 测试
+### 10.4 Testing
 
 ```bash
 npm run test
 npm run test:coverage
 ```
 
-## 11. 已知待办 / 迭代点
+## 11. Known TODOs / Iteration Points
 
-- `auth.routes.ts` 目前是占位实现，真正用户认证尚未启用
-- `template.routes.ts` 仍为 mock 数据与模拟创建
-- `resume.routes.ts` 和 `application.routes.ts` 中 `userId` 当前硬编码为 `user-id-mock`
-- `user.routes.ts` 目前未实现完整用户生命周期
-- 可以补充 `Jwt` 认证中间件，并将请求用户从 token 中解析到 `req.user`
-- 数据库事务与 Typst 生成失败回滚逻辑可进一步强化
-- 工作申请跟踪功能已实现，包括 Application 和 Interview 模型
+- `auth.routes.ts` is currently a placeholder; actual user authentication is not yet enabled.
+- `template.routes.ts` is still using mock data and simulated creation.
+- `userId` is currently hardcoded as `user-id-mock` in `resume.routes.ts` and `application.routes.ts`.
+- `user.routes.ts` has no complete user lifecycle implemented.
+- Add JWT authentication middleware and parse the requesting user from the token into `req.user`.
+- Strengthen database transaction and Typst generation failure rollback logic.
+- Job application tracking functionality implemented, including Application and Interview models.
 
-## 12. 细节说明
+## 12. Details
 
-- `src/config/env.ts` 使用 `zod` 对环境变量做强类型校验，启动失败即报错退出
-- `prisma/schema.prisma` 采用 `Json` 类型存储动态简历字段和模板配置
-- `TypstService.generateResumeTypst()` 负责将动态数据映射为可编译 Typst 源
-- `pdf.routes.ts` 里 `axios` 调用 `TYPST_SERVICE_URL/compile`，并处理缓存 key、cache hit、异常返回
+- `src/config/env.ts` uses `zod` for strong typing validation of environment variables; failure to start will throw an error.
+- `prisma/schema.prisma` uses `Json` type to store dynamic resume fields and template configurations.
+- `TypstService.generateResumeTypst()` maps dynamic data to compilable Typst source.
+- `pdf.routes.ts` uses `axios` to call `TYPST_SERVICE_URL/compile`, handling cache keys, cache hits, and exception returns.
 
-## 13. 目录快速定位
+## 13. Directory Navigation
 
-- 后端主入口：`backend/src/index.ts`
-- 路由注册：`backend/src/routes/index.ts`
-- 业务逻辑：`backend/src/services/*.ts`
-- 中间件：`backend/src/middleware/*.ts`
-- 环境校验：`backend/src/config/env.ts`
-- 数据模型：`backend/prisma/schema.prisma`
+- Backend Main Entry: `backend/src/index.ts`
+- Route Registration: `backend/src/routes/index.ts`
+- Business Logic: `backend/src/services/*.ts`
+- Middleware: `backend/src/middleware/*.ts`
+- Env Validation: `backend/src/config/env.ts`
+- Data Model: `backend/prisma/prisma/schema.prisma`
 
 ---
 
-该 README 旨在为后端开发者快速理解当前实现、运行方式和待升级区域。如需补充具体接口示例或 API 测试用例，可以继续扩展本文件。
+This README is intended to help backend developers quickly understand the current implementation, run mode, and areas for upgrade. Feel free to extend this file with specific API examples or test cases.

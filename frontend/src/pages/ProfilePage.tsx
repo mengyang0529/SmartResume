@@ -98,7 +98,7 @@ export default function ProfilePage() {
     applicationApi.listApplications()
       .then((data) => setApplications(data))
       .catch(() => {
-        toast.error('无法加载投递记录，将显示本地默认数据。')
+        toast.error('Failed to load applications. Showing local default data.')
       })
       .finally(() => setIsLoading(false))
   }, [])
@@ -176,7 +176,7 @@ export default function ProfilePage() {
 
             <ProfileCard title="Application Timeline" icon={<FaBriefcase />}>
               <div className="space-y-4">
-                {isLoading && <div className="text-gray-500 text-sm">加载中...</div>}
+                {isLoading && <div className="text-gray-500 text-sm">Loading...</div>}
                 {applications.map((application, index) => (
                   <motion.div
                     key={application.id}
@@ -199,8 +199,8 @@ export default function ProfilePage() {
                     </div>
                     <p className="mt-5 text-sm text-gray-400 leading-relaxed">{application.notes || 'No notes added yet.'}</p>
                     <div className="mt-6 flex flex-wrap items-center gap-3">
-                      <ActionButton label="编辑" onClick={() => navigate('/editor')} />
-                      <ActionButton label="详情" onClick={() => {}} />
+                      <ActionButton label="Edit" onClick={() => navigate('/editor')} />
+                      <ActionButton label="Details" onClick={() => {}} />
                       <span className="text-[10px] text-gray-600 uppercase tracking-[0.3em]">{application.interviews?.length || 0} interview rounds</span>
                     </div>
                   </motion.div>
@@ -243,7 +243,7 @@ export default function ProfilePage() {
                   </div>
                 ))}
                 {!applications.flatMap((app) => app.interviews || []).length && (
-                  <div className="text-[11px] text-gray-500">当前没有安排中的面试。请先创建投递记录。</div>
+                  <div className="text-[11px] text-gray-500">No interviews scheduled yet. Please create an application record first.</div>
                 )}
               </div>
             </ProfileCard>

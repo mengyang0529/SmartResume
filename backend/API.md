@@ -1,27 +1,27 @@
-# API 文档
+# API Documentation
 
-本文档描述 Web Resume Generator 后端提供的 REST API。
+This document describes the REST API provided by the Web Resume Generator backend.
 
-**基础 URL**：`http://localhost:5001/api/v1`
+**Base URL**: `http://localhost:5001/api/v1`
 
-**通用响应格式**：
+**General Response Format**:
 ```json
 {
   "status": "success | error",
-  "message": "可选描述",
+  "message": "Optional description",
   "data": { ... }
 }
 ```
 
 ---
 
-## 健康检查
+## Health Check
 
 ### `GET /health`
 
-返回服务健康状态。
+Returns the service health status.
 
-**响应示例**：
+**Example Response**:
 ```json
 {
   "status": "healthy",
@@ -34,20 +34,20 @@
 
 ---
 
-## 简历管理
+## Resume Management
 
 ### `GET /api/v1/resumes`
 
-分页查询当前用户的简历列表。
+Paginated query of the current user's resume list.
 
-**查询参数**：
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| page | int | 否 | 页码，默认 1，最小 1 |
-| limit | int | 否 | 每页数量，默认 20，最大 100 |
-| search | string | 否 | 搜索关键词 |
+**Query Parameters**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| page | int | No | Page number, defaults to 1, minimum 1. |
+| limit | int | No | Page size, defaults to 20, maximum 100. |
+| search | string | No | Search keywords. |
 
-**响应示例**：
+**Example Response**:
 ```json
 {
   "status": "success",
@@ -60,9 +60,9 @@
 
 ### `POST /api/v1/resumes`
 
-创建新简历。
+Creates a new resume.
 
-**请求体**：
+**Request Body**:
 ```json
 {
   "title": "My Resume",
@@ -74,13 +74,13 @@
 
 ### `GET /api/v1/resumes/:id`
 
-获取指定简历详情。
+Gets details of a specific resume.
 
 ### `PUT /api/v1/resumes/:id`
 
-更新简历。
+Updates a resume.
 
-**请求体**（可选字段）：
+**Request Body** (Optional fields):
 ```json
 {
   "title": "Updated Title",
@@ -92,13 +92,13 @@
 
 ### `DELETE /api/v1/resumes/:id`
 
-删除简历。
+Deletes a resume.
 
 ### `POST /api/v1/resumes/:id/duplicate`
 
-复制简历。
+Duplicates a resume.
 
-**请求体**（可选）：
+**Request Body** (Optional):
 ```json
 {
   "title": "Copy of My Resume"
@@ -107,25 +107,25 @@
 
 ### `GET /api/v1/resumes/sample`
 
-获取示例简历数据。
+Gets sample resume data.
 
 ---
 
-## 工作申请跟踪
+## Job Application Tracking
 
 ### `GET /api/v1/applications`
 
-查询工作申请列表。
+Queries the job application list.
 
-**查询参数**：
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| status | string | 否 | 筛选状态 |
-| company | string | 否 | 公司名筛选 |
-| page | int | 否 | 页码，默认 1 |
-| limit | int | 否 | 每页数量，默认 50，最大 100 |
+**Query Parameters**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| status | string | No | Filter by status. |
+| company | string | No | Filter by company name. |
+| page | int | No | Page number, defaults to 1. |
+| limit | int | No | Page size, defaults to 50, maximum 100. |
 
-**响应示例**：
+**Example Response**:
 ```json
 {
   "status": "success",
@@ -152,9 +152,9 @@
 
 ### `POST /api/v1/applications`
 
-创建新工作申请。
+Creates a new job application.
 
-**请求体**：
+**Request Body**:
 ```json
 {
   "company": "TestCorp",
@@ -169,29 +169,29 @@
 }
 ```
 
-**必填字段**：`company`, `jobTitle`
+**Required Fields**: `company`, `jobTitle`
 
 ### `GET /api/v1/applications/:id`
 
-获取单个工作申请详情（包含面试列表）。
+Gets details of a single job application (including interview list).
 
 ### `PUT /api/v1/applications/:id`
 
-更新工作申请。
+Updates a job application.
 
 ### `DELETE /api/v1/applications/:id`
 
-删除工作申请。
+Deletes a job application.
 
 ### `GET /api/v1/applications/:id/interviews`
 
-查询指定申请下的面试列表。
+Queries the interview list for a specific application.
 
 ### `POST /api/v1/applications/:id/interviews`
 
-为指定申请添加面试记录。
+Adds an interview record to a specific application.
 
-**请求体**：
+**Request Body**:
 ```json
 {
   "round": 1,
@@ -206,13 +206,13 @@
 
 ---
 
-## PDF / Typst 编译
+## PDF / Typst Compilation
 
 ### `POST /api/v1/pdf/generate`
 
-直接提交 Typst 源码并编译为 PDF。
+Directly submits Typst source and compiles it to PDF.
 
-**请求体**：
+**Request Body**:
 ```json
 {
   "typst": "#import \"awesome-cv.typ\": *\n...",
@@ -222,58 +222,58 @@
 
 ### `POST /api/v1/pdf/generate-from-resume/:id`
 
-根据已有简历生成 PDF（当前为占位实现）。
+Generates PDF from an existing resume (currently a placeholder implementation).
 
 ### `GET /api/v1/pdf/preview-template/:templateName`
 
-为指定模板生成预览 PDF。
+Generates a preview PDF for a specific template.
 
 ### `GET /api/v1/pdf/download/:cacheKey`
 
-下载已生成的 PDF。
+Downloads a generated PDF.
 
 ### `GET /api/v1/pdf/preview/:cacheKey`
 
-在浏览器内联预览 PDF。
+In-browser inline preview of a PDF.
 
 ### `GET /api/v1/pdf/refresh-all-previews`
 
-刷新所有模板预览（管理接口）。
+Refreshes all template previews (management endpoint).
 
 ---
 
-## 模板管理
+## Template Management
 
 ### `GET /api/v1/templates`
 
-获取模板列表（当前为模拟数据）。
+Gets the list of templates (currently mock data).
 
 ### `GET /api/v1/templates/:id`
 
-获取模板详情。
+Gets details of a specific template.
 
 ---
 
-## 认证（占位）
+## Authentication (Placeholder)
 
 ### `POST /api/v1/auth/register`
 
-用户注册（当前返回 503）。
+User registration (currently returns 503).
 
 ### `POST /api/v1/auth/login`
 
-用户登录（当前返回 503）。
+User login (currently returns 503).
 
 ---
 
-## 错误码说明
+## Error Codes
 
-| HTTP 状态码 | 说明 |
-|-------------|------|
-| 200 | 请求成功 |
-| 201 | 创建成功 |
-| 400 | 请求参数校验失败 |
-| 404 | 资源不存在 |
-| 500 | 服务器内部错误 |
-| 502 | 外部服务（Typst 编译）不可用 |
-| 503 | 功能暂未启用 |
+| HTTP Status Code | Description |
+|------------------|-------------|
+| 200 | Request successful |
+| 201 | Creation successful |
+| 400 | Request parameter validation failed |
+| 404 | Resource does not exist |
+| 500 | Internal server error |
+| 502 | External service (Typst compilation) unavailable |
+| 503 | Feature not yet enabled |
