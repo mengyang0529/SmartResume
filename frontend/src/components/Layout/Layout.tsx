@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaTerminal, FaLayerGroup, FaImages, FaUserAlt, FaGithub, FaHome, FaCog } from 'react-icons/fa'
 import clsx from 'clsx'
@@ -16,6 +16,16 @@ export default function Layout() {
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
     return location.pathname.startsWith(path)
+  }
+
+  const navigate = useNavigate()
+
+  const handleCreateResume = () => {
+    if (location.pathname === '/editor') {
+      window.dispatchEvent(new Event('openResumeJsonFile'))
+    } else {
+      navigate('/editor', { state: { openJsonFile: true } })
+    }
   }
 
   return (
@@ -62,9 +72,9 @@ export default function Layout() {
              <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Compiler Online</span>
           </div>
           <div className="flex items-center space-x-4 border-l border-gray-800/50 pl-8">
-            <Link to="/editor" className="bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2.5 rounded transition-all shadow-[0_10px_20px_rgba(220,38,38,0.2)]">
+            <button onClick={handleCreateResume} className="bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2.5 rounded transition-all shadow-[0_10px_20px_rgba(220,38,38,0.2)]">
                Create Resume
-            </Link>
+            </button>
           </div>
         </div>
       </header>

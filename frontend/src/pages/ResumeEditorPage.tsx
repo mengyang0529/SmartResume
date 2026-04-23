@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useRef, useEffect, type ChangeEvent } from 'react'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { 
   FaPlus, FaTrash, FaArrowUp, FaArrowDown, FaSpinner, 
   FaSave, FaDownload, FaChevronRight, FaTerminal, FaFingerprint,
@@ -258,29 +258,196 @@ export default function ResumeEditorPage() {
     headerAlignment: 'C',
   }
 
-  const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData)
+  const emptyResumeData: ResumeData = {
+    personal: {
+      firstName: '',
+      lastName: '',
+      position: '',
+      email: '',
+      mobile: '',
+      address: '',
+      github: '',
+    },
+    education: [],
+    sections: [],
+    skills: [],
+  }
+
+  const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData)
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings>(defaultTemplateSettings)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [activeTab, setActiveTab] = useState('personal')
   const [isSaved, setIsSaved] = useState(true)
-  
-  useEffect(() => {
-    const saved = localStorage.getItem('current_resume_data')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (parsed.sections && Array.isArray(parsed.sections)) {
-          setResumeData(parsed)
-        } else {
-          setResumeData(defaultResumeData)
-        }
-      } catch (e) {
-        setResumeData(defaultResumeData)
-      }
-    }
-  }, [])
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const handleChange = () => setIsSaved(false)
+
+  useEffect(() => {
+    const openListener = () => openJsonFile()
+    window.addEventListener('openResumeJsonFile', openListener)
+    return () => window.removeEventListener('openResumeJsonFile', openListener)
+  }, [])
+
+  useEffect(() => {
+    if ((location.state as any)?.openJsonFile) {
+      openJsonFile()
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location, navigate])
+
+  const normalizeResumeData = (data: any): ResumeData => {
+    const ensureId = (value: any, prefix: string) => typeof value === 'string' && value ? value : `${prefix}-${crypto.randomUUID()}`
+
+    return {
+      personal: {
+        firstName: String(data.personal?.firstName || ''),
+        lastName: String(data.personal?.lastName || ''),
+        position: String(data.personal?.position || ''),
+        email: String(data.personal?.email || ''),
+        mobile: String(data.personal?.mobile || ''),
+        address: String(data.personal?.address || ''),
+        github: String(data.personal?.github || ''),
+        homePage: data.personal?.homePage ? String(data.personal.homePage) : undefined,
+        linkedin: data.personal?.linkedin ? String(data.personal.linkedin) : undefined,
+        gitlab: data.personal?.gitlab ? String(data.personal.gitlab) : undefined,
+        twitter: data.personal?.twitter ? String(data.personal.twitter) : undefined,
+        photo: data.personal?.photo,
+        quote: data.personal?.quote ? String(data.personal.quote) : undefined,
+      },
+      education: Array.isArray(data.education) ? data.education.map((edu: any) => ({
+        id: ensureId(edu.id, 'edu'),
+        school: String(edu.school || ''),
+        degree: String(edu.degree || ''),
+        field: edu.field ? String(edu.field) : undefined,
+        startDate: String(edu.startDate || ''),
+        endDate: edu.endDate ? String(edu.endDate) : undefined,
+        description: edu.description ? String(edu.description) : undefined,
+        gpa: edu.gpa ? String(edu.gpa) : undefined,
+        location: edu.location ? String(edu.location) : undefined,
+      })) : [],
+      sections: Array.isArray(data.sections) ? data.sections.map((section: any, sectionIndex: number) => ({
+        id: ensureId(section.id || `section-${sectionIndex}`, 'sec'),
+        title: String(section.title || `Section ${sectionIndex + 1}`),
+        entries: Array.isArray(section.entries) ? section.entries.map((entry: any, entryIndex: number) => ({
+          id: ensureId(entry.id || `entry-${entryIndex}`, 'entry'),
+          title: String(entry.title || ''),
+          subtitle: String(entry.subtitle || ''),
+          location: entry.location ? String(entry.location) : undefined,
+          startDate: String(entry.startDate || ''),
+          endDate: entry.endDate ? String(entry.endDate) : undefined,
+          description: entry.description ? String(entry.description) : undefined,
+          highlights: Array.isArray(entry.highlights) ? entry.highlights.map((item: any) => String(item)) : undefined,
+        })) : [],
+      })) : [],
+      skills: Array.isArray(data.skills) ? data.skills.map((skill: any, skillIndex: number) => ({
+        id: ensureId(skill.id || `skill-${skillIndex}`, 'sk'),
+        category: String(skill.category || ''),
+        name: String(skill.name || ''),
+      })) : [],
+      summary: typeof data.summary === 'string' ? data.summary : undefined,
+    }
+  }
+
+  const validateResumeFile = (data: any): data is ResumeData => {
+    return (
+      data &&
+      typeof data === 'object' &&
+      data.personal &&
+      typeof data.personal === 'object'
+    )
+  }
+
+  const sanitizeJsonText = (raw: string) => {
+    let inString = false
+    let escaped = false
+    let sanitized = ''
+
+    for (let i = 0; i < raw.length; i += 1) {
+      const char = raw[i]
+
+      if (inString) {
+        if (escaped) {
+          sanitized += char
+          escaped = false
+          continue
+        }
+
+        if (char === '\\') {
+          sanitized += char
+          escaped = true
+          continue
+        }
+
+        if (char === '"') {
+          sanitized += char
+          inString = false
+          continue
+        }
+
+        if (char === '\r') {
+          sanitized += '\\n'
+          if (raw[i + 1] === '\n') {
+            i += 1
+          }
+          continue
+        }
+
+        if (char === '\n') {
+          sanitized += '\\n'
+          continue
+        }
+      } else if (char === '"') {
+        inString = true
+      }
+
+      sanitized += char
+    }
+
+    return sanitized
+  }
+
+  const parseJsonWithFallback = (raw: string) => {
+    try {
+      return JSON.parse(raw)
+    } catch (firstError) {
+      const sanitized = sanitizeJsonText(raw)
+      return JSON.parse(sanitized)
+    }
+  }
+
+  const handleJsonFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const text = reader.result as string
+        const parsed = parseJsonWithFallback(text)
+        if (!validateResumeFile(parsed)) {
+          console.error('Resume JSON validation failed', parsed)
+          toast.error('Invalid resume JSON format. Please include a personal object.')
+          return
+        }
+        setResumeData(normalizeResumeData(parsed))
+        setIsSaved(true)
+        toast.success('Resume loaded from JSON.')
+      } catch (error) {
+        console.error('Failed to parse JSON file', error)
+        toast.error('Failed to parse JSON file. Please check the JSON syntax.')
+      }
+    }
+    reader.readAsText(file)
+    event.target.value = ''
+  }
+
+  const openJsonFile = () => {
+    fileInputRef.current?.click()
+  }
 
   const saveToLocalStorage = (data: ResumeData) => {
     localStorage.setItem('current_resume_data', JSON.stringify(data))
@@ -414,7 +581,14 @@ export default function ResumeEditorPage() {
         </nav>
 
         {/* Execute Build Button moved here, made more prominent */}
-        <div className="p-8 border-t border-gray-800/30 bg-[#080808]">
+        <div className="p-8 border-t border-gray-800/30 bg-[#080808] space-y-3">
+          <button
+            onClick={openJsonFile}
+            className="w-full bg-[#111111] border border-gray-700 hover:border-red-500 hover:bg-[#181818] text-gray-200 font-black py-4 rounded uppercase tracking-widest text-[10px] flex items-center justify-center space-x-3 transition-all"
+          >
+            <FaPlus className="text-xs" />
+            <span>Create Resume</span>
+          </button>
           <button 
             onClick={handleDownloadPdf} 
             disabled={isGeneratingPdf} 
@@ -422,6 +596,13 @@ export default function ResumeEditorPage() {
           >
             {isGeneratingPdf ? <FaSpinner className="animate-spin" /> : <><FaDownload className="text-xs" /> <span>Download PDF</span></>}
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={handleJsonFileUpload}
+          />
         </div>
       </aside>
 
