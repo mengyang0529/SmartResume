@@ -6,7 +6,7 @@ A Typst-based Web Resume Generator that supports editable resume content, online
 
 - **Typst PDF Generation**: Uses Typst as the typesetting engine, providing faster and more stable PDF output.
 - **React Editing Interface**: Built with React + Vite + Tailwind for easy extension and fast iteration.
-- **Modern Resume Templates**: Based on the `awesome-cv` style template, supporting various resume content modules.
+- **Modern Resume Templates**: Based on the `awesome-cv` style template and inspired by [modern-cv](https://github.com/ptsouchlos/modern-cv), supporting various resume content modules.
 - **Developer Friendly**: Supports one-click start with Docker Compose, suitable for local development and debugging.
 
 ## Project Architecture
