@@ -27,7 +27,9 @@
 ## 主要功能
 
 - 简历数据编辑：个人信息、教育、工作经验、技能、项目、语言、荣誉等
+- 工作申请跟踪：Profile 页面提供工作申请和面试跟踪功能，包括申请状态、面试安排、统计和时间线
 - 后端简历管理接口：`GET /api/v1/resumes`、`POST /api/v1/resumes`、`GET /api/v1/resumes/:id`、`PUT /api/v1/resumes/:id`、`DELETE /api/v1/resumes/:id`
+- 工作申请管理接口：`GET /api/v1/applications`、`POST /api/v1/applications`、`GET /api/v1/applications/:id`、`PUT /api/v1/applications/:id`、`DELETE /api/v1/applications/:id`
 - Typst PDF 编译：`typst-service` 提供 `/compile` API
 - 健康检查：`/health`
 - Docker Compose 一键启动所有服务
@@ -114,7 +116,7 @@ npm test
 
 ## 说明
 
-当前项目处于 Typst 迁移完成阶段，核心功能已就绪。下一步应重点补全用户认证与简历持久化逻辑、完善前端体验，以及在生产环境中验证缓存和容器连接稳定性。
+当前项目已完成 Typst 迁移和 Profile 页面重构为工作申请跟踪器。核心功能包括简历生成和工作申请管理。下一步应重点补全用户认证与简历持久化逻辑、完善前端体验，以及在生产环境中验证缓存和容器连接稳定性。
 
 ## 许可证
 
