@@ -55,7 +55,7 @@ export default function RichTextToolbar({
   canMoveDown,
 }: RichTextToolbarProps) {
   return (
-    <div className="sticky top-0 z-10 bg-[#26262c] border-b border-gray-700/50 px-4 py-3 flex flex-wrap items-center gap-2">
+    <div className="bg-[#26262c] border-b border-gray-700/50 px-4 py-3 flex flex-wrap items-center gap-2 transition-all duration-300">
       {/* Block type selector */}
       <div className="flex items-center gap-1 bg-[#32323a] rounded p-1">
         {blockTypes.map(({ type, label }) => (

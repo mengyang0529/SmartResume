@@ -33,6 +33,9 @@ ${authorBlock}
   font: ("Source Sans 3", "Source Sans Pro", "LXGW Neo XiHei"),
 )
 
+// Disable automatic uppercase for headings to respect user input
+#set heading(upper: false)
+
 `
 
   if (summary) {
