@@ -333,8 +333,8 @@ export default function ResumeEditorPage() {
           <AnimatePresence mode="wait">
             {/* Identity Module */}
             {activeTab === 'personal' && (
-              <ModuleWrapper key="personal" title="Primary Identity" subtitle="Fundamental credentials for professional interface">
-                <div className="grid grid-cols-2 gap-x-12 gap-y-12">
+              <ModuleWrapper key="personal">
+                <div className="grid grid-cols-2 gap-x-12 gap-y-12 mt-8">
                   <FoundryInput label="First Name" value={resumeData.personal.firstName} onChange={(v: string) => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, firstName: v}}))}} />
                   <FoundryInput label="Last Name" value={resumeData.personal.lastName} onChange={(v: string) => { handleChange(); setResumeData(p => ({...p, personal: {...p.personal, lastName: v}}))}} />
                   <div className="col-span-2">
@@ -354,19 +354,7 @@ export default function ResumeEditorPage() {
 
             {/* Education Module */}
             {activeTab === 'education' && (
-              <ModuleWrapper 
-                key="education" 
-                title="Education" 
-                subtitle="Academic milestones & theoretical foundation"
-                onAdd={() => {
-                   handleChange();
-                   const newBlock: RichTextBlock = { id: `block-${crypto.randomUUID()}`, type: 'h2', content: '', rightContent: '' };
-                   const currentBlocks = editorBlocks['education'] || educationToBlocks(resumeData.education);
-                   const updatedBlocks = [...currentBlocks, { ...newBlock, type: 'h2' as const }, { id: `block-${crypto.randomUUID()}`, type: 'h3' as const, content: '', rightContent: '' }];
-                   setEditorBlocks(prev => ({...prev, education: updatedBlocks}));
-                   setResumeData(prev => ({...prev, education: blocksToEducation(updatedBlocks)}));
-                }}
-              >
+              <ModuleWrapper key="education">
                 <RichTextEditor
                   blocks={editorBlocks['education'] || educationToBlocks(resumeData.education)}
                   onChange={(blocks) => {
@@ -380,26 +368,7 @@ export default function ResumeEditorPage() {
 
             {/* Dynamic Modules */}
             {resumeData.sections.map(sec => activeTab === sec.id && (
-              <ModuleWrapper 
-                key={sec.id}
-                title={sec.title}
-                isTitleEditable
-                onTitleChange={(v: string) => updateSectionTitle(sec.id, v)}
-                onAdd={() => {
-                  handleChange();
-                  const currentBlocks = editorBlocks[sec.id] || sectionToBlocks(sec);
-                  const updatedBlocks = [
-                    ...currentBlocks,
-                    { id: `block-${crypto.randomUUID()}`, type: 'h2' as const, content: '', rightContent: '' },
-                    { id: `block-${crypto.randomUUID()}`, type: 'h3' as const, content: '', rightContent: '' },
-                  ];
-                  setEditorBlocks(prev => ({...prev, [sec.id]: updatedBlocks}));
-                  setResumeData(prev => ({
-                    ...prev,
-                    sections: prev.sections.map(s => s.id === sec.id ? blocksToSection(updatedBlocks, sec.id) : s)
-                  }));
-                }}
-              >
+              <ModuleWrapper key={sec.id}>
                 <RichTextEditor
                   blocks={editorBlocks[sec.id] || sectionToBlocks(sec)}
                   onChange={(blocks) => {
@@ -416,16 +385,8 @@ export default function ResumeEditorPage() {
 
             {/* Capabilities Module */}
             {activeTab === 'skills' && (
-              <ModuleWrapper 
-                key="skills" 
-                title="Capabilities" 
-                subtitle="Technical inventory & domain expertise"
-                onAdd={() => {
-                   handleChange();
-                   setResumeData(p => ({...p, skills: [{ id: crypto.randomUUID(), category: "", name: "" }, ...p.skills]}));
-                }}
-              >
-                <div className="grid grid-cols-2 gap-10">
+              <ModuleWrapper key="skills">
+                <div className="grid grid-cols-2 gap-10 mt-8">
                   {resumeData.skills.map(skill => (
                     <div key={skill.id} className="bg-[#3a3a44] p-8 border border-gray-700/50 relative group hover:border-red-600/30 transition-all">
                       <button onClick={() => {
@@ -439,6 +400,10 @@ export default function ResumeEditorPage() {
                       </div>
                     </div>
                   ))}
+                  <button onClick={() => {
+                     handleChange();
+                     setResumeData(p => ({...p, skills: [...p.skills, { id: crypto.randomUUID(), category: "", name: "" }]}));
+                  }} className="col-span-2 py-8 border border-dashed border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-500 uppercase font-black tracking-widest text-[10px]">+ Add New Capability</button>
                 </div>
               </ModuleWrapper>
             )}
@@ -486,26 +451,9 @@ function NavTab({ active, onClick, num, label, icon }: any) {
   )
 }
 
-function ModuleWrapper({ title, subtitle, children, isTitleEditable, onTitleChange, onAdd }: any) {
+function ModuleWrapper({ children }: any) {
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="pb-32">
-      <header className="mb-16 flex items-end justify-between border-b border-gray-700/50 pb-8">
-        <div className="flex-1 mr-8">
-          {isTitleEditable ? (
-            <input 
-              className="bg-transparent border-none text-5xl font-black uppercase tracking-tighter text-white p-0 focus:ring-0 w-full mb-4 caret-red-600" 
-              value={title} 
-              onChange={(e) => onTitleChange(e.target.value)} 
-            />
-          ) : (
-            <h1 className="text-5xl font-black uppercase tracking-tighter text-gray-400 mb-4">{title}</h1>
-          )}
-          <p className="text-gray-500 font-mono text-xs uppercase tracking-widest">{subtitle || 'Deployment module configuration'}</p>
-        </div>
-        <div className="flex space-x-3">
-          {onAdd && <button onClick={onAdd} className="px-8 py-3 bg-white text-black hover:bg-red-600 hover:text-white transition-all text-[10px] font-black uppercase shadow-xl">Add New Entry</button>}
-        </div>
-      </header>
       {children}
     </motion.div>
   )
