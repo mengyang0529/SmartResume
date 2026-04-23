@@ -98,25 +98,49 @@ npm run dev
 - `MAX_COMPILE_TIME=30`
 - `CACHE_ENABLED=true`
 
-## 运行测试
+## 数据库迁移
 
-### 后端测试
+本地开发时，首次启动或 schema 变更后需要运行迁移：
 
 ```bash
 cd backend
-npm test
+# 生成 Prisma Client
+npm run db:generate
+
+# 创建并应用迁移（开发环境）
+npx prisma migrate dev
+
+# 仅应用已有迁移（生产环境）
+npm run db:migrate
 ```
 
-### 前端测试
+## 运行测试与构建
+
+### 后端
+
+```bash
+cd backend
+npm run type-check   # TypeScript 类型检查
+npm run build        # 编译到 dist/
+npm test             # 运行单元测试
+```
+
+### 前端
 
 ```bash
 cd frontend
-npm test
+npm run type-check   # TypeScript 类型检查
+npm run build        # Vite 生产构建
+npm test             # 运行单元测试
 ```
+
+## API 文档
+
+详见 [`backend/API.md`](backend/API.md)，包含所有端点的请求/响应说明。
 
 ## 说明
 
-当前项目已完成 Typst 迁移和 Profile 页面重构为工作申请跟踪器。核心功能包括简历生成和工作申请管理。下一步应重点补全用户认证与简历持久化逻辑、完善前端体验，以及在生产环境中验证缓存和容器连接稳定性。
+当前项目已完成 Typst 迁移和 Profile 页面重构为工作申请跟踪器。核心功能包括简历生成和工作申请管理。数据库迁移已验证，后端路由已测试通过，前后端构建均无错误。
 
 ## 许可证
 

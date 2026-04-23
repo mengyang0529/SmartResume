@@ -73,7 +73,7 @@ describe('TypstService', () => {
     const typst = typstService.generateResumeTypst(sampleResume, defaultSettings)
 
     expect(typst).toBeDefined()
-    expect(typst).toContain('#import "@preview/modern-cv:0.10.0": *')
+    expect(typst).toContain('#import "awesome-cv.typ": *')
     expect(typst).toContain('#show: resume.with(')
     expect(typst).toContain('John')
     expect(typst).toContain('Doe')
@@ -84,7 +84,7 @@ describe('TypstService', () => {
 
     expect(typst).toContain('firstname: "John"')
     expect(typst).toContain('lastname: "Doe"')
-    expect(typst).toContain('positions: ("Senior Software Engineer")')
+    expect(typst).toContain('positions: ("Senior Software Engineer",)')
     expect(typst).toContain('email: "john.doe@example.com"')
   })
 
@@ -99,7 +99,7 @@ describe('TypstService', () => {
   it('should include experience section', () => {
     const typst = typstService.generateResumeTypst(sampleResume, defaultSettings)
 
-    expect(typst).toContain('= Experience')
+    expect(typst).toContain('= Work Experience')
     expect(typst).toContain('Tech Corp Inc.')
     expect(typst).toContain('Senior Software Engineer')
   })
@@ -158,6 +158,6 @@ describe('TypstService', () => {
   it('should include correct font configuration', () => {
     const typst = typstService.generateResumeTypst(sampleResume, defaultSettings)
 
-    expect(typst).toContain('font: ("Source Sans 3", "LXGW Neo XiHei", "sans-serif")')
+    expect(typst).toContain('font: ("Source Sans 3", "Source Sans Pro", "LXGW Neo XiHei")')
   })
 })

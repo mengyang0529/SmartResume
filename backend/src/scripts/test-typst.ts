@@ -77,22 +77,26 @@ const sampleResume: ResumeData = {
       name: 'AWS, Docker, Kubernetes'
     }
   ],
+  sections: [],
   projects: [
     {
-      id: 'proj1',
-      name: 'Open Source Dashboard',
-      description: 'Real-time monitoring dashboard for DevOps teams.',
-      technologies: ['React', 'TypeScript', 'WebSocket', 'D3.js']
+      title: 'Projects',
+      entries: [
+        {
+          id: 'proj1',
+          name: 'Open Source Dashboard',
+          description: 'Real-time monitoring dashboard for DevOps teams.',
+          technologies: ['React', 'TypeScript', 'WebSocket', 'D3.js']
+        }
+      ]
     }
   ],
   languages: [
     {
-      id: 'lang1',
       name: 'English',
       level: 'Native'
     },
     {
-      id: 'lang2',
       name: 'Spanish',
       level: 'Intermediate'
     }

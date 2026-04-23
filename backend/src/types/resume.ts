@@ -53,12 +53,48 @@ export interface Skill {
   name: string
 }
 
+export interface Experience {
+  id: string
+  position: string
+  company: string
+  location?: string
+  startDate: string
+  endDate?: string
+  description?: string
+  highlights?: string[]
+}
+
+export interface Project {
+  id: string
+  name: string
+  url?: string
+  description?: string
+  technologies?: string[]
+}
+
+export interface ProjectSection {
+  title: string
+  entries: Project[]
+}
+
+export interface Language {
+  name: string
+  level: string
+}
+
 export interface ResumeData {
   personal: PersonalInfo
   education: Education[]
   sections: ResumeSection[] // 动态区块：包含工作经历、项目、研究等
   skills: Skill[]
   summary?: string
+  experience?: Experience[]
+  projects?: ProjectSection[]
+  languages?: Language[]
+  honors?: string[]
+  certificates?: string[]
+  publications?: string[]
+  sectionTitles?: Record<string, string>
 }
 
 export interface TemplateSettings {

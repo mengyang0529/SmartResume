@@ -1,4 +1,4 @@
-import { ResumeData, TemplateSettings, Project, Language } from '../types/resume'
+import { ResumeData, TemplateSettings, Project, Language, Experience } from '../types/resume'
 
 export class TypstService {
   /**
@@ -120,7 +120,7 @@ export class TypstService {
     const titles = data.sectionTitles || {}
     const summarySection = summary ? this.buildSummarySection(summary, titles.summary || 'Summary') : ''
     const educationSection = education.length > 0 ? this.buildEducationSection(education, titles.education || 'Education') : ''
-    const experienceSection = experience.length > 0 ? this.buildExperienceSection(experience, titles.experience || 'Work Experience') : ''
+    const experienceSection = experience && experience.length > 0 ? this.buildExperienceSection(experience, titles.experience || 'Work Experience') : ''
     const skillsSection = skills.length > 0 ? this.buildSkillsSection(skills, titles.skills || 'Skills') : ''
     
     let projectsSection = ''
@@ -130,10 +130,10 @@ export class TypstService {
       }
     }
     
-    const languagesSection = languages.length > 0 ? this.buildLanguagesSection(languages) : ''
-    const honorsSection = honors.length > 0 ? this.buildHonorsSection(honors) : ''
-    const certificatesSection = certificates.length > 0 ? this.buildCertificatesSection(certificates) : ''
-    const publicationsSection = publications.length > 0 ? this.buildPublicationsSection(publications) : ''
+    const languagesSection = languages && languages.length > 0 ? this.buildLanguagesSection(languages) : ''
+    const honorsSection = honors && honors.length > 0 ? this.buildHonorsSection(honors) : ''
+    const certificatesSection = certificates && certificates.length > 0 ? this.buildCertificatesSection(certificates) : ''
+    const publicationsSection = publications && publications.length > 0 ? this.buildPublicationsSection(publications) : ''
 
     // Build quote block if present
     const quoteBlock = personal.quote
@@ -177,10 +177,10 @@ ${publicationsSection}
 `
   }
 
-  private buildExperienceSection(experiences: ResumeData['experience'], title: string): string {
+  private buildExperienceSection(experiences: Experience[] | undefined, title: string): string {
     let section = `= ${title}\n\n`
 
-    experiences.forEach(exp => {
+    experiences?.forEach((exp: Experience) => {
       const endDate = exp.endDate ? exp.endDate : 'Present'
       const dateStr = `${exp.startDate} -- ${endDate}`
 
@@ -211,8 +211,8 @@ ${publicationsSection}
     return section
   }
 
-  private buildEducationSection(educations: ResumeData['education']): string {
-    let section = `= Education\n\n`
+  private buildEducationSection(educations: ResumeData['education'], title: string = 'Education'): string {
+    let section = `= ${title}\n\n`
 
     educations.forEach(edu => {
       const endDate = edu.endDate ? edu.endDate : 'Present'
@@ -235,7 +235,7 @@ ${publicationsSection}
     return section
   }
 
-  private buildSkillsSection(skills: ResumeData['skills']): string {
+  private buildSkillsSection(skills: ResumeData['skills'], title: string = 'Skills'): string {
     // Group by category
     const byCategory: Record<string, ResumeData['skills']> = {}
     skills.forEach(skill => {
@@ -245,7 +245,7 @@ ${publicationsSection}
       byCategory[skill.category].push(skill)
     })
 
-    let section = `= Skills\n\n`
+    let section = `= ${title}\n\n`
 
     Object.entries(byCategory).forEach(([category, categorySkills]) => {
       const items = categorySkills.map(s => `"${this.escapeTypstString(s.name)}"`).join(', ')
@@ -257,10 +257,10 @@ ${publicationsSection}
     return section
   }
 
-  private buildProjectsSection(projects: ResumeData['projects']): string {
-    let section = `= Projects\n\n`
+  private buildProjectsSection(entries: Project[], title: string = 'Projects'): string {
+    let section = `= ${title}\n\n`
 
-    const projectList = projects || []
+    const projectList = entries || []
     projectList.forEach((project: Project) => {
       const titleLink = project.url
         ? `  title-link: "${this.escapeTypstString(project.url)}",\n`
@@ -294,7 +294,7 @@ ${titleLink}  location: "",
     return section
   }
 
-  private buildLanguagesSection(languages: ResumeData['languages']): string {
+  private buildLanguagesSection(languages: Language[] | undefined): string {
     let section = `= Languages\n\n`
 
     const langList = languages || []
@@ -306,10 +306,10 @@ ${titleLink}  location: "",
     return section
   }
 
-  private buildHonorsSection(honors: string[]): string {
+  private buildHonorsSection(honors: string[] | undefined): string {
     let section = `= Honors & Awards\n\n`
 
-    honors.forEach(honor => {
+    honors?.forEach((honor: string) => {
       section += `#resume-entry(
   title: "${this.escapeTypstString(honor)}",
   location: "",
@@ -321,10 +321,10 @@ ${titleLink}  location: "",
     return section
   }
 
-  private buildCertificatesSection(certificates: string[]): string {
+  private buildCertificatesSection(certificates: string[] | undefined): string {
     let section = `= Certifications\n\n`
 
-    certificates.forEach(cert => {
+    certificates?.forEach(cert => {
       section += `#resume-certification("${this.escapeTypstString(cert)}", "")\n`
     })
 
@@ -332,10 +332,10 @@ ${titleLink}  location: "",
     return section
   }
 
-  private buildPublicationsSection(publications: string[]): string {
+  private buildPublicationsSection(publications: string[] | undefined): string {
     let section = `= Publications\n\n`
 
-    publications.forEach(pub => {
+    publications?.forEach(pub => {
       section += `#resume-entry(
   title: "${this.escapeTypstString(pub)}",
   location: "",

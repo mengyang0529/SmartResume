@@ -20,11 +20,11 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://backend:5001',
+        target: process.env.VITE_PROXY_API_URL || 'http://localhost:5001',
         changeOrigin: true,
       },
       '/typst': {
-        target: 'http://typst:5050',
+        target: process.env.VITE_PROXY_TYPST_URL || 'http://localhost:5050',
         changeOrigin: true,
       },
     },

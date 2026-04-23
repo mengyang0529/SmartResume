@@ -20,6 +20,7 @@ const previewData: ResumeData = {
     address: '123 Innovation Drive, Silicon Valley, CA',
   },
   summary: 'Innovative software architect with over 10 years of experience in building scalable web applications and AI-powered tools. Expert in TypeScript, React, Node.js, and Typst automation.',
+  sections: [],
   experience: [
     {
       id: '1',
