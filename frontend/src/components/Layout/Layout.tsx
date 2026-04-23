@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaTerminal, FaLayerGroup, FaImages, FaUserAlt, FaHome } from 'react-icons/fa'
+import { FaTerminal, FaLayerGroup, FaImages, FaHome } from 'react-icons/fa'
 import clsx from 'clsx'
 
 export default function Layout() {
@@ -10,7 +10,6 @@ export default function Layout() {
     { path: '/', label: 'Home', icon: FaHome, num: '01' },
     { path: '/gallery', label: 'Gallery', icon: FaImages, num: '02' },
     { path: '/editor', label: 'Editor', icon: FaLayerGroup, num: '03' },
-    { path: '/profile', label: 'Profile', icon: FaUserAlt, num: '04' },
   ]
 
   const isActive = (path: string) => {

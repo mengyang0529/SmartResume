@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaBriefcase, FaChartBar, FaClock, FaSearchLocation, FaUserTie } from 'react-icons/fa'
+import { FaBriefcase, FaChartBar, FaClock, FaSearchLocation } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 import { applicationApi } from '../services/api'
@@ -28,13 +28,6 @@ interface Application {
   source?: string
   notes?: string
   interviews?: Interview[]
-}
-
-interface JobProfile {
-  targetRole: string
-  targetLocation: string
-  resumeVariant: string
-  notes: string
 }
 
 const initialApplications: Application[] = [
@@ -80,17 +73,8 @@ const initialApplications: Application[] = [
   },
 ]
 
-const initialJobProfile: JobProfile = {
-  targetRole: 'Senior Software Architect',
-  targetLocation: 'Remote-first / Bay Area',
-  resumeVariant: 'Technical Leadership',
-  notes: 'Focus on Typst PDF generation, distributed systems, and production workload case studies.',
-}
-
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const [isEditing, setIsEditing] = useState(false)
-  const [jobProfile, setJobProfile] = useState<JobProfile>(initialJobProfile)
   const [applications, setApplications] = useState<Application[]>(initialApplications)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -127,10 +111,6 @@ export default function ProfilePage() {
     return events
   }).sort((a, b) => (b.time.localeCompare(a.time)))
 
-  const handleJobProfileChange = (field: keyof JobProfile, value: string) => {
-    setJobProfile(prev => ({ ...prev, [field]: value }))
-  }
-
   return (
     <div className="min-h-screen bg-[#1e1e22] py-24 px-10">
       <div className="max-w-7xl mx-auto">
@@ -144,36 +124,10 @@ export default function ProfilePage() {
               Job Application <br /> <span className="text-gray-600">Tracker</span>
             </h1>
           </div>
-          <button
-            onClick={() => setIsEditing((value) => !value)}
-            className={clsx(
-              'px-10 py-4 font-black uppercase tracking-widest text-[10px] transition-all',
-              isEditing ? 'bg-red-600 text-white shadow-[0_10px_30px_rgba(220,38,38,0.3)]' : 'bg-white text-black hover:bg-red-600 hover:text-white'
-            )}
-          >
-            {isEditing ? 'Save Profile' : 'Edit Search Profile'}
-          </button>
         </header>
 
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-12">
-            <ProfileCard title="Job Search Profile" icon={<FaUserTie />}>
-              <div className="grid md:grid-cols-2 gap-x-12 gap-y-10">
-                <FoundryInput label="Target Role" value={jobProfile.targetRole} onChange={(value: string) => handleJobProfileChange('targetRole', value)} disabled={!isEditing} />
-                <FoundryInput label="Target Location" value={jobProfile.targetLocation} onChange={(value: string) => handleJobProfileChange('targetLocation', value)} disabled={!isEditing} />
-                <FoundryInput label="Resume Variant" value={jobProfile.resumeVariant} onChange={(value: string) => handleJobProfileChange('resumeVariant', value)} disabled={!isEditing} />
-                <div className="md:col-span-2">
-                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4 block">Search Notes</label>
-                  <textarea
-                    className="w-full bg-[#26262c] border border-gray-700 p-6 text-sm text-gray-400 focus:ring-1 focus:ring-red-600 transition-all min-h-[140px] resize-none leading-relaxed"
-                    value={jobProfile.notes}
-                    onChange={(e) => handleJobProfileChange('notes', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-              </div>
-            </ProfileCard>
-
             <ProfileCard title="Application Timeline" icon={<FaBriefcase />}>
               <div className="space-y-4">
                 {isLoading && <div className="text-gray-500 text-sm">Loading...</div>}
@@ -277,20 +231,6 @@ function ProfileCard({ title, icon, children }: any) {
         <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 group-hover:text-white transition-colors">{title}</h2>
       </header>
       {children}
-    </div>
-  )
-}
-
-function FoundryInput({ label, value, onChange, disabled }: any) {
-  return (
-    <div className="flex flex-col space-y-3 group/input">
-      <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest group-focus-within/input:text-red-500 transition-colors">{label}</label>
-      <input
-        className="w-full bg-transparent p-0 text-lg font-medium text-gray-300 border-b border-gray-700 focus:border-red-600 focus:ring-0 transition-all disabled:text-gray-600 disabled:border-transparent"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-      />
     </div>
   )
 }

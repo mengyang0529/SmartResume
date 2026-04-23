@@ -4,7 +4,7 @@ import Layout from './components/Layout/Layout'
 import HomePage from './pages/HomePage'
 import ResumeEditorPage from './pages/ResumeEditorPage'
 import GalleryPage from './pages/GalleryPage'
-import ProfilePage from './pages/ProfilePage'
+
 import NotFoundPage from './pages/NotFoundPage'
 
 // Create a client for React Query
@@ -28,7 +28,6 @@ function App() {
           <Route path="editor" element={<ResumeEditorPage />} />
           <Route path="editor/:templateId" element={<ResumeEditorPage />} />
           <Route path="gallery" element={<GalleryPage />} />
-          <Route path="profile" element={<ProfilePage />} />
           <Route path="404" element={<NotFoundPage />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Route>
