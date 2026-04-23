@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { FaStar, FaDownload, FaEye, FaFilter, FaMagic, FaTimes, FaFilePdf, FaLayerGroup } from 'react-icons/fa'
-import toast from 'react-hot-toast'
-import { pdfApi } from '../services/api'
+import { motion } from 'framer-motion'
+import { FaMagic, FaEye } from 'react-icons/fa'
 import clsx from 'clsx'
 
 const templates = [

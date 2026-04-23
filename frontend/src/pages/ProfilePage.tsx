@@ -159,9 +159,9 @@ export default function ProfilePage() {
           <div className="lg:col-span-2 space-y-12">
             <ProfileCard title="Job Search Profile" icon={<FaUserTie />}>
               <div className="grid md:grid-cols-2 gap-x-12 gap-y-10">
-                <FoundryInput label="Target Role" value={jobProfile.targetRole} onChange={(value) => handleJobProfileChange('targetRole', value)} disabled={!isEditing} />
-                <FoundryInput label="Target Location" value={jobProfile.targetLocation} onChange={(value) => handleJobProfileChange('targetLocation', value)} disabled={!isEditing} />
-                <FoundryInput label="Resume Variant" value={jobProfile.resumeVariant} onChange={(value) => handleJobProfileChange('resumeVariant', value)} disabled={!isEditing} />
+                <FoundryInput label="Target Role" value={jobProfile.targetRole} onChange={(value: string) => handleJobProfileChange('targetRole', value)} disabled={!isEditing} />
+                <FoundryInput label="Target Location" value={jobProfile.targetLocation} onChange={(value: string) => handleJobProfileChange('targetLocation', value)} disabled={!isEditing} />
+                <FoundryInput label="Resume Variant" value={jobProfile.resumeVariant} onChange={(value: string) => handleJobProfileChange('resumeVariant', value)} disabled={!isEditing} />
                 <div className="md:col-span-2">
                   <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4 block">Search Notes</label>
                   <textarea

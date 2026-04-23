@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaArrowRight, FaTerminal, FaCog, FaMicrochip, FaRobot } from 'react-icons/fa'
+import { FaArrowRight, FaTerminal } from 'react-icons/fa'
 
 export default function HomePage() {
   const navigate = useNavigate()

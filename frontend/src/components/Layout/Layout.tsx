@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaTerminal, FaLayerGroup, FaImages, FaUserAlt, FaGithub, FaHome, FaCog } from 'react-icons/fa'
+import { FaTerminal, FaLayerGroup, FaImages, FaUserAlt, FaHome } from 'react-icons/fa'
 import clsx from 'clsx'
 
 export default function Layout() {
