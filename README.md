@@ -6,7 +6,7 @@
 
 - **Typst PDF 生成**：使用 Typst 作为排版引擎，提供更快、更稳定的 PDF 输出。
 - **React 编辑界面**：使用 React + Vite + Tailwind 构建，便于扩展和快速迭代。
-- **现代简历模板**：基于 `modern-cv` 风格模板，支持多种简历内容模块。
+- **现代简历模板**：基于 `awesome-cv` 风格模板，支持多种简历内容模块。
 - **开发友好**：支持 Docker Compose 一键启动，适合本地开发和调试。
 
 ## 项目架构
@@ -30,6 +30,7 @@
 - 工作申请跟踪：Profile 页面提供工作申请和面试跟踪功能，包括申请状态、面试安排、统计和时间线
 - 后端简历管理接口：`GET /api/v1/resumes`、`POST /api/v1/resumes`、`GET /api/v1/resumes/:id`、`PUT /api/v1/resumes/:id`、`DELETE /api/v1/resumes/:id`
 - 工作申请管理接口：`GET /api/v1/applications`、`POST /api/v1/applications`、`GET /api/v1/applications/:id`、`PUT /api/v1/applications/:id`、`DELETE /api/v1/applications/:id`
+- 面试管理接口：`GET /api/v1/applications/:id/interviews`、`POST /api/v1/applications/:id/interviews`
 - Typst PDF 编译：`typst-service` 提供 `/compile` API
 - 健康检查：`/health`
 - Docker Compose 一键启动所有服务
@@ -60,11 +61,15 @@ docker run -p 5050:5050 typst-service
 cd backend
 npm install
 cp .env.example .env
+# 确保 .env 中 NODE_ENV=development，否则后端不会启动端口监听
 npm run db:generate
+npx prisma migrate dev
 npm run dev
 ```
 
 后端默认监听 `http://localhost:5001`。
+
+> **注意**：本地开发需要先启动 PostgreSQL。macOS 用户可通过 `brew services start postgresql@18` 启动，或参考 PostgreSQL 官方文档。
 
 #### 3. 前端
 
@@ -74,7 +79,7 @@ npm install
 npm run dev
 ```
 
-前端默认监听 `http://localhost:3000`，并通过代理调用后端 API。
+前端默认监听 `http://localhost:3000`，通过 Vite 代理将 `/api` 转发到 `localhost:5001`。
 
 ## 代码迁移说明
 
