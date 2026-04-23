@@ -1,143 +1,17 @@
 import type { RichTextBlock } from '../types/richText'
-import type { Education, ResumeSection, Entry } from '../types/resume'
+import type { ResumeSection, Entry, ResumeData } from '../types/resume'
 
 /* ------------------------------------------------------------------ */
-/*  Education  <=>  RichTextBlock[]                                     */
-/* ------------------------------------------------------------------ */
-
-export function educationToBlocks(education: Education[]): RichTextBlock[] {
-  // If we have saved blocks, and the first one is an H1, use them directly
-  if (education.length > 0 && education[0].blocks && education[0].blocks.some(b => b.type === 'h1')) {
-    // Collect all blocks from all education entries, avoiding duplicates if they share the same array
-    // In our system, usually the first entry holds the full block list for the whole section
-    return education[0].blocks
-  }
-
-  const blocks: RichTextBlock[] = []
-  
-  // Add initial H1 for Education
-  blocks.push({
-    id: `edu-h1-default`,
-    type: 'h1',
-    content: 'Education'
-  })
-
-  education.forEach((edu) => {
-    blocks.push({
-      id: `edu-h2-${edu.id}`,
-      type: 'h2',
-      content: edu.school,
-      rightContent: edu.location || '',
-    })
-
-    const dateStr = `${edu.startDate}${edu.endDate ? ' -- ' + edu.endDate : ''}`
-    blocks.push({
-      id: `edu-h3-${edu.id}`,
-      type: 'h3',
-      content: edu.degree,
-      rightContent: dateStr,
-    })
-
-    if (edu.description) {
-      edu.description
-        .split('\n')
-        .map((l) => l.trim())
-        .filter((l) => l.length > 0)
-        .forEach((line, i) => {
-          blocks.push({
-            id: `edu-b-${edu.id}-${i}`,
-            type: 'bullet',
-            content: line,
-          })
-        })
-    }
-  })
-
-  return blocks
-}
-
-export function blocksToEducation(blocks: RichTextBlock[]): Education[] {
-  const education: Education[] = []
-  let current: Partial<Education> & { id: string; blocks: RichTextBlock[] } = { 
-    id: crypto.randomUUID(),
-    blocks: [] 
-  }
-  let hasCurrent = false
-
-  const flush = () => {
-    if (hasCurrent && current.school) {
-      education.push({
-        id: current.id,
-        school: current.school,
-        degree: current.degree || '',
-        startDate: current.startDate || '',
-        endDate: current.endDate,
-        location: current.location,
-        description: current.description,
-        blocks: undefined // We'll set the full blocks array on the first entry
-      })
-    }
-    current = { id: crypto.randomUUID(), blocks: [] }
-    hasCurrent = false
-  }
-
-  blocks.forEach((block) => {
-    if (block.type === 'h1') {
-      // H1 is a section-level block, we'll ensure it stays in the full list
-      // but it doesn't start a new education entry
-    } else if (block.type === 'h2') {
-      flush()
-      current.school = block.content
-      current.location = block.rightContent || undefined
-      hasCurrent = true
-    } else if (block.type === 'h3' && hasCurrent) {
-      current.degree = block.content
-      const rc = block.rightContent || ''
-      const m = rc.match(/^(.+?)\s*--\s*(.*)$/)
-      if (m) {
-        current.startDate = m[1].trim()
-        const end = m[2].trim()
-        if (end) current.endDate = end
-      } else {
-        current.startDate = rc.trim()
-      }
-    } else if (hasCurrent && (block.type === 'bullet' || block.type === 'paragraph')) {
-      current.description = current.description
-        ? current.description + '\n' + block.content
-        : block.content
-    }
-  })
-
-  flush()
-  
-  // Store the entire blocks array in the first education entry for persistence
-  if (education.length > 0) {
-    education[0].blocks = [...blocks]
-  } else if (blocks.length > 0) {
-    // If no school entries yet, still keep the H1 block
-    education.push({
-      id: crypto.randomUUID(),
-      school: '',
-      degree: '',
-      startDate: '',
-      blocks: [...blocks]
-    })
-  }
-  
-  return education
-}
-
-/* ------------------------------------------------------------------ */
-/*  ResumeSection  <=>  RichTextBlock[]                                 */
+/*  Generic Section  <=>  RichTextBlock[]                               */
 /* ------------------------------------------------------------------ */
 
 export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
-  if (section.blocks && section.blocks.length > 0) {
-    return section.blocks
-  }
+  // If we have cached blocks for this section, use them
+  if (section.blocks && section.blocks.length > 0) return section.blocks
 
   const blocks: RichTextBlock[] = []
-
+  
+  // H1 for Section Title
   blocks.push({
     id: `sec-h1-${section.id}`,
     type: 'h1',
@@ -145,6 +19,7 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
   })
 
   section.entries.forEach((entry) => {
+    // H2 for main entity (Company/School)
     blocks.push({
       id: `ent-h2-${entry.id}`,
       type: 'h2',
@@ -152,6 +27,7 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
       rightContent: entry.location || '',
     })
 
+    // H3 for subtitle (Role/Degree) and dates
     const dateStr = `${entry.startDate}${entry.endDate ? ' -- ' + entry.endDate : ''}`
     blocks.push({
       id: `ent-h3-${entry.id}`,
@@ -160,6 +36,7 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
       rightContent: dateStr,
     })
 
+    // Paragraphs/Bullets for description
     if (entry.description) {
       entry.description
         .split('\n')
@@ -172,16 +49,6 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
             content: line,
           })
         })
-    }
-
-    if (entry.highlights) {
-      entry.highlights.forEach((hl, i) => {
-        blocks.push({
-          id: `ent-hl-${entry.id}-${i}`,
-          type: 'bullet',
-          content: hl,
-        })
-      })
     }
   })
 
@@ -231,4 +98,43 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
   }
   
   return section
+}
+
+/* ------------------------------------------------------------------ */
+/*  Modules (All Sections) <=> RichTextBlock[]                          */
+/* ------------------------------------------------------------------ */
+
+export function modulesToBlocks(sections: ResumeSection[]): RichTextBlock[] {
+  let allBlocks: RichTextBlock[] = []
+  sections.forEach(sec => {
+    allBlocks = allBlocks.concat(sectionToBlocks(sec))
+  })
+  return allBlocks
+}
+
+export function blocksToModules(blocks: RichTextBlock[]): ResumeSection[] {
+  const sectionGroups: { id: string, blocks: RichTextBlock[] }[] = []
+  let currentGroup: RichTextBlock[] | null = null
+
+  blocks.forEach(block => {
+    if (block.type === 'h1') {
+      const newSecId = block.id.startsWith('sec-h1-') ? block.id.replace('sec-h1-', '') : `sec-${crypto.randomUUID()}`
+      const newGroup: RichTextBlock[] = []
+      sectionGroups.push({ id: newSecId, blocks: newGroup })
+      currentGroup = newGroup
+    }
+    if (currentGroup) {
+      currentGroup.push(block)
+    } else if (blocks.indexOf(block) === 0) {
+      // First block is not H1, create a default group
+      const newGroup: RichTextBlock[] = []
+      sectionGroups.push({ id: `sec-${crypto.randomUUID()}`, blocks: newGroup })
+      currentGroup = newGroup
+      currentGroup.push(block)
+    } else if (currentGroup) {
+      currentGroup.push(block)
+    }
+  })
+
+  return sectionGroups.map(group => blocksToSection(group.blocks, group.id))
 }
