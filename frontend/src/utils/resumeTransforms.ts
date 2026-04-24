@@ -1,5 +1,5 @@
 import type { RichTextBlock } from '../types/richText'
-import type { ResumeSection, Entry, ResumeData } from '../types/resume'
+import type { ResumeSection, Entry } from '../types/resume'
 
 /* ------------------------------------------------------------------ */
 /*  Generic Section  <=>  RichTextBlock[]                               */
@@ -126,12 +126,9 @@ export function blocksToModules(blocks: RichTextBlock[]): ResumeSection[] {
     if (currentGroup) {
       currentGroup.push(block)
     } else if (blocks.indexOf(block) === 0) {
-      // First block is not H1, create a default group
       const newGroup: RichTextBlock[] = []
       sectionGroups.push({ id: `sec-${crypto.randomUUID()}`, blocks: newGroup })
       currentGroup = newGroup
-      currentGroup.push(block)
-    } else if (currentGroup) {
       currentGroup.push(block)
     }
   })

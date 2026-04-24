@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaTerminal, FaLayerGroup, FaImages, FaHome } from 'react-icons/fa'
 import clsx from 'clsx'
@@ -15,16 +15,6 @@ export default function Layout() {
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
     return location.pathname.startsWith(path)
-  }
-
-  const navigate = useNavigate()
-
-  const handleCreateResume = () => {
-    if (location.pathname === '/editor') {
-      window.dispatchEvent(new Event('openResumeJsonFile'))
-    } else {
-      navigate('/editor', { state: { openJsonFile: true } })
-    }
   }
 
   return (

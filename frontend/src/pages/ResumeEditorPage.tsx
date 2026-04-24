@@ -1,18 +1,23 @@
-import { useState, useRef, useEffect, type ChangeEvent } from 'react'
+import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { 
-  FaPlus, FaTrash, FaSpinner, 
+import {
+  FaPlus, FaTrash, FaSpinner,
   FaSave, FaDownload, FaChevronRight, FaFingerprint,
-  FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaEye, FaUpload, FaWrench
+  FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaEye, FaUpload, FaWrench,
+  FaHistory, FaFileDownload,
 } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
+import localforage from 'localforage'
 import { ResumeData, TemplateSettings, ResumeSection } from '../types/resume'
 import type { RichTextBlock } from '../types/richText'
 import { generateResumeTypst } from '../utils/typstGenerator'
-import { pdfApi } from '../services/api'
 import { modulesToBlocks, blocksToModules } from '../utils/resumeTransforms'
 import { RichTextEditor } from '../components/RichTextEditor'
+import { useTypstCompiler } from '../hooks/useTypstCompiler'
+import HistoryPanel from '../components/HistoryPanel'
+import { historyService } from '../services/historyService'
+import { importExportService } from '../services/importExport'
 import clsx from 'clsx'
 
 const generateId = (prefix = 'id') => {
@@ -23,7 +28,7 @@ const generateId = (prefix = 'id') => {
 }
 
 export default function ResumeEditorPage() {
-  
+
   const defaultTemplateSettings: TemplateSettings = {
     colorScheme: 'awesome-red',
     fontSize: '11pt',
@@ -49,18 +54,47 @@ export default function ResumeEditorPage() {
 
   const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData)
   const [templateSettings] = useState<TemplateSettings>(defaultTemplateSettings)
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [activeTab, setActiveTab] = useState('personal')
   const [isSaved, setIsSaved] = useState(true)
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([])
-  
+  const [showHistory, setShowHistory] = useState(false)
+
+  const { pdfBlobUrl, isCompiling, error: compileError, compile: triggerCompile } = useTypstCompiler({ debounceMs: 400 })
+
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const lastCompileSource = useRef('')
   const location = useLocation()
   const navigate = useNavigate()
 
-  const handleChange = () => setIsSaved(false)
+  const handleChange = useCallback(() => setIsSaved(false), [])
 
-  // Initialize blocks when data is loaded
+  const generateTypstNow = useCallback((data: ResumeData) => {
+    const source = generateResumeTypst(data, templateSettings)
+    if (source !== lastCompileSource.current) {
+      lastCompileSource.current = source
+      triggerCompile(source)
+    }
+  }, [templateSettings, triggerCompile])
+
+  // Load saved data on mount
+  useEffect(() => {
+    localforage.getItem<ResumeData>('current_resume_data').then(saved => {
+      if (saved) {
+        setResumeData(saved)
+        if (saved.sections.length > 0) {
+          setModuleBlocks(modulesToBlocks(saved.sections))
+        }
+      }
+    })
+  }, [])
+
+  // Trigger compilation when data changes (after initial load)
+  useEffect(() => {
+    if (resumeData.personal.firstName || resumeData.sections.length > 0) {
+      generateTypstNow(resumeData)
+    }
+  }, [resumeData, generateTypstNow])
+
   useEffect(() => {
     if (moduleBlocks.length === 0 && resumeData.sections.length > 0) {
       setModuleBlocks(modulesToBlocks(resumeData.sections))
@@ -108,7 +142,7 @@ export default function ResumeEditorPage() {
 
   const normalizeResumeData = (data: any): ResumeData => {
     const ensureId = (value: any, prefix: string) => typeof value === 'string' && value ? value : generateId(prefix)
-    
+
     let sections: ResumeSection[] = Array.isArray(data.sections) ? data.sections.map((section: any, sectionIndex: number) => ({
       id: ensureId(section.id || `section-${sectionIndex}`, 'sec'),
       title: String(section.title || `Section ${sectionIndex + 1}`),
@@ -124,7 +158,6 @@ export default function ResumeEditorPage() {
       })) : [],
     })) : []
 
-    // Migrate old education field if exists
     if (Array.isArray(data.education) && data.education.length > 0 && !sections.some(s => s.title.toLowerCase() === 'education')) {
       const eduSection: ResumeSection = {
         id: generateId('sec-edu'),
@@ -183,9 +216,12 @@ export default function ResumeEditorPage() {
 
   const openJsonFile = () => fileInputRef.current?.click()
 
-  const saveToLocalStorage = (data: ResumeData) => {
-    localStorage.setItem('current_resume_data', JSON.stringify(data))
+  const saveToLocal = async (data: ResumeData) => {
+    await localforage.setItem('current_resume_data', data)
     setIsSaved(true)
+    toast.success('Changes saved locally.')
+    // Save a history snapshot
+    historyService.saveSnapshot(data)
   }
 
   const addSection = () => {
@@ -211,24 +247,40 @@ export default function ResumeEditorPage() {
     return () => observer.disconnect()
   }, [])
 
-  const handleDownloadPdf = async () => {
-    setIsGeneratingPdf(true)
-    try {
-      const typstSource = generateResumeTypst(resumeData, templateSettings)
-      const result = await pdfApi.generateFromTypst(typstSource)
-      const cacheKey = result?.cacheKey || result?.cache_key
-      if (cacheKey) { window.open(pdfApi.downloadPdf(cacheKey), '_blank'); toast.success('Download started') }
-    } catch (e) { toast.error('Download failed') } finally { setIsGeneratingPdf(false) }
+  const handleDownloadPdf = () => {
+    if (pdfBlobUrl) {
+      const a = document.createElement('a')
+      a.href = pdfBlobUrl
+      const name = `${resumeData.personal.firstName || 'resume'}_${resumeData.personal.lastName || 'export'}.pdf`
+      a.download = name
+      a.click()
+      toast.success('PDF downloaded')
+    } else {
+      toast.error('No PDF generated yet. Please wait for compilation.')
+    }
   }
 
-  const handlePreviewPdf = async () => {
-    setIsGeneratingPdf(true)
-    try {
-      const typstSource = generateResumeTypst(resumeData, templateSettings)
-      const result = await pdfApi.generateFromTypst(typstSource)
-      const cacheKey = result?.cacheKey || result?.cache_key
-      if (cacheKey) { window.open(pdfApi.previewPdf(cacheKey), '_blank'); toast.success('Preview ready') }
-    } catch (e) { toast.error('Preview failed') } finally { setIsGeneratingPdf(false) }
+  const handlePreviewPdf = () => {
+    if (pdfBlobUrl) {
+      window.open(pdfBlobUrl, '_blank')
+      toast.success('Preview opened')
+    } else {
+      toast.error('No PDF generated yet. Please wait for compilation.')
+    }
+  }
+
+  const handleExportJson = () => {
+    importExportService.downloadJson(resumeData, `${resumeData.personal.firstName || 'resume'}-backup.json`)
+    toast.success('JSON exported')
+  }
+
+  const handleHistoryRestore = (data: ResumeData) => {
+    setResumeData(data)
+    if (data.sections.length > 0) {
+      setModuleBlocks(modulesToBlocks(data.sections))
+    }
+    setIsSaved(false)
+    toast.success('Snapshot restored')
   }
 
   return (
@@ -240,6 +292,11 @@ export default function ResumeEditorPage() {
           <NavTab active={activeTab === 'modules'} onClick={() => scrollToSection('modules')} num="02" label="Modules" icon={<FaLayerGroup />} />
           <SectionDivider label="Finalize" className="mt-6" />
           <NavTab active={activeTab === 'skills'} onClick={() => scrollToSection('skills')} num="--" label="Skills" icon={<FaWrench />} />
+          <SectionDivider label="Data" className="mt-6" />
+          <button onClick={() => setShowHistory(true)} className="w-full flex items-center px-4 py-5 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-300 transition-colors">
+            <FaHistory className="mr-3 text-sm" />
+            Time Machine
+          </button>
         </nav>
       </aside>
 
@@ -250,16 +307,25 @@ export default function ResumeEditorPage() {
               <FaUpload className="text-xs" /> <span>Import JSON</span>
             </button>
             <input ref={fileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleJsonFileUpload} />
+            <button onClick={handleExportJson} className="px-4 py-2 bg-[#3a3a44] border border-gray-700 hover:border-emerald-500 hover:bg-[#464650] text-gray-300 font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest">
+              <FaFileDownload className="text-xs" /> <span>Export JSON</span>
+            </button>
           </div>
           <div className="flex items-center space-x-3">
-            <button onClick={handlePreviewPdf} disabled={isGeneratingPdf} className="px-5 py-2 bg-[#3a3a44] border border-gray-700 hover:border-blue-500 hover:bg-[#464650] text-gray-300 font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest disabled:opacity-50">
-              {isGeneratingPdf ? <FaSpinner className="animate-spin" /> : <><FaEye className="text-xs" /> <span>Preview</span></>}
+            <button onClick={handlePreviewPdf} disabled={isCompiling || !pdfBlobUrl} className="px-5 py-2 bg-[#3a3a44] border border-gray-700 hover:border-blue-500 hover:bg-[#464650] text-gray-300 font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest disabled:opacity-50">
+              {isCompiling ? <FaSpinner className="animate-spin" /> : <><FaEye className="text-xs" /> <span>Preview</span></>}
             </button>
-            <button onClick={handleDownloadPdf} disabled={isGeneratingPdf} className="px-5 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest disabled:opacity-50 shadow-[0_10px_30px_rgba(220,38,38,0.2)]">
-              {isGeneratingPdf ? <FaSpinner className="animate-spin" /> : <><FaDownload className="text-xs" /> <span>Download PDF</span></>}
+            <button onClick={handleDownloadPdf} disabled={isCompiling || !pdfBlobUrl} className="px-5 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest disabled:opacity-50 shadow-[0_10px_30px_rgba(220,38,38,0.2)]">
+              {isCompiling ? <FaSpinner className="animate-spin" /> : <><FaDownload className="text-xs" /> <span>Download PDF</span></>}
             </button>
           </div>
         </div>
+
+        {compileError && (
+          <div className="w-full max-w-4xl mb-4 p-4 bg-red-900/20 border border-red-800/30 rounded text-red-400 text-[11px] font-mono">
+            Compilation warning: {compileError}
+          </div>
+        )}
 
         <div className="w-full max-w-4xl space-y-16 pb-20">
           <section id="section-personal">
@@ -310,12 +376,18 @@ export default function ResumeEditorPage() {
 
         {!isSaved && (
           <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-12 right-12 z-50">
-            <button onClick={() => saveToLocalStorage(resumeData)} className="bg-red-600 text-white px-10 py-5 rounded shadow-[0_15px_40px_rgba(220,38,38,0.4)] hover:bg-red-500 transition-all flex items-center space-x-4 active:scale-95 group border border-red-400/20">
+            <button onClick={() => saveToLocal(resumeData)} className="bg-red-600 text-white px-10 py-5 rounded shadow-[0_15px_40px_rgba(220,38,38,0.4)] hover:bg-red-500 transition-all flex items-center space-x-4 active:scale-95 group border border-red-400/20">
               <FaSave className="text-xl" /> <span className="font-black uppercase tracking-[0.2em] text-xs">Save Changes</span>
             </button>
           </motion.div>
         )}
       </main>
+
+      <HistoryPanel
+        open={showHistory}
+        onClose={() => setShowHistory(false)}
+        onRestore={handleHistoryRestore}
+      />
     </div>
   )
 }
