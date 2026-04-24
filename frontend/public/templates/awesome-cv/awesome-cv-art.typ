@@ -303,13 +303,13 @@
 /// ---- Resume Template ----
 
 #let organic-shape(color: default-accent-color) = {
-  place(dx: 0pt, dy: 0pt, block(width: 100%, height: 140pt, inset: 0pt)[
+  place(dx: 0pt, dy: 0pt, block(width: 100%, height: 200pt, inset: 0pt)[
     #set align(top + left)
-    #place(dx: -30pt, dy: -25pt)[#circle(radius: 65pt, fill: gradient.linear(color.lighten(15%), color.lighten(40%)), stroke: none)]
-    #place(dx: 60pt, dy: -30pt)[#circle(radius: 50pt, fill: gradient.linear(color.lighten(20%), color.lighten(50%)), stroke: none)]
-    #place(dx: 150pt, dy: -5pt)[#circle(radius: 45pt, fill: gradient.linear(color.lighten(25%), color.lighten(55%)), stroke: none)]
-    #place(dx: 240pt, dy: -35pt)[#circle(radius: 55pt, fill: gradient.linear(color.lighten(30%), color.lighten(60%)), stroke: none)]
-    #place(dx: 330pt, dy: -10pt)[#circle(radius: 30pt, fill: gradient.linear(color.lighten(35%), color.lighten(65%)), stroke: none)]
+    #place(dx: 390pt, dy: -15pt)[#rotate(-15deg)[#ellipse(width: 100pt, height: 70pt, fill: color.transparentize(60%), stroke: none)]]
+    #place(dx: 440pt, dy: 15pt)[#rect(width: 90pt, height: 50pt, radius: 25pt, fill: color.transparentize(50%), stroke: none)]
+    #place(dx: 400pt, dy: 40pt)[#rotate(20deg)[#ellipse(width: 80pt, height: 55pt, fill: color.transparentize(55%), stroke: none)]]
+    #place(dx: 465pt, dy: 60pt)[#rotate(-10deg)[#rect(width: 70pt, height: 40pt, radius: 20pt, fill: color.transparentize(65%), stroke: none)]]
+    #place(dx: 410pt, dy: 80pt)[#ellipse(width: 60pt, height: 40pt, fill: color.transparentize(50%), stroke: none)]
   ])
 }
 
@@ -481,13 +481,21 @@
       ],
       align(left + horizon)[
         #block(
-          clip: true,
-          stroke: 0pt,
-          radius: 2cm,
           width: 4cm,
           height: 4cm,
-          align(center + horizon, profile-picture),
-        )
+          radius: 2cm,
+          fill: white,
+          inset: 0pt,
+        )[
+          #block(
+            clip: true,
+            stroke: 0pt,
+            radius: 2cm,
+            width: 100%,
+            height: 100%,
+            align(center + horizon, profile-picture),
+          )
+        ]
       ],
     )
   } else {
