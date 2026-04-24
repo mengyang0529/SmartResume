@@ -8,8 +8,8 @@ export default function Layout() {
 
   const navItems = [
     { path: '/', label: 'Home', icon: FaHome, num: '01' },
-    { path: '/gallery', label: 'Gallery', icon: FaImages, num: '02' },
-    { path: '/editor', label: 'Editor', icon: FaLayerGroup, num: '03' },
+    { path: '/editor', label: 'Editor', icon: FaLayerGroup, num: '02' },
+    { path: '/gallery', label: 'Gallery', icon: FaImages, num: '03' },
   ]
 
   const isActive = (path: string) => {
