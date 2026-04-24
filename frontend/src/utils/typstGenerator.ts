@@ -55,23 +55,37 @@ ${authorBlock}
 `
 
   if (summary) {
-    typst += `#block(sticky: true, above: 1em)[
+    if (settings.template === 'art') {
+      typst += `#block(sticky: true, above: 1em)[
+  #set text(size: 16pt, weight: "regular")
+  #align(left)[
+    #text(fill: rgb("${accentColor}"))[*Sum*]#text(fill: black)[*mary*]
+    #box(width: 1fr, line(length: 100%))
+  ]
+]\n\n#resume-item[\n  ${escapeTypstContent(summary)}\n]\n\n`
+    } else {
+      typst += `#block(sticky: true, above: 1em)[
   #set text(size: 16pt, weight: "regular")
   #align(left)[
     #text(fill: black)[*Summary*]
     #box(width: 1fr, line(length: 100%))
   ]
 ]\n\n#resume-item[\n  ${escapeTypstContent(summary)}\n]\n\n`
+    }
   }
 
   // 1. Education
   if (education && education.length > 0) {
     if (education[0].blocks && education[0].blocks.length > 0) {
       // Use rich blocks (which should include H1)
-      typst += renderBlocksAsEntries(education[0].blocks)
+      typst += renderBlocksAsEntries(education[0].blocks, settings.template, accentColor)
     } else {
       // Fallback to legacy education data
-      typst += `= Education\n\n`
+      if (settings.template === 'art') {
+        typst += `= #text(fill: rgb("${accentColor}"))[Edu]#text(fill: black)[cation]\n\n`
+      } else {
+        typst += `= Education\n\n`
+      }
       education.forEach(edu => {
         typst += `#resume-entry(
   title: "${escapeTypstString(edu.school)}",
@@ -87,9 +101,15 @@ ${authorBlock}
   // 2. Dynamic Sections
   sections.forEach(sec => {
     if (sec.blocks && sec.blocks.length > 0) {
-      typst += renderBlocksAsEntries(sec.blocks)
+      typst += renderBlocksAsEntries(sec.blocks, settings.template, accentColor)
     } else if (sec.entries && sec.entries.length > 0) {
-      typst += `= ${sec.title}\n\n`
+      if (settings.template === 'art') {
+        const first3 = escapeTypstContent(sec.title.slice(0, 3))
+        const rest = escapeTypstContent(sec.title.slice(3))
+        typst += `= #text(fill: rgb("${accentColor}"))[${first3}]#text(fill: black)[${rest}]\n\n`
+      } else {
+        typst += `= ${sec.title}\n\n`
+      }
       sec.entries.forEach(entry => {
         typst += `#resume-entry(
   title: "${escapeTypstString(entry.title)}",
@@ -113,7 +133,13 @@ ${authorBlock}
     // Render H1 heading from skills blocks in black, or no heading if absent
     const skillsHeading = skillsBlocks?.find(b => b.type === 'h1')?.content
     if (skillsHeading) {
-      typst += `= ${escapeTypstContent(skillsHeading)}\n\n`
+      if (settings.template === 'art') {
+        const first3 = escapeTypstContent(skillsHeading.slice(0, 3))
+        const rest = escapeTypstContent(skillsHeading.slice(3))
+        typst += `= #text(fill: rgb("${accentColor}"))[${first3}]#text(fill: black)[${rest}]\n\n`
+      } else {
+        typst += `= ${escapeTypstContent(skillsHeading)}\n\n`
+      }
     }
     const byCategory: any = {}
     skills.forEach(s => {
@@ -129,7 +155,7 @@ ${authorBlock}
   return typst
 }
 
-function renderBlocksAsEntries(blocks: RichTextBlock[]): string {
+function renderBlocksAsEntries(blocks: RichTextBlock[], template?: string, accentColor?: string): string {
   let typst = ''
   let currentEntry: { title?: string, location?: string, date?: string, description?: string, items: string[] } | null = null
 
@@ -155,8 +181,14 @@ function renderBlocksAsEntries(blocks: RichTextBlock[]): string {
   blocks.forEach(block => {
     if (block.type === 'h1') {
       flush()
-      const content = renderFormattedText(block.content, block.bold ?? false, block.color)
-      typst += `= ${content}\n\n`
+      if (template === 'art' && accentColor) {
+        const first3 = escapeTypstContent(block.content.slice(0, 3))
+        const rest = escapeTypstContent(block.content.slice(3))
+        typst += `= #text(fill: rgb("${accentColor}"))[${first3}]#text(fill: black)[${rest}]\n\n`
+      } else {
+        const content = renderFormattedText(block.content, block.bold ?? false, block.color)
+        typst += `= ${content}\n\n`
+      }
     } else if (block.type === 'h2') {
       flush()
       currentEntry = {
