@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaBriefcase, FaChartBar, FaClock, FaSearchLocation } from 'react-icons/fa'
-import toast from 'react-hot-toast'
 import clsx from 'clsx'
 import { applicationApi } from '../services/api'
 
@@ -82,7 +81,7 @@ export default function ProfilePage() {
     applicationApi.listApplications()
       .then((data) => setApplications(data))
       .catch(() => {
-        toast.error('Failed to load applications. Showing local default data.')
+        console.error('Failed to load applications. Showing local default data.')
       })
       .finally(() => setIsLoading(false))
   }, [])

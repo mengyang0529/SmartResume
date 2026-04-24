@@ -7,7 +7,6 @@ import {
   FaHistory, FaFileDownload,
 } from 'react-icons/fa'
 import { motion } from 'framer-motion'
-import toast from 'react-hot-toast'
 import localforage from 'localforage'
 import { ResumeData, TemplateSettings, ResumeSection } from '../types/resume'
 import type { RichTextBlock } from '../types/richText'
@@ -202,13 +201,12 @@ export default function ResumeEditorPage() {
     reader.onload = () => {
       try {
         const parsed = parseJsonWithFallback(reader.result as string)
-        if (!validateResumeFile(parsed)) { toast.error('Invalid format.'); return }
+        if (!validateResumeFile(parsed)) { return }
         const normalized = normalizeResumeData(parsed)
         setResumeData(normalized)
         setModuleBlocks(modulesToBlocks(normalized.sections))
         setIsSaved(true)
-        toast.success('Resume loaded.')
-      } catch (e) { toast.error('Failed to parse JSON.') }
+      } catch (e) { /* ignore parse errors */ }
     }
     reader.readAsText(file)
     event.target.value = ''
@@ -219,8 +217,6 @@ export default function ResumeEditorPage() {
   const saveToLocal = async (data: ResumeData) => {
     await localforage.setItem('current_resume_data', data)
     setIsSaved(true)
-    toast.success('Changes saved locally.')
-    // Save a history snapshot
     historyService.saveSnapshot(data)
   }
 
@@ -254,24 +250,17 @@ export default function ResumeEditorPage() {
       const name = `${resumeData.personal.firstName || 'resume'}_${resumeData.personal.lastName || 'export'}.pdf`
       a.download = name
       a.click()
-      toast.success('PDF downloaded')
-    } else {
-      toast.error('No PDF generated yet. Please wait for compilation.')
     }
   }
 
   const handlePreviewPdf = () => {
     if (pdfBlobUrl) {
       window.open(pdfBlobUrl, '_blank')
-      toast.success('Preview opened')
-    } else {
-      toast.error('No PDF generated yet. Please wait for compilation.')
     }
   }
 
   const handleExportJson = () => {
     importExportService.downloadJson(resumeData, `${resumeData.personal.firstName || 'resume'}-backup.json`)
-    toast.success('JSON exported')
   }
 
   const handleHistoryRestore = (data: ResumeData) => {
@@ -280,7 +269,6 @@ export default function ResumeEditorPage() {
       setModuleBlocks(modulesToBlocks(data.sections))
     }
     setIsSaved(false)
-    toast.success('Snapshot restored')
   }
 
   return (
