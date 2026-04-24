@@ -302,14 +302,20 @@
 
 /// ---- Resume Template ----
 
-#let organic-shape(color: default-accent-color) = {
+#let organic-shape(color: default-accent-color, transparent: true) = {
+  let muted = color.lighten(45%)
+  let a = if transparent { color.transparentize(60%) } else { muted }
+  let b = if transparent { color.transparentize(50%) } else { muted }
+  let c = if transparent { color.transparentize(55%) } else { muted }
+  let d = if transparent { color.transparentize(65%) } else { muted }
+  let e = if transparent { color.transparentize(50%) } else { muted }
   place(dx: 0pt, dy: 0pt, block(width: 100%, height: 200pt, inset: 0pt)[
     #set align(top + left)
-    #place(dx: 390pt, dy: -15pt)[#rotate(-15deg)[#ellipse(width: 100pt, height: 70pt, fill: color.transparentize(60%), stroke: none)]]
-    #place(dx: 440pt, dy: 15pt)[#rect(width: 90pt, height: 50pt, radius: 25pt, fill: color.transparentize(50%), stroke: none)]
-    #place(dx: 400pt, dy: 40pt)[#rotate(20deg)[#ellipse(width: 80pt, height: 55pt, fill: color.transparentize(55%), stroke: none)]]
-    #place(dx: 465pt, dy: 60pt)[#rotate(-10deg)[#rect(width: 70pt, height: 40pt, radius: 20pt, fill: color.transparentize(65%), stroke: none)]]
-    #place(dx: 410pt, dy: 80pt)[#ellipse(width: 60pt, height: 40pt, fill: color.transparentize(50%), stroke: none)]
+    #place(dx: 390pt, dy: -15pt)[#rotate(-15deg)[#ellipse(width: 100pt, height: 70pt, fill: a, stroke: none)]]
+    #place(dx: 440pt, dy: 15pt)[#rect(width: 90pt, height: 50pt, radius: 25pt, fill: b, stroke: none)]
+    #place(dx: 400pt, dy: 40pt)[#rotate(20deg)[#ellipse(width: 80pt, height: 55pt, fill: c, stroke: none)]]
+    #place(dx: 465pt, dy: 60pt)[#rotate(-10deg)[#rect(width: 70pt, height: 40pt, radius: 20pt, fill: d, stroke: none)]]
+    #place(dx: 410pt, dy: 80pt)[#ellipse(width: 60pt, height: 40pt, fill: e, stroke: none)]
   ])
 }
 
@@ -411,7 +417,7 @@
     __apply_smallcaps(it.body, use-smallcaps)
   }
 
-  organic-shape(color: accent-color)
+  organic-shape(color: accent-color, transparent: profile-picture != none)
 
   let name = {
     align(center)[
@@ -468,25 +474,25 @@
     align(center, items.join(contact-items-separator))
   }
 
-  if profile-picture != none {
-    grid(
-      columns: (100% - 4cm, 4cm),
-      rows: 100pt,
-      gutter: 10pt,
-      [
-        #name
-        #positions-block
-        #address
-        #contacts
-      ],
-      align(left + horizon)[
-        #block(
-          width: 4cm,
-          height: 4cm,
-          radius: 2cm,
-          fill: white,
-          inset: 0pt,
-        )[
+  grid(
+    columns: (100% - 4cm, 4cm),
+    rows: 100pt,
+    gutter: 10pt,
+    [
+      #name
+      #positions-block
+      #address
+      #contacts
+    ],
+    align(left + horizon)[
+      #block(
+        width: 4cm,
+        height: 4cm,
+        radius: 2cm,
+        fill: if profile-picture != none { white } else { accent-color.lighten(45%) },
+        inset: 0pt,
+      )[
+        #if profile-picture != none [
           #block(
             clip: true,
             stroke: 0pt,
@@ -496,14 +502,9 @@
             align(center + horizon, profile-picture),
           )
         ]
-      ],
-    )
-  } else {
-    name
-    positions-block
-    address
-    contacts
-  }
+      ]
+    ],
+  )
 
   body
 }
