@@ -60,7 +60,7 @@ function blocksToSkills(blocks: RichTextBlock[]): Skill[] {
 export default function ResumeEditorPage() {
 
   const templates = [
-    { id: 1, name: 'Standard Professional', category: 'Blueprint', description: 'Optimized for ATS and corporate standards.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const } },
+    { id: 1, name: 'Classic', category: 'Awsome-CV', description: 'Optimized for ATS and corporate standards.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const } },
   ]
 
   const defaultTemplateSettings: TemplateSettings = {
