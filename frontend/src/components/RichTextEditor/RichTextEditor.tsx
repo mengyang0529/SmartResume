@@ -3,7 +3,7 @@ import type { RichTextBlock, BlockType } from '../../types/richText'
 import EditableBlock from './EditableBlock'
 import RichTextToolbar from './RichTextToolbar'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaPlus, FaTrash, FaHeading, FaArrowUp, FaArrowDown, FaPalette } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaBold, FaHeading, FaArrowUp, FaArrowDown, FaPalette } from 'react-icons/fa'
 import clsx from 'clsx'
 
 const COLORS = [
@@ -307,7 +307,64 @@ export default function RichTextEditor({ blocks, onChange, placeholder, headingC
                 </AnimatePresence>
               </div>
 
-              {/* 2. Add Block */}
+              {/* 2. Bold */}
+              <button
+                onClick={() => updateBlock(block.id, { bold: !block.bold })}
+                className={clsx(
+                  "w-6 h-6 flex items-center justify-center rounded-micro transition-all",
+                  block.bold ? "bg-[rgba(0,117,222,0.1)] text-[#0075de]" : "text-warm-300 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.05)]"
+                )}
+                title="Toggle Bold"
+              >
+                <FaBold className="text-[10px]" />
+              </button>
+
+              {/* 3. Color */}
+              <div className="relative">
+                <button
+                  onClick={() => setActiveMenu(prev =>
+                    prev.id === block.id && prev.type === 'color' ? { id: '', type: null } : { id: block.id, type: 'color' }
+                  )}
+                  className={clsx(
+                    "w-6 h-6 flex items-center justify-center rounded-micro transition-all",
+                    activeMenu.id === block.id && activeMenu.type === 'color' || block.color ? "bg-[rgba(0,117,222,0.1)] text-[#0075de]" : "text-warm-300 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.05)]"
+                  )}
+                  title="Text Color"
+                >
+                  <FaPalette className="text-[10px]" />
+                </button>
+
+                <AnimatePresence>
+                  {activeMenu.id === block.id && activeMenu.type === 'color' && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, x: -10 }}
+                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, x: -10 }}
+                      className="absolute left-8 top-0 flex items-center gap-1.5 bg-white border border-[rgba(0,0,0,0.1)] rounded-standard shadow-deep p-1.5 z-50"
+                    >
+                      {COLORS.map((c) => (
+                        <button
+                          key={c.label}
+                          onClick={() => {
+                            updateBlock(block.id, { color: c.value || undefined })
+                            setActiveMenu({ id: '', type: null })
+                          }}
+                          className={clsx(
+                            'w-4 h-4 rounded-full border-2 transition-all',
+                            (block.color || '') === c.value
+                              ? 'border-[#0075de] scale-110'
+                              : 'border-transparent hover:border-[rgba(0,0,0,0.2)]'
+                          )}
+                          style={{ backgroundColor: c.value || '#e0dfdd' }}
+                          title={c.label}
+                        />
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 4. Add Block */}
               <button
                 onClick={() => addBlock(block.id)}
                 className="w-6 h-6 flex items-center justify-center rounded-micro text-warm-300 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.05)] transition-all"
@@ -316,7 +373,7 @@ export default function RichTextEditor({ blocks, onChange, placeholder, headingC
                 <FaPlus className="text-[10px]" />
               </button>
 
-              {/* 3. Move Up/Down */}
+              {/* 5. Move Up/Down */}
               <button
                 onClick={() => moveBlock(block.id, 'up')}
                 className="w-6 h-6 flex items-center justify-center rounded-micro text-warm-300 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.05)] transition-all disabled:opacity-20"
@@ -334,7 +391,7 @@ export default function RichTextEditor({ blocks, onChange, placeholder, headingC
                 <FaArrowDown className="text-[10px]" />
               </button>
 
-              {/* 4. Delete */}
+              {/* 6. Delete */}
               {blocks.length > 1 && (
                 <button
                   onClick={() => deleteBlock(block.id)}

@@ -30,8 +30,6 @@ export default function ResumeEditorPage() {
 
   const templates = [
     { id: 1, name: 'Standard Professional', category: 'Blueprint', description: 'Optimized for ATS and corporate standards.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const } },
-    { id: 2, name: 'Modern Engineering', category: 'Module', description: 'Grid-based layout for technical profiles.', settings: { colorScheme: '#0395DE', fontSize: '10pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'L' as const } },
-    { id: 3, name: 'Minimalist Academic', category: 'System', description: 'High information density for research.', settings: { colorScheme: '#000000', fontSize: '11pt' as const, paperSize: 'letterpaper' as const, sectionColorHighlight: false, headerAlignment: 'L' as const } },
   ]
 
   const defaultTemplateSettings: TemplateSettings = {
