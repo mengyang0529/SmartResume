@@ -13,11 +13,11 @@ interface EditableBlockProps {
 }
 
 const typeStyles: Record<BlockType, string> = {
-  h1: 'text-xl font-black text-gray-200 tracking-[0.2em] mt-4 mb-2 px-4 py-2 bg-white/5 border-l-4 border-gray-600 rounded-r',
-  h2: 'text-lg font-bold text-gray-300 mt-3 mb-1',
-  h3: 'text-sm font-semibold text-gray-300 mt-2 mb-1',
-  bullet: 'text-sm text-gray-400 pl-4 relative before:content-["•"] before:absolute before:left-0 before:text-red-500',
-  paragraph: 'text-sm text-gray-400 leading-relaxed',
+  h1: 'text-xl font-bold text-[rgba(0,0,0,0.95)] mt-4 mb-2 px-0 py-1 border-l-[3px] border-[#0075de] pl-3',
+  h2: 'text-lg font-semibold text-[rgba(0,0,0,0.95)] mt-3 mb-1',
+  h3: 'text-caption font-semibold text-warm-500 mt-2 mb-1',
+  bullet: 'text-sm text-[rgba(0,0,0,0.95)] pl-4 relative before:content-["•"] before:absolute before:left-0 before:text-[#0075de]',
+  paragraph: 'text-sm text-[rgba(0,0,0,0.95)] leading-relaxed',
 }
 
 export default function EditableBlock({
@@ -64,9 +64,9 @@ export default function EditableBlock({
   return (
     <div
       className={clsx(
-        'group/block relative rounded transition-colors',
+        'group/block relative rounded-micro transition-colors',
         block.type === 'h1' ? 'px-0 py-0 mb-1' : 'px-2 py-1',
-        isActive ? (block.type === 'h1' ? 'bg-transparent' : 'bg-[#32323a]') : 'hover:bg-[#26262c]'
+        isActive ? (block.type === 'h1' ? 'bg-transparent' : 'bg-[rgba(0,0,0,0.03)]') : 'hover:bg-[rgba(0,0,0,0.02)]'
       )}
     >
       <div className="flex items-start gap-2">
@@ -82,10 +82,10 @@ export default function EditableBlock({
             onKeyDown={(e) => onKeyDown(e, block.id)}
             onPaste={handlePaste}
             className={clsx(
-              'outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-800',
+              'outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-warm-300',
               typeStyles[block.type],
               block.bold && 'font-bold',
-              isActive && 'caret-red-500'
+              isActive && 'caret-[#0075de]'
             )}
             data-placeholder={getPlaceholder(block.type)}
             style={{ color: block.color }}
@@ -104,9 +104,9 @@ export default function EditableBlock({
             onKeyDown={(e) => onKeyDown(e, block.id)}
             onPaste={handlePaste}
             className={clsx(
-              'outline-none text-xs text-gray-500 font-mono text-right shrink-0 max-w-[200px] min-w-[80px]',
-              'empty:before:content-[attr(data-placeholder)] empty:before:text-gray-900',
-              isActive && 'caret-red-500'
+              'outline-none text-xs text-warm-400 font-mono text-right shrink-0 max-w-[200px] min-w-[80px]',
+              'empty:before:content-[attr(data-placeholder)] empty:before:text-warm-300',
+              isActive && 'caret-[#0075de]'
             )}
             data-placeholder="right..."
           />

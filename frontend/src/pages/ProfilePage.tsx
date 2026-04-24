@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaBriefcase, FaChartBar, FaClock, FaSearchLocation } from 'react-icons/fa'
 import clsx from 'clsx'
+import { FaBriefcase, FaChartBar, FaClock, FaSearchLocation } from 'react-icons/fa'
 import { applicationApi } from '../services/api'
 
 interface Interview {
@@ -92,10 +92,10 @@ export default function ProfilePage() {
     const offers = applications.filter(app => app.status === 'Offer').length
     const pending = applications.filter(app => ['Applied', 'Resume Submitted'].includes(app.status)).length
     return [
-      { label: 'Total Applications', value: total, max: Math.max(10, total), color: 'bg-red-600' },
-      { label: 'Interviewing', value: interviewing, max: 10, color: 'bg-emerald-500' },
-      { label: 'Offers', value: offers, max: 10, color: 'bg-sky-500' },
-      { label: 'Pending', value: pending, max: 10, color: 'bg-yellow-500' },
+      { label: 'Total Applications', value: total, color: 'bg-[#0075de]' },
+      { label: 'Interviewing', value: interviewing, color: 'bg-[#2a9d99]' },
+      { label: 'Offers', value: offers, color: 'bg-[#1aae39]' },
+      { label: 'Pending', value: pending, color: 'bg-[#dd5b00]' },
     ]
   }, [applications])
 
@@ -111,109 +111,125 @@ export default function ProfilePage() {
   }).sort((a, b) => (b.time.localeCompare(a.time)))
 
   return (
-    <div className="min-h-screen bg-[#1e1e22] py-24 px-10">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div>
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="h-[2px] w-12 bg-red-600"></div>
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-red-500">Career Operations</span>
-            </div>
-            <h1 className="text-6xl font-black uppercase tracking-tighter text-gray-300 leading-none">
-              Job Application <br /> <span className="text-gray-600">Tracker</span>
-            </h1>
-          </div>
-        </header>
+    <div className="bg-white min-h-screen">
+      <div className="container-narrow py-20 md:py-24">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-16"
+        >
+          <span className="pill-badge mb-4">Career Operations</span>
+          <h1 className="text-section-heading text-[rgba(0,0,0,0.95)] mt-3">
+            Job Application <span className="text-warm-300">Tracker</span>
+          </h1>
+        </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-12">
-            <ProfileCard title="Application Timeline" icon={<FaBriefcase />}>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Column */}
+          <div className="lg:col-span-2 space-y-8">
+            <ProfileSection title="Application Timeline" icon={<FaBriefcase />}>
               <div className="space-y-4">
-                {isLoading && <div className="text-gray-500 text-sm">Loading...</div>}
+                {isLoading && (
+                  <p className="text-caption text-warm-500">Loading...</p>
+                )}
                 {applications.map((application, index) => (
                   <motion.div
                     key={application.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.04 }}
-                    className="group p-6 bg-[#26262c] border border-gray-700/50 hover:border-red-600 transition-all"
+                    className="card-hover p-6"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-300">{application.company}</h3>
-                        <p className="text-[11px] text-gray-500 mt-2">{application.jobTitle} · {application.location || 'Remote'}</p>
+                        <h3 className="text-card-title text-[rgba(0,0,0,0.95)]">{application.company}</h3>
+                        <p className="text-caption-light text-warm-500 mt-1">
+                          {application.jobTitle} &middot; {application.location || 'Remote'}
+                        </p>
                       </div>
-                      <span className="text-[10px] font-mono uppercase text-red-500">{application.stage}</span>
+                      <span className="pill-badge shrink-0">{application.stage}</span>
                     </div>
-                    <div className="mt-5 grid sm:grid-cols-3 gap-4 text-[10px] text-gray-400">
+                    <div className="flex flex-wrap gap-4 mt-4 text-caption-light text-warm-500">
                       <span>Applied: {application.appliedAt}</span>
                       <span>Status: {application.status}</span>
                       <span>Source: {application.source || 'N/A'}</span>
                     </div>
-                    <p className="mt-5 text-sm text-gray-400 leading-relaxed">{application.notes || 'No notes added yet.'}</p>
-                    <div className="mt-6 flex flex-wrap items-center gap-3">
-                      <ActionButton label="Edit" onClick={() => navigate('/editor')} />
-                      <ActionButton label="Details" onClick={() => {}} />
-                      <span className="text-[10px] text-gray-600 uppercase tracking-[0.3em]">{application.interviews?.length || 0} interview rounds</span>
+                    <p className="mt-4 text-body text-warm-500 leading-relaxed">
+                      {application.notes || 'No notes added yet.'}
+                    </p>
+                    <div className="flex items-center gap-3 mt-5">
+                      <button onClick={() => navigate('/editor')} className="btn-secondary text-caption px-3 py-[6px]">
+                        Edit
+                      </button>
+                      <span className="text-micro text-warm-300">
+                        {application.interviews?.length || 0} interview rounds
+                      </span>
                     </div>
                   </motion.div>
                 ))}
               </div>
-            </ProfileCard>
+            </ProfileSection>
           </div>
 
-          <div className="space-y-12">
-            <ProfileCard title="Application Metrics" icon={<FaChartBar />}>
-              <div className="space-y-8">
+          {/* Sidebar */}
+          <div className="space-y-8">
+            <ProfileSection title="Application Metrics" icon={<FaChartBar />}>
+              <div className="space-y-6">
                 {applicationStats.map((stat) => (
                   <div key={stat.label}>
-                    <div className="flex justify-between mb-3">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{stat.label}</span>
-                      <span className="text-xs font-mono font-bold text-red-500">{stat.value}</span>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-caption font-semibold text-warm-500">{stat.label}</span>
+                      <span className="text-caption font-bold text-[rgba(0,0,0,0.95)]">{stat.value}</span>
                     </div>
-                    <div className="w-full bg-gray-900 h-1 rounded-full overflow-hidden">
+                    <div className="w-full bg-[rgba(0,0,0,0.06)] h-1.5 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(100, (stat.value / stat.max) * 100)}%` }}
-                        className={clsx('h-full shadow-[0_0_10px_rgba(220,38,38,0.5)]', stat.color)}
+                        animate={{ width: `${Math.min(100, (stat.value / Math.max(10, applications.length)) * 100)}%` }}
+                        className={clsx('h-full rounded-full', stat.color)}
                       />
                     </div>
                   </div>
                 ))}
               </div>
-            </ProfileCard>
+            </ProfileSection>
 
-            <ProfileCard title="Interview Pipeline" icon={<FaSearchLocation />}>
-              <div className="space-y-4">
+            <ProfileSection title="Interview Pipeline" icon={<FaSearchLocation />}>
+              <div className="space-y-3">
                 {applications.flatMap((app) => app.interviews || []).slice(0, 3).map((interview) => (
-                  <div key={interview.id} className="p-5 bg-[#26262c] border border-gray-700/50 transition-all">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-[10px] uppercase tracking-[0.3em] text-gray-500">Round {interview.round}</span>
-                      <span className="text-[10px] font-black uppercase text-red-500">{interview.outcome}</span>
+                  <div key={interview.id} className="card-hover p-5">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-micro font-semibold text-warm-300 uppercase tracking-wider">Round {interview.round}</span>
+                      <span className="pill-badge">{interview.outcome}</span>
                     </div>
-                    <p className="text-sm text-gray-300">{interview.interviewType} with {interview.interviewer}</p>
-                    <p className="text-[11px] text-gray-500 mt-2">{interview.scheduledAt ? interview.scheduledAt.slice(0, 16).replace('T', ' ') : 'TBD'}</p>
+                    <p className="text-caption font-medium text-[rgba(0,0,0,0.95)]">
+                      {interview.interviewType} with {interview.interviewer}
+                    </p>
+                    <p className="text-micro text-warm-500 mt-1">
+                      {interview.scheduledAt ? interview.scheduledAt.slice(0, 16).replace('T', ' ') : 'TBD'}
+                    </p>
                   </div>
                 ))}
                 {!applications.flatMap((app) => app.interviews || []).length && (
-                  <div className="text-[11px] text-gray-500">No interviews scheduled yet. Please create an application record first.</div>
+                  <p className="text-caption-light text-warm-500">No interviews scheduled yet.</p>
                 )}
               </div>
-            </ProfileCard>
+            </ProfileSection>
 
-            <ProfileCard title="Recent Activity" icon={<FaClock />}>
-              <div className="space-y-6">
+            <ProfileSection title="Recent Activity" icon={<FaClock />}>
+              <div className="space-y-4">
                 {activityLogs.slice(0, 5).map((log, index) => (
-                  <div key={`${log.title}-${index}`} className="flex items-start space-x-4 group">
-                    <span className="text-[9px] font-mono text-gray-500 mt-1">{log.time}</span>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">{log.title}</span>
-                      <span className="text-[8px] font-mono text-red-600 mt-1">{log.status}</span>
+                  <div key={`${log.title}-${index}`} className="flex items-start gap-3">
+                    <span className="text-micro text-warm-300 mt-0.5 shrink-0">{log.time}</span>
+                    <div>
+                      <p className="text-caption font-medium text-warm-500">{log.title}</p>
+                      <span className="text-micro text-[#0075de]">{log.status}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            </ProfileCard>
+            </ProfileSection>
           </div>
         </div>
       </div>
@@ -221,26 +237,14 @@ export default function ProfilePage() {
   )
 }
 
-function ProfileCard({ title, icon, children }: any) {
+function ProfileSection({ title, icon, children }: any) {
   return (
-    <div className="bg-[#26262c] border border-gray-700/50 p-10 relative overflow-hidden group hover:border-red-600/50 transition-all duration-500">
-      <div className="absolute top-0 right-0 w-24 h-24 bg-red-600/5 rotate-45 translate-x-12 -translate-y-12 transition-colors group-hover:bg-red-600/10"></div>
-      <header className="flex items-center space-x-4 mb-10">
-        <div className="text-gray-600 group-hover:text-red-500 transition-colors">{icon}</div>
-        <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 group-hover:text-white transition-colors">{title}</h2>
-      </header>
+    <div className="card p-8">
+      <div className="flex items-center gap-3 mb-6">
+        <span className="text-warm-300">{icon}</span>
+        <h2 className="text-caption font-semibold uppercase tracking-wider text-warm-500">{title}</h2>
+      </div>
       {children}
     </div>
-  )
-}
-
-function ActionButton({ label, onClick }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] border border-gray-700 text-gray-400 hover:border-red-500 hover:text-white transition-all"
-    >
-      {label}
-    </button>
   )
 }

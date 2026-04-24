@@ -1,15 +1,12 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { FaTerminal, FaLayerGroup, FaImages, FaHome } from 'react-icons/fa'
-import clsx from 'clsx'
+import { FaPenFancy } from 'react-icons/fa'
 
 export default function Layout() {
   const location = useLocation()
 
   const navItems = [
-    { path: '/', label: 'Home', icon: FaHome, num: '01' },
-    { path: '/editor', label: 'Editor', icon: FaLayerGroup, num: '02' },
-    { path: '/gallery', label: 'Gallery', icon: FaImages, num: '03' },
+    { path: '/', label: 'Home' },
+    { path: '/editor', label: 'Editor' },
   ]
 
   const isActive = (path: string) => {
@@ -18,80 +15,69 @@ export default function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1e1e22] text-gray-400 font-sans flex flex-col">
-      {/* Global Horizontal Header */}
-      <header className="fixed top-0 left-0 right-0 h-14 bg-[#32323a]/90 backdrop-blur-xl border-b border-gray-700/30 z-[100] flex items-center justify-between px-8">
-        {/* Logo Section */}
-        <Link to="/" className="flex items-center space-x-3 group shrink-0">
-          <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-gray-300 shadow-[0_0_10px_rgba(220,38,38,0.2)] group-hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-all">
-            <FaTerminal className="text-base" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-red-500 transition-colors leading-none">Smart Resume</span>
-            <span className="text-[8px] font-mono text-gray-600 uppercase tracking-widest mt-1">Foundry OS v2.4</span>
-          </div>
-        </Link>
+    <div className="min-h-screen bg-white text-[rgba(0,0,0,0.95)] flex flex-col">
+      {/* Notion-style Header */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[rgba(0,0,0,0.1)]">
+        <div className="flex items-center h-[55px] px-6">
+          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+            <div className="w-[30px] h-[30px] bg-[#0075de] rounded-micro flex items-center justify-center text-white transition-colors">
+              <FaPenFancy className="text-sm" />
+            </div>
+            <span className="text-[15px] font-semibold text-[rgba(0,0,0,0.95)] leading-none">Smart Resume</span>
+          </Link>
 
-        {/* Navigation Items */}
-        <nav className="flex items-center space-x-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={clsx(
-                "group relative flex items-center px-4 py-2 rounded transition-all duration-300",
-                isActive(item.path) 
-                  ? "bg-[#32323a] text-gray-300 border-b-2 border-red-600" 
-                  : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
-              )}
-            >
-              <span className={clsx("text-[8px] font-mono mr-2 transition-colors", isActive(item.path) ? "text-red-500" : "text-gray-700")}>{item.num}</span>
-              <span className="text-[10px] font-black uppercase tracking-[0.15em] transition-colors">{item.label}</span>
-              {isActive(item.path) && (
-                <motion.div layoutId="headerActiveGlow" className="absolute inset-x-0 bottom-[-2px] h-[2px] bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
-              )}
-            </Link>
-          ))}
-        </nav>
+          {/* Nav Links */}
+          <nav className="flex items-center gap-1 ml-8">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className="px-3 py-1.5 rounded-micro text-nav-button transition-colors duration-150"
+                style={{
+                  color: isActive(item.path) ? 'rgba(0,0,0,0.95)' : 'rgba(0,0,0,0.6)',
+                  backgroundColor: isActive(item.path) ? 'rgba(0,0,0,0.05)' : 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive(item.path)) {
+                    e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive(item.path)) {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }
+                }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
 
-        {/* System & Social Section */}
-        <div className="flex items-center space-x-6 shrink-0">
-          <div className="hidden lg:flex items-center space-x-2">
-             <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.5)]"></div>
-             <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Compiler Online</span>
-          </div>
         </div>
       </header>
 
-      {/* Content Area */}
-      <main className="flex-1 mt-14">
+      {/* Content */}
+      <main className="flex-1">
         <Outlet />
       </main>
 
-      {/* Industrial Footer */}
-      <footer className="bg-[#1e1e22] border-t border-gray-700/20 py-12 px-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col items-center md:items-start space-y-2">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-600">
-              © {new Date().getFullYear()} Forge Systems / Professional / Identity / Compiler
-            </p>
-          </div>
-          <div className="flex space-x-10">
-            <FooterLink label="Source" href="https://github.com/mengyang0529" />
-            <FooterLink label="Documentation" href="#" />
-            <FooterLink label="MIT License" href="#" />
-            <span className="text-[10px] font-mono text-gray-800 tracking-widest">v2.4.0-PROD</span>
+      {/* Notion-style Footer */}
+      <footer className="border-t border-[rgba(0,0,0,0.1)] bg-[#f6f5f4]">
+        <div className="container-narrow py-12 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-caption-light text-warm-500">
+            &copy; {new Date().getFullYear()} Smart Resume
+          </p>
+          <div className="flex items-center gap-6">
+            <a
+              href="https://github.com/mengyang0529"
+              className="text-caption text-warm-500 hover:text-[rgba(0,0,0,0.95)] transition-colors no-underline hover:underline"
+            >
+              Source
+            </a>
+            <span className="text-caption text-warm-300">MIT License</span>
           </div>
         </div>
       </footer>
     </div>
-  )
-}
-
-function FooterLink({ label, href }: any) {
-  return (
-    <a href={href} className="text-[10px] font-black uppercase tracking-widest text-gray-700 hover:text-red-500 transition-colors">
-      {label}
-    </a>
   )
 }

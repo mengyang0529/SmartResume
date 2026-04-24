@@ -2,9 +2,8 @@ import { useState, useRef, useEffect, useCallback, useMemo, type ChangeEvent } f
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   FaPlus, FaTrash, FaSpinner,
-  FaDownload, FaChevronRight, FaFingerprint,
-  FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaEye, FaUpload, FaWrench,
-  FaHistory, FaFileDownload,
+  FaDownload, FaEye, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLayerGroup, FaUpload, FaWrench,
+  FaHistory, FaFileDownload, FaUser, FaBars,
 } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import localforage from 'localforage'
@@ -28,6 +27,12 @@ const generateId = (prefix = 'id') => {
 }
 
 export default function ResumeEditorPage() {
+
+  const templates = [
+    { id: 1, name: 'Standard Professional', category: 'Blueprint', description: 'Optimized for ATS and corporate standards.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const } },
+    { id: 2, name: 'Modern Engineering', category: 'Module', description: 'Grid-based layout for technical profiles.', settings: { colorScheme: '#0395DE', fontSize: '10pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'L' as const } },
+    { id: 3, name: 'Minimalist Academic', category: 'System', description: 'High information density for research.', settings: { colorScheme: '#000000', fontSize: '11pt' as const, paperSize: 'letterpaper' as const, sectionColorHighlight: false, headerAlignment: 'L' as const } },
+  ]
 
   const defaultTemplateSettings: TemplateSettings = {
     colorScheme: 'awesome-red',
@@ -53,19 +58,20 @@ export default function ResumeEditorPage() {
   }
 
   const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData)
-  const [templateSettings] = useState<TemplateSettings>(defaultTemplateSettings)
+  const [templateSettings, setTemplateSettings] = useState<TemplateSettings>(defaultTemplateSettings)
+  const [activeTemplateId, setActiveTemplateId] = useState(1)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [isSample, setIsSample] = useState(false)
+  const [showNav, setShowNav] = useState(false)
 
   const { pdfBlobUrl, isCompiling, error: compileError, compile: triggerCompile } = useTypstCompiler({ debounceMs: 400 })
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const navRef = useRef<HTMLElement | null>(null)
   const lastCompileSource = useRef('')
   const location = useLocation()
   const navigate = useNavigate()
-
   const handleChange = useCallback(() => {
     setIsSample(false)
   }, [])
@@ -273,12 +279,6 @@ export default function ResumeEditorPage() {
     }
   }
 
-  const handlePreviewPdf = () => {
-    if (pdfBlobUrl) {
-      window.open(pdfBlobUrl, '_blank')
-    }
-  }
-
   const handleExportJson = () => {
     importExportService.downloadJson(resumeData, `${resumeData.personal.firstName || 'resume'}-backup.json`)
   }
@@ -291,146 +291,308 @@ export default function ResumeEditorPage() {
     setIsSample(false)
   }
 
+  const navItems = useMemo(() => {
+    const items: { id: string; label: string; icon: any; onClick: () => void }[] = [
+      { id: 'personal', label: 'Personal Info', icon: <FaUser />, onClick: () => { scrollToSection('personal'); setShowNav(false) } },
+    ]
+    sectionTitles.forEach(sec => {
+      items.push({
+        id: sec.id,
+        label: sec.title,
+        icon: <FaLayerGroup />,
+        onClick: () => { scrollToBlock(sec.id); setShowNav(false) },
+      })
+    })
+    items.push(
+      { id: 'skills', label: 'Skills', icon: <FaWrench />, onClick: () => { scrollToSection('skills'); setShowNav(false) } },
+    )
+    return items
+  }, [sectionTitles])
+
+  // Close nav on click outside
+  useEffect(() => {
+    if (!showNav) return
+    const handler = () => setShowNav(false)
+    document.addEventListener('click', handler)
+    return () => document.removeEventListener('click', handler)
+  }, [showNav])
+
   return (
-    <div className="min-h-screen bg-[#1e1e22] font-sans text-gray-400 flex selection:bg-red-500/30">
-      <aside className="w-[280px] bg-[#3a3a44] border-r border-gray-700/30 fixed top-14 bottom-0 left-0 z-40 flex flex-col">
-        <nav ref={navRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-1 custom-scrollbar">
-          <NavTab active={false} onClick={() => scrollToSection('personal')} num="01" label="Identity" icon={<FaFingerprint />} />
-          <div className="mt-6 flex items-center justify-between px-4 mb-2"><SectionDivider label="Modules" /><button onClick={addSection} className="text-gray-500 hover:text-red-500 transition-colors"><FaPlus className="text-xs" /></button></div>
-          {sectionTitles.length === 0 ? (
-            <NavTab active={false} onClick={() => scrollToSection('modules')} num="02" label="Modules" icon={<FaLayerGroup />} />
-          ) : (
-            sectionTitles.map((sec, i) => (
-              <NavTab
-                key={sec.id}
-                active={false}
-                onClick={() => scrollToBlock(sec.id)}
-                num={String(i + 1).padStart(2, '0')}
-                label={sec.title}
-                icon={<FaLayerGroup />}
-              />
-            ))
-          )}
-          <SectionDivider label="Finalize" className="mt-6" />
-          <NavTab active={false} onClick={() => scrollToSection('skills')} num="--" label="Skills" icon={<FaWrench />} />
-          <SectionDivider label="Data" className="mt-6" />
-          <button onClick={() => setShowHistory(true)} className="w-full flex items-center px-4 py-5 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-300 transition-colors">
-            <FaHistory className="mr-3 text-sm" />
-            Time Machine
-          </button>
-        </nav>
-      </aside>
-
-      <main className="flex-1 ml-[280px] p-4 flex flex-col items-center bg-[#1e1e22]">
-        <div className="w-full max-w-4xl flex items-center justify-between mb-8 bg-[#26262c] p-3 border border-gray-700/30 rounded-lg shadow-2xl sticky top-20 z-30">
-          <div className="flex items-center space-x-4">
-             <button onClick={openJsonFile} className="px-4 py-2 bg-[#3a3a44] border border-gray-700 hover:border-red-500 hover:bg-[#464650] text-gray-300 font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest">
-              <FaUpload className="text-xs" /> <span>Import JSON</span>
-            </button>
-            <input ref={fileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleJsonFileUpload} />
-            <button onClick={handleExportJson} className="px-4 py-2 bg-[#3a3a44] border border-gray-700 hover:border-emerald-500 hover:bg-[#464650] text-gray-300 font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest">
-              <FaFileDownload className="text-xs" /> <span>Export JSON</span>
-            </button>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button onClick={handlePreviewPdf} disabled={isCompiling || !pdfBlobUrl} className="px-5 py-2 bg-[#3a3a44] border border-gray-700 hover:border-blue-500 hover:bg-[#464650] text-gray-300 font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest disabled:opacity-50">
-              {isCompiling ? <FaSpinner className="animate-spin" /> : <><FaEye className="text-xs" /> <span>Preview</span></>}
-            </button>
-            <button onClick={handleDownloadPdf} disabled={isCompiling || !pdfBlobUrl} className="px-5 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded flex items-center space-x-3 transition-all text-xs uppercase tracking-widest disabled:opacity-50 shadow-[0_10px_30px_rgba(220,38,38,0.2)]">
-              {isCompiling ? <FaSpinner className="animate-spin" /> : <><FaDownload className="text-xs" /> <span>Download PDF</span></>}
-            </button>
-          </div>
-        </div>
-
-        {compileError && (
-          <div className="w-full max-w-4xl mb-4 p-4 bg-red-900/20 border border-red-800/30 rounded text-red-400 text-[11px] font-mono">
-            Compilation warning: {compileError}
-          </div>
-        )}
-
-        <div className={clsx("w-full max-w-4xl space-y-16 pb-20", isSample && "opacity-60")}>
-          <section id="section-personal">
-            <ModuleWrapper>
-              <div className="grid grid-cols-1 gap-y-3 mt-8">
-                <div className="grid grid-cols-2 gap-x-4">
-                  <FoundryInput label="First Name" value={resumeData.personal.firstName} onChange={(v: string) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, firstName: v } })); }} />
-                  <FoundryInput label="Last Name" value={resumeData.personal.lastName} onChange={(v: string) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, lastName: v } })); }} />
-                </div>
-                <FoundryInput label="System Designation" value={resumeData.personal.position} onChange={(v: string) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, position: v } })); }} />
-                <FoundryInput label="Communication Layer (Email)" value={resumeData.personal.email} onChange={(v: string) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, email: v } })); }} icon={<FaEnvelope />} />
-                <FoundryInput label="Voice Node (Mobile)" value={resumeData.personal.mobile} onChange={(v: string) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, mobile: v } })); }} icon={<FaPhone />} />
-                <FoundryInput label="Physical Coordinates (Address)" value={resumeData.personal.address} onChange={(v: string) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, address: v } })); }} icon={<FaMapMarkerAlt />} />
-                <FoundryInput label="Digital Repository (GitHub)" value={resumeData.personal.github} onChange={(v: string) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, github: v } })); }} icon={<FaGithub />} />
-              </div>
-            </ModuleWrapper>
-          </section>
-
-          <section id="section-modules">
-            <ModuleWrapper>
-              <RichTextEditor
-                blocks={moduleBlocks}
-                onChange={(blocks) => {
-                  handleChange()
-                  setModuleBlocks(blocks)
-                  const sections = blocksToModules(blocks)
-                  setResumeData(prev => ({ ...prev, sections }))
-                }}
-              />
-            </ModuleWrapper>
-          </section>
-
-          <section id="section-skills">
-            <ModuleWrapper>
-              <div className="grid grid-cols-2 gap-10 mt-8">
-                {resumeData.skills.map(skill => (
-                  <div key={skill.id} className="bg-[#3a3a44] p-8 border border-gray-700/50 relative group hover:border-red-600/30 transition-all">
-                    <button onClick={() => { handleChange(); setResumeData(p => ({...p, skills: p.skills.filter(s => s.id !== skill.id)})); }} className="absolute top-4 right-4 text-gray-700 hover:text-red-500 opacity-0 group-hover:opacity-100"><FaTrash className="text-xs" /></button>
-                    <FoundryInput clean label="Domain" value={skill.category} onChange={(v: string) => { handleChange(); setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, category: v} : s)})); }} />
-                    <div className="mt-8"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-3 block">Protocols / Tools</label><textarea className="w-full bg-transparent border border-gray-700/50 p-4 text-sm font-mono text-red-500 focus:border-red-600 focus:ring-0 min-h-[80px] resize-none" value={skill.name} onChange={e => { handleChange(); setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)})); }} /></div>
+    <div className="h-[calc(100vh-55px)] bg-[#f0efed] flex flex-col selection:bg-[rgba(0,117,222,0.15)]">
+      {/* Toolbar */}
+      <div className="shrink-0 bg-white border-b border-[rgba(0,0,0,0.1)] px-4 py-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {/* Nav hamburger */}
+            <div className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowNav(!showNav) }}
+                className="px-2.5 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)] transition-all flex items-center gap-1.5"
+              >
+                <FaBars className="text-xs" />
+                <span className="hidden sm:inline text-xs">Sections</span>
+              </button>
+              {showNav && (
+                  <div
+                    className="absolute top-full left-0 mt-1 w-52 bg-white border border-[rgba(0,0,0,0.1)] rounded-lg shadow-deep py-1 z-50"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="px-3 py-1.5 text-xs font-medium text-warm-400">
+                      <button onClick={addSection} className="w-full flex items-center justify-between hover:text-[#0075de] transition-colors">
+                        <span>Add section</span>
+                        <FaPlus className="text-[10px]" />
+                      </button>
+                    </div>
+                    <div className="h-px bg-[rgba(0,0,0,0.06)] mx-3 my-1" />
+                    {navItems.map(item => (
+                      <button
+                        key={item.id}
+                        onClick={item.onClick}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.04)] hover:text-[rgba(0,0,0,0.95)] transition-colors"
+                      >
+                        <span className="text-warm-300 text-xs">{item.icon}</span>
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
-                ))}
-                <button onClick={() => { handleChange(); setResumeData(p => ({...p, skills: [...p.skills, { id: generateId('sk'), category: "", name: "" }]})); }} className="col-span-2 py-8 border border-dashed border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-500 uppercase font-black tracking-widest text-[10px]">+ Add New Skill</button>
+                )}
               </div>
-            </ModuleWrapper>
-          </section>
+
+              <span className="w-px h-5 bg-[rgba(0,0,0,0.1)]" />
+
+              <button
+                onClick={openJsonFile}
+                className="px-2.5 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)] transition-all flex items-center gap-1.5"
+              >
+                <FaUpload className="text-xs" />
+                <span className="hidden sm:inline text-xs">Import</span>
+              </button>
+              <input ref={fileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleJsonFileUpload} />
+              <button
+                onClick={handleExportJson}
+                className="px-2.5 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)] transition-all flex items-center gap-1.5"
+              >
+                <FaFileDownload className="text-xs" />
+                <span className="hidden sm:inline text-xs">Export</span>
+              </button>
+
+              <span className="w-px h-5 bg-[rgba(0,0,0,0.1)]" />
+
+              <button
+                onClick={() => setShowHistory(true)}
+                className="px-2.5 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)] transition-all flex items-center gap-1.5"
+              >
+                <FaHistory className="text-xs" />
+                <span className="hidden sm:inline text-xs">History</span>
+              </button>
+            </div>
+
+          </div>
         </div>
 
-        </main>
+        {/* Main content: editor + gallery */}
+        <div className="flex-1 flex flex-row overflow-hidden">
+          {/* Left: Editor */}
+          <div className="flex-1 overflow-y-auto" onClick={() => setActiveTemplateId(0)}>
+            {compileError && (
+              <div className="px-4 pt-4">
+                <div className="p-3 rounded-lg bg-[rgba(221,91,0,0.06)] border border-[rgba(221,91,0,0.15)] text-warm-600 text-xs">
+                  {compileError}
+                </div>
+              </div>
+            )}
 
-        <HistoryPanel
-        open={showHistory}
-        onClose={() => setShowHistory(false)}
-        onRestore={handleHistoryRestore}
-      />
+            <div className={clsx("px-4 py-6 space-y-6 pb-24", isSample && "opacity-60")}>
+              <section id="section-personal">
+                <SectionCard title="Personal Information">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-4">
+                    <NotionInput label="First Name" value={resumeData.personal.firstName} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, firstName: v } })) }} />
+                    <NotionInput label="Last Name" value={resumeData.personal.lastName} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, lastName: v } })) }} />
+                    <NotionInput label="Position / Title" value={resumeData.personal.position} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, position: v } })) }} />
+                    <NotionInput label="Phone" value={resumeData.personal.mobile} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, mobile: v } })) }} icon={<FaPhone />} />
+                    <NotionInput label="Biography" value={resumeData.personal.github} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, github: v } })) }} icon={<FaUser />} />
+                    <NotionInput label="Email" value={resumeData.personal.email} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, email: v } })) }} icon={<FaEnvelope />} />
+                    <div className="col-span-2">
+                      <NotionInput label="Address" value={resumeData.personal.address} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, address: v } })) }} icon={<FaMapMarkerAlt />} />
+                    </div>
+                  </div>
+                </SectionCard>
+              </section>
+
+              <section id="section-modules">
+                <SectionCard title="Resume Modules" subtitle="Add and arrange your resume sections with the rich text editor">
+                  <div className="mt-4">
+                    <RichTextEditor
+                      blocks={moduleBlocks}
+                      onChange={(blocks) => {
+                        handleChange()
+                        setModuleBlocks(blocks)
+                        const sections = blocksToModules(blocks)
+                        setResumeData(prev => ({ ...prev, sections }))
+                      }}
+                    />
+                  </div>
+                </SectionCard>
+              </section>
+
+              <section id="section-skills">
+                <SectionCard title="Skills">
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    {resumeData.skills.map(skill => (
+                      <div key={skill.id} className="bg-white rounded-xl border border-[rgba(0,0,0,0.1)] p-5 relative group">
+                        <button onClick={() => { handleChange(); setResumeData(p => ({...p, skills: p.skills.filter(s => s.id !== skill.id)})) }} className="absolute top-3 right-3 text-warm-300 hover:text-[#dd5b00] opacity-0 group-hover:opacity-100 transition-opacity">
+                          <FaTrash className="text-xs" />
+                        </button>
+                        <div className="mb-3">
+                          <label className="text-xs font-medium text-warm-500 block mb-1.5">Category</label>
+                          <NotionInput clean label="" value={skill.category} onChange={(v) => { handleChange(); setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, category: v} : s)})) }} />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-warm-500 block mb-1.5">Skills / Tools</label>
+                          <textarea className="input min-h-[70px] resize-none text-sm leading-relaxed" value={skill.name} onChange={e => { handleChange(); setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)})) }} placeholder="e.g. Python, React, AWS..." />
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={() => { handleChange(); setResumeData(p => ({...p, skills: [...p.skills, { id: generateId('sk'), category: "", name: "" }]})) }} className="col-span-2 py-6 border-2 border-dashed border-[rgba(0,0,0,0.1)] rounded-xl text-sm text-warm-300 hover:text-[#0075de] hover:border-[#0075de] transition-colors font-medium">
+                      + Add Skill Category
+                    </button>
+                  </div>
+                </SectionCard>
+              </section>
+            </div>
+          </div>
+
+          {/* Right: Template Gallery */}
+          <div className="w-[820px] lg:w-[900px] border-l border-[rgba(0,0,0,0.1)] bg-white flex flex-col" onClick={() => setActiveTemplateId(0)}>
+            <div className="shrink-0 px-5 py-4 border-b border-[rgba(0,0,0,0.1)]">
+              <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">Templates</h3>
+              <p className="text-xs text-warm-500 mt-0.5">Choose a template to apply</p>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-3 gap-3">
+              {templates.map((tpl) => (
+                <div
+                  key={tpl.id}
+                  className={`border rounded-lg p-4 transition-all flex flex-col aspect-[4/3] cursor-pointer ${
+                    activeTemplateId === tpl.id
+                      ? 'border-[#0075de] ring-1 ring-[#0075de] bg-[rgba(0,117,222,0.03)]'
+                      : 'border-[rgba(0,0,0,0.1)] hover:border-[rgba(0,0,0,0.2)]'
+                  }`}
+                  onClick={(e) => { e.stopPropagation(); setActiveTemplateId(tpl.id) }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    setActiveTemplateId(tpl.id)
+                    setTemplateSettings(tpl.settings)
+                    setShowPreviewModal(true)
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(0,117,222,0.08)] text-[#0075de]">
+                      {tpl.category}
+                    </span>
+                    <span className="text-micro text-warm-300">0{tpl.id}</span>
+                  </div>
+                  <h4 className="text-xs font-semibold text-[rgba(0,0,0,0.95)] mb-1">{tpl.name}</h4>
+                  <p className="text-[11px] text-warm-500 leading-snug mb-3 flex-1">{tpl.description}</p>
+                  <div className="flex items-center gap-2 mt-auto">
+                    <button
+                      onClick={() => {
+                        setActiveTemplateId(tpl.id)
+                        setTemplateSettings(tpl.settings)
+                        setShowPreviewModal(true)
+                      }}
+                      className="flex-1 text-xs font-medium px-3 py-1.5 rounded-md border border-[rgba(0,0,0,0.1)] text-warm-500 hover:bg-[rgba(0,0,0,0.04)] transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <FaEye className="text-[10px]" />
+                      Preview
+                    </button>
+                    <button
+                      onClick={handleDownloadPdf}
+                      disabled={isCompiling || !pdfBlobUrl}
+                      className="flex-1 text-xs font-medium px-3 py-1.5 rounded-md bg-[#0075de] text-white hover:bg-[#005bab] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40"
+                    >
+                      {isCompiling ? <FaSpinner className="animate-spin" /> : <FaDownload className="text-[10px]" />}
+                      PDF
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      <HistoryPanel open={showHistory} onClose={() => setShowHistory(false)} onRestore={handleHistoryRestore} />
+
+      {/* Preview Modal */}
+      {showPreviewModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(0,0,0,0.5)] backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-[500px] max-w-[90vw] h-[90vh] flex flex-col overflow-hidden">
+            <div className="shrink-0 flex items-center justify-between px-5 py-3 border-b border-[rgba(0,0,0,0.1)]">
+              <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">PDF Preview</h3>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="px-3 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] transition-colors"
+              >
+                Close
+              </button>
+            </div>
+            <div className="flex-1 p-4 bg-[#f0efed]">
+              {pdfBlobUrl ? (
+                <iframe
+                  src={pdfBlobUrl}
+                  className="w-full h-full rounded-standard shadow-sm border border-[rgba(0,0,0,0.1)] bg-white"
+                  title="PDF Preview"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-warm-400 text-sm">
+                  {isCompiling ? 'Compiling...' : 'Generating preview...'}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-function SectionDivider({ label, className }: any) {
-  return <div className={clsx("flex items-center space-x-4 px-4 py-4", className)}><div className="h-[1px] flex-1 bg-gray-800/50"></div><span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</span><div className="h-[1px] w-4 bg-gray-800/50"></div></div>
-}
+/* ===== Sub-Components ===== */
 
-function NavTab({ active, onClick, num, label, icon, onDelete }: any) {
+function SectionCard({ title, subtitle, children }: any) {
   return (
-    <div className={clsx("w-full group flex items-center rounded transition-all duration-300 relative pr-2", active ? "bg-[#3a3a44] border-l-4 border-red-600" : "hover:bg-white/5")}>
-      <button onClick={onClick} className="flex-1 flex items-center px-4 py-5 min-w-0">
-        <span className={clsx("text-[10px] font-mono mr-4 transition-colors shrink-0", active ? "text-red-500" : "text-gray-700")}>{num}</span>
-        <div className={clsx("mr-3 text-sm transition-colors shrink-0", active ? "text-red-500" : "text-gray-600 group-hover:text-gray-400")}>{icon}</div>
-        <span className={clsx("text-[11px] font-black uppercase tracking-widest truncate transition-colors text-left", active ? "text-gray-400" : "text-gray-500 group-hover:text-gray-400")}>{label}</span>
-      </button>
-      {onDelete && <button onClick={onDelete} className={clsx("px-2 py-5 text-gray-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0", active && "mr-6")}><FaTrash className="text-xs" /></button>}
-      {active && <motion.div layoutId="tabActive" className="absolute right-4 text-red-600"><FaChevronRight className="text-[10px]" /></motion.div>}
-    </div>
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-[rgba(0,0,0,0.1)] p-6 shadow-sm">
+      <div className="mb-0.5">
+        <h2 className="text-lg font-semibold text-[rgba(0,0,0,0.95)] tracking-tight">{title}</h2>
+        {subtitle && <p className="text-sm text-warm-500 mt-1 leading-relaxed">{subtitle}</p>}
+      </div>
+      {children}
+    </motion.div>
   )
 }
 
-function ModuleWrapper({ children }: any) { return <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="pb-4">{children}</motion.div> }
-
-function FoundryInput({ label, value, onChange, icon, clean }: any) {
+function NotionInput({ label, value, onChange, icon, clean }: { label?: string; value?: string; onChange: (v: string) => void; icon?: React.ReactNode; clean?: boolean }) {
   return (
-    <div className="flex flex-col space-y-1 group/input">
-      <div className="flex items-center space-x-2"><label className="text-[10px] font-black text-gray-500 uppercase tracking-widest group-focus-within/input:text-red-500 transition-colors">{label}</label>{icon && <span className="text-[10px] text-gray-600">{icon}</span>}</div>
-      <input className={clsx("w-full bg-transparent py-2 text-sm font-medium text-gray-400 focus:ring-0 placeholder:text-gray-900 transition-all", !clean ? "border-b border-gray-700 focus:border-red-600" : "border-none")} value={value || ''} onChange={(e) => onChange(e.target.value)} />
+    <div className="flex flex-col gap-1.5 group/input">
+      {label && (
+        <label className="text-xs font-medium text-warm-500 group-focus-within/input:text-[#0075de] transition-colors flex items-center gap-1.5">
+          {label}
+          {icon && <span className="text-warm-300">{icon}</span>}
+        </label>
+      )}
+      {clean ? (
+        <input
+          className="w-full bg-transparent py-1.5 text-sm text-[rgba(0,0,0,0.95)] border-b border-[rgba(0,0,0,0.1)] focus:border-[#0075de] focus:outline-none transition-colors placeholder:text-warm-300"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={label || ''}
+        />
+      ) : (
+        <input
+          className="input text-sm py-[7px]"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={label || ''}
+        />
+      )}
     </div>
   )
 }

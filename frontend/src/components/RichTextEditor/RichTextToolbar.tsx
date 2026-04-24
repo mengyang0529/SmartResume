@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { BlockType } from '../../types/richText'
 import {
   FaBold,
@@ -5,6 +6,7 @@ import {
   FaTrash,
   FaArrowUp,
   FaArrowDown,
+  FaPalette,
 } from 'react-icons/fa'
 import clsx from 'clsx'
 
@@ -54,19 +56,21 @@ export default function RichTextToolbar({
   canMoveUp,
   canMoveDown,
 }: RichTextToolbarProps) {
+  const [showColorPicker, setShowColorPicker] = useState(false)
+
   return (
-    <div className="bg-[#26262c] border-b border-gray-700/50 px-4 py-3 flex flex-wrap items-center gap-2 transition-all duration-300">
+    <div className="bg-[#f6f5f4] border-b border-[rgba(0,0,0,0.1)] px-4 py-2.5 flex flex-wrap items-center gap-2">
       {/* Block type selector */}
-      <div className="flex items-center gap-1 bg-[#32323a] rounded p-1">
+      <div className="flex items-center gap-0.5 bg-white border border-[rgba(0,0,0,0.1)] rounded-md p-0.5">
         {blockTypes.map(({ type, label }) => (
           <button
             key={type}
             onClick={() => onChangeType(type)}
             className={clsx(
-              'px-3 py-1.5 rounded text-[11px] font-bold transition-all',
+              'px-2.5 py-1 rounded text-xs font-medium transition-all',
               activeBlockType === type
-                ? 'bg-red-600 text-gray-300'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
+                ? 'bg-[#0075de] text-white'
+                : 'text-warm-400 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.04)]'
             )}
             title={`Convert to ${type}`}
           >
@@ -75,73 +79,96 @@ export default function RichTextToolbar({
         ))}
       </div>
 
-      <div className="w-px h-6 bg-gray-800" />
+      <div className="w-px h-5 bg-[rgba(0,0,0,0.1)]" />
 
-      {/* Formatting */}
+      {/* Bold */}
       <button
         onClick={onToggleBold}
         className={clsx(
-          'w-8 h-8 flex items-center justify-center rounded transition-all',
+          'w-7 h-7 flex items-center justify-center rounded-md transition-all',
           activeBlockBold
-            ? 'bg-red-600/20 text-red-500'
-            : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'
+            ? 'bg-[rgba(0,117,222,0.1)] text-[#0075de]'
+            : 'text-warm-400 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.04)]'
         )}
         title="Bold"
       >
-        <FaBold className="text-[10px]" />
+        <FaBold className="text-xs" />
       </button>
 
-      {/* Color picker */}
-      <div className="flex items-center gap-1">
-        {colors.map((c) => (
-          <button
-            key={c.label}
-            onClick={() => onChangeColor(c.value || '')}
-            className={clsx(
-              'w-5 h-5 rounded-full border-2 transition-all',
-              activeBlockColor === c.value
-                ? 'border-white scale-110'
-                : 'border-transparent hover:border-gray-500'
-            )}
-            style={{ backgroundColor: c.value || '#444444' }}
-            title={c.label}
-          />
-        ))}
+      {/* Color picker - single button */}
+      <div className="relative">
+        <button
+          onClick={() => setShowColorPicker(!showColorPicker)}
+          className={clsx(
+            'w-7 h-7 flex items-center justify-center rounded-md transition-all',
+            showColorPicker || activeBlockColor
+              ? 'bg-[rgba(0,117,222,0.1)] text-[#0075de]'
+              : 'text-warm-400 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.04)]'
+          )}
+          title="Text color"
+        >
+          <FaPalette className="text-xs" />
+        </button>
+
+        {showColorPicker && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
+            <div className="absolute top-8 left-0 z-50 flex items-center gap-1.5 bg-white border border-[rgba(0,0,0,0.1)] rounded-lg shadow-deep p-2">
+              {colors.map((c) => (
+                <button
+                  key={c.label}
+                  onClick={() => {
+                    onChangeColor(c.value || '')
+                    setShowColorPicker(false)
+                  }}
+                  className={clsx(
+                    'w-5 h-5 rounded-full border-2 transition-all',
+                    activeBlockColor === c.value
+                      ? 'border-[#0075de] scale-110'
+                      : 'border-transparent hover:border-[rgba(0,0,0,0.2)]'
+                  )}
+                  style={{ backgroundColor: c.value || '#e0dfdd' }}
+                  title={c.label}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="w-px h-6 bg-gray-800" />
+      <div className="w-px h-5 bg-[rgba(0,0,0,0.1)]" />
 
       {/* Block operations */}
       <button
         onClick={onAddBlock}
-        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-all"
+        className="w-7 h-7 flex items-center justify-center rounded-md text-warm-400 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.04)] transition-all"
         title="Add block below"
       >
-        <FaPlus className="text-[10px]" />
+        <FaPlus className="text-xs" />
       </button>
       <button
         onClick={() => onMoveBlock('up')}
         disabled={!canMoveUp}
-        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-7 h-7 flex items-center justify-center rounded-md text-warm-400 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.04)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         title="Move up"
       >
-        <FaArrowUp className="text-[10px]" />
+        <FaArrowUp className="text-xs" />
       </button>
       <button
         onClick={() => onMoveBlock('down')}
         disabled={!canMoveDown}
-        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-7 h-7 flex items-center justify-center rounded-md text-warm-400 hover:text-[rgba(0,0,0,0.95)] hover:bg-[rgba(0,0,0,0.04)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         title="Move down"
       >
-        <FaArrowDown className="text-[10px]" />
+        <FaArrowDown className="text-xs" />
       </button>
       <button
         onClick={onDeleteBlock}
         disabled={!canDelete}
-        className="w-8 h-8 flex items-center justify-center rounded text-gray-500 hover:text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-7 h-7 flex items-center justify-center rounded-md text-warm-400 hover:text-[#dd5b00] hover:bg-[rgba(221,91,0,0.08)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         title="Delete block"
       >
-        <FaTrash className="text-[10px]" />
+        <FaTrash className="text-xs" />
       </button>
     </div>
   )
