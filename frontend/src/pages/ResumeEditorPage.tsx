@@ -526,7 +526,7 @@ export default function ResumeEditorPage() {
       {/* Preview Modal */}
       {showPreviewModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(0,0,0,0.5)] backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-[500px] max-w-[90vw] h-[90vh] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-xl shadow-2xl w-[750px] max-w-[95vw] h-[90vh] flex flex-col overflow-hidden">
             <div className="shrink-0 flex items-center justify-between px-5 py-3 border-b border-[rgba(0,0,0,0.1)]">
               <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">PDF Preview</h3>
               <button
