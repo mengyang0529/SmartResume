@@ -522,14 +522,14 @@ export default function ResumeEditorPage() {
                       </div>
                     </div>
                     {/* Photo upload area */}
-                    <div className="w-[120px] flex-shrink-0 flex flex-col items-center justify-start pt-1">
+                    <div className="w-[130px] flex-shrink-0 flex flex-col items-center justify-start pt-1">
                       <div
-                        className="w-[100px] h-[100px] rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-warm-400 hover:bg-warm-50 transition-colors overflow-hidden relative group"
+                        className="w-full h-[150px] rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-warm-400 hover:bg-warm-50 transition-colors overflow-hidden relative group"
                         onClick={handlePhotoClick}
                       >
                         {resumeData.personal.photo?.url ? (
                           <>
-                            <img src={resumeData.personal.photo.url} alt="Profile" className="w-full h-full object-cover" />
+                            <img src={resumeData.personal.photo.url} alt="Profile" className="w-full h-full object-contain" />
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                               <FaCamera className="text-white text-xl" />
                             </div>
