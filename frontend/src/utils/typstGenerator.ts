@@ -135,13 +135,13 @@ function renderBlocksAsEntries(blocks: RichTextBlock[]): string {
   blocks.forEach(block => {
     if (block.type === 'h1') {
       flush()
-      // Manually render h1 with black color to bypass the template's
-      // heading show rule which applies accent-color to level-1 headings
-      const content = escapeTypstContent(block.content)
+      // Use black by default to bypass the template's accent-color rule
+      // for level-1 headings, but respect per-block color and bold settings
+      const content = renderFormattedText(block.content, block.bold ?? false, block.color)
       typst += `#block(sticky: true, above: 1em)[
   #set text(size: 16pt, weight: "regular")
   #align(left)[
-    #text(fill: black)[*${content}*]
+    #text(fill: black)[${content}]
     #box(width: 1fr, line(length: 100%))
   ]
 ]\n\n`
