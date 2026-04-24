@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, type ChangeEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   FaPlus, FaTrash, FaSpinner,
@@ -54,7 +54,6 @@ export default function ResumeEditorPage() {
 
   const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData)
   const [templateSettings] = useState<TemplateSettings>(defaultTemplateSettings)
-  const [activeTab, setActiveTab] = useState('personal')
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [isSample, setIsSample] = useState(false)
@@ -62,6 +61,7 @@ export default function ResumeEditorPage() {
   const { pdfBlobUrl, isCompiling, error: compileError, compile: triggerCompile } = useTypstCompiler({ debounceMs: 400 })
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const navRef = useRef<HTMLElement | null>(null)
   const lastCompileSource = useRef('')
   const location = useLocation()
   const navigate = useNavigate()
@@ -242,7 +242,6 @@ export default function ResumeEditorPage() {
     handleChange()
     const newId = generateId('block')
     setModuleBlocks(prev => [...prev, { id: newId, type: 'h1', content: 'New Section' }])
-    setActiveTab('modules')
     setTimeout(() => scrollToSection('modules'), 50)
   }
 
@@ -251,15 +250,18 @@ export default function ResumeEditorPage() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  useEffect(() => {
-    const sectionIds = ['section-personal', 'section-modules', 'section-skills']
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-      if (visible) setActiveTab(visible.target.id.replace('section-', ''))
-    }, { threshold: [0, 0.1, 0.5], rootMargin: '-70px 0px -40% 0px' })
-    sectionIds.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el) })
-    return () => observer.disconnect()
-  }, [])
+  const scrollToBlock = (blockId: string) => {
+    scrollToSection('modules')
+    setTimeout(() => {
+      const el = document.querySelector(`[data-block-id="${blockId}"]`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }
+
+  const sectionTitles = useMemo(
+    () => moduleBlocks.filter(b => b.type === 'h1').map(b => ({ id: b.id, title: b.content || 'Untitled' })),
+    [moduleBlocks]
+  )
 
   const handleDownloadPdf = () => {
     if (pdfBlobUrl) {
@@ -292,12 +294,25 @@ export default function ResumeEditorPage() {
   return (
     <div className="min-h-screen bg-[#1e1e22] font-sans text-gray-400 flex selection:bg-red-500/30">
       <aside className="w-[280px] bg-[#3a3a44] border-r border-gray-700/30 fixed top-14 bottom-0 left-0 z-40 flex flex-col">
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1 custom-scrollbar">
-          <NavTab active={activeTab === 'personal'} onClick={() => scrollToSection('personal')} num="01" label="Identity" icon={<FaFingerprint />} />
+        <nav ref={navRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-1 custom-scrollbar">
+          <NavTab active={false} onClick={() => scrollToSection('personal')} num="01" label="Identity" icon={<FaFingerprint />} />
           <div className="mt-6 flex items-center justify-between px-4 mb-2"><SectionDivider label="Modules" /><button onClick={addSection} className="text-gray-500 hover:text-red-500 transition-colors"><FaPlus className="text-xs" /></button></div>
-          <NavTab active={activeTab === 'modules'} onClick={() => scrollToSection('modules')} num="02" label="Modules" icon={<FaLayerGroup />} />
+          {sectionTitles.length === 0 ? (
+            <NavTab active={false} onClick={() => scrollToSection('modules')} num="02" label="Modules" icon={<FaLayerGroup />} />
+          ) : (
+            sectionTitles.map((sec, i) => (
+              <NavTab
+                key={sec.id}
+                active={false}
+                onClick={() => scrollToBlock(sec.id)}
+                num={String(i + 1).padStart(2, '0')}
+                label={sec.title}
+                icon={<FaLayerGroup />}
+              />
+            ))
+          )}
           <SectionDivider label="Finalize" className="mt-6" />
-          <NavTab active={activeTab === 'skills'} onClick={() => scrollToSection('skills')} num="--" label="Skills" icon={<FaWrench />} />
+          <NavTab active={false} onClick={() => scrollToSection('skills')} num="--" label="Skills" icon={<FaWrench />} />
           <SectionDivider label="Data" className="mt-6" />
           <button onClick={() => setShowHistory(true)} className="w-full flex items-center px-4 py-5 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-300 transition-colors">
             <FaHistory className="mr-3 text-sm" />
