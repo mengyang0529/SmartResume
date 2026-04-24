@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
   FaPlus, FaSpinner,
   FaDownload, FaEye, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLayerGroup, FaUpload, FaWrench,
-  FaHistory, FaFileDownload, FaUser, FaBars,
+  FaHistory, FaFileDownload, FaUser, FaBars, FaCamera,
 } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import localforage from 'localforage'
@@ -64,14 +64,6 @@ export default function ResumeEditorPage() {
     { id: 2, name: 'Modern', category: 'Awsome-CV', description: 'Original Awesome CV style with colored accents.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const, template: 'modern' as const } },
   ]
 
-  const defaultTemplateSettings: TemplateSettings = {
-    colorScheme: 'awesome-red',
-    fontSize: '11pt',
-    paperSize: 'a4paper',
-    sectionColorHighlight: true,
-    headerAlignment: 'C',
-  }
-
   const emptyResumeData: ResumeData = {
     personal: {
       firstName: '',
@@ -88,18 +80,32 @@ export default function ResumeEditorPage() {
   }
 
   const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData)
-  const [templateSettings, setTemplateSettings] = useState<TemplateSettings>(defaultTemplateSettings)
-  const [activeTemplateId, setActiveTemplateId] = useState(1)
+  const [templateSettings, setTemplateSettings] = useState<TemplateSettings>(templates[0].settings)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([])
   const [skillsBlocks, setSkillsBlocks] = useState<RichTextBlock[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [isSample, setIsSample] = useState(false)
   const [showNav, setShowNav] = useState(false)
+  const [templatePdfs, setTemplatePdfs] = useState<Record<number, string>>({})
+  const prevTemplateSettingsRef = useRef<TemplateSettings | null>(null)
+  const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null)
+  const compilingTemplateRef = useRef(1)
 
-  const { pdfBlobUrl, isCompiling, error: compileError, compile: triggerCompile } = useTypstCompiler({ debounceMs: 400 })
+  const onCompileResult = useCallback((pdfBytes: ArrayBuffer, compileId?: number) => {
+    const templateId = compileId ?? compilingTemplateRef.current
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+    setTemplatePdfs(prev => ({
+      ...prev,
+      [templateId]: url,
+    }))
+  }, [])
+
+  const { isCompiling, error: compileError, compile: triggerCompile, setPhoto, removePhoto } = useTypstCompiler({ debounceMs: 400, onCompileResult })
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const photoInputRef = useRef<HTMLInputElement | null>(null)
   const lastCompileSource = useRef('')
   const location = useLocation()
   const navigate = useNavigate()
@@ -107,11 +113,50 @@ export default function ResumeEditorPage() {
     setIsSample(false)
   }, [])
 
+  const handlePhotoClick = () => {
+    photoInputRef.current?.click()
+  }
+
+  const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    handleChange()
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      setPhoto(dataUrl)
+      setResumeData(prev => ({
+        ...prev,
+        personal: {
+          ...prev.personal,
+          photo: { url: dataUrl, shape: 'circle' },
+        },
+      }))
+    }
+    reader.readAsDataURL(file)
+    // Reset input so same file can be re-selected
+    e.target.value = ''
+  }
+
+  const handlePhotoRemove = () => {
+    removePhoto()
+    setResumeData(prev => ({
+      ...prev,
+      personal: {
+        ...prev.personal,
+        photo: undefined,
+      },
+    }))
+  }
+
   const generateTypstNow = useCallback((data: ResumeData, skillsBlocks?: RichTextBlock[]) => {
     const source = generateResumeTypst(data, templateSettings, skillsBlocks)
     if (source !== lastCompileSource.current) {
       lastCompileSource.current = source
-      triggerCompile(source)
+      const tpl = templates.find(t => t.settings.template === templateSettings.template)
+      const templateId = tpl?.id ?? 1
+      compilingTemplateRef.current = templateId
+      triggerCompile(source, templateId)
     }
   }, [templateSettings, triggerCompile])
 
@@ -141,6 +186,16 @@ export default function ResumeEditorPage() {
       }
     })
   }, [])
+
+  // Sync photo to worker when it changes (runs before compile effect for FIFO ordering)
+  useEffect(() => {
+    const photo = resumeData.personal.photo
+    if (photo?.url) {
+      setPhoto(photo.url)
+    } else {
+      removePhoto()
+    }
+  }, [resumeData.personal.photo?.url, setPhoto, removePhoto])
 
   // Trigger compilation when data changes (after initial load)
   useEffect(() => {
@@ -246,6 +301,10 @@ export default function ResumeEditorPage() {
         mobile: String(data.personal?.mobile || ''),
         address: String(data.personal?.address || ''),
         homepage: String(data.personal?.homepage || ''),
+        photo: data.personal?.photo ? {
+          url: String(data.personal.photo.url || ''),
+          shape: (data.personal.photo.shape === 'circle' || data.personal.photo.shape === 'rectangle') ? data.personal.photo.shape : 'circle',
+        } : undefined,
       },
       education: [],
       sections,
@@ -317,16 +376,6 @@ export default function ResumeEditorPage() {
     () => moduleBlocks.filter(b => b.type === 'h1').map(b => ({ id: b.id, title: b.content || 'Untitled' })),
     [moduleBlocks]
   )
-
-  const handleDownloadPdf = () => {
-    if (pdfBlobUrl) {
-      const a = document.createElement('a')
-      a.href = pdfBlobUrl
-      const name = `${resumeData.personal.firstName || 'resume'}_${resumeData.personal.lastName || 'export'}.pdf`
-      a.download = name
-      a.click()
-    }
-  }
 
   const handleExportJson = () => {
     const exportData = { ...resumeData, skillsBlocks }
@@ -448,7 +497,7 @@ export default function ResumeEditorPage() {
         {/* Main content: editor + gallery */}
         <div className="flex-1 flex flex-row overflow-hidden">
           {/* Left: Editor */}
-          <div className="flex-1 overflow-y-auto" onClick={() => setActiveTemplateId(0)}>
+          <div className="flex-1 overflow-y-auto">
             {compileError && (
               <div className="px-4 pt-4">
                 <div className="p-3 rounded-lg bg-[rgba(221,91,0,0.06)] border border-[rgba(221,91,0,0.15)] text-warm-600 text-xs">
@@ -460,15 +509,43 @@ export default function ResumeEditorPage() {
             <div className={clsx("px-4 py-6 space-y-6 pb-24", isSample && "opacity-60")}>
               <section id="section-personal">
                 <SectionCard title="Personal Information">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-4">
-                    <NotionInput label="First Name" value={resumeData.personal.firstName} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, firstName: v } })) }} />
-                    <NotionInput label="Last Name" value={resumeData.personal.lastName} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, lastName: v } })) }} />
-                    <NotionInput label="Position / Title" value={resumeData.personal.position} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, position: v } })) }} />
-                    <NotionInput label="Phone" value={resumeData.personal.mobile} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, mobile: v } })) }} icon={<FaPhone />} />
-                    <NotionInput label="Homepage" value={resumeData.personal.homepage ?? ''} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, homepage: v } })) }} icon={<FaUser />} />
-                    <NotionInput label="Email" value={resumeData.personal.email} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, email: v } })) }} icon={<FaEnvelope />} />
-                    <div className="col-span-2">
-                      <NotionInput label="Address" value={resumeData.personal.address} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, address: v } })) }} icon={<FaMapMarkerAlt />} />
+                  <div className="flex gap-6 mt-4">
+                    <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-3">
+                      <NotionInput label="First Name" value={resumeData.personal.firstName} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, firstName: v } })) }} />
+                      <NotionInput label="Last Name" value={resumeData.personal.lastName} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, lastName: v } })) }} />
+                      <NotionInput label="Position / Title" value={resumeData.personal.position} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, position: v } })) }} />
+                      <NotionInput label="Phone" value={resumeData.personal.mobile} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, mobile: v } })) }} icon={<FaPhone />} />
+                      <NotionInput label="Homepage" value={resumeData.personal.homepage ?? ''} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, homepage: v } })) }} icon={<FaUser />} />
+                      <NotionInput label="Email" value={resumeData.personal.email} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, email: v } })) }} icon={<FaEnvelope />} />
+                      <div className="col-span-2">
+                        <NotionInput label="Address" value={resumeData.personal.address} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, address: v } })) }} icon={<FaMapMarkerAlt />} />
+                      </div>
+                    </div>
+                    {/* Photo upload area */}
+                    <div className="w-[120px] flex-shrink-0 flex flex-col items-center justify-start pt-1">
+                      <div
+                        className="w-[100px] h-[100px] rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-warm-400 hover:bg-warm-50 transition-colors overflow-hidden relative group"
+                        onClick={handlePhotoClick}
+                      >
+                        {resumeData.personal.photo?.url ? (
+                          <>
+                            <img src={resumeData.personal.photo.url} alt="Profile" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <FaCamera className="text-white text-xl" />
+                            </div>
+                          </>
+                        ) : (
+                          <FaCamera className="text-gray-300 text-2xl" />
+                        )}
+                      </div>
+                      {resumeData.personal.photo?.url ? (
+                        <button onClick={handlePhotoRemove} className="text-xs text-warm-500 mt-1.5 hover:text-red-500 transition-colors">
+                          Remove
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-gray-400 mt-1.5">Photo</span>
+                      )}
+                      <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
                     </div>
                   </div>
                 </SectionCard>
@@ -510,27 +587,16 @@ export default function ResumeEditorPage() {
           </div>
 
           {/* Right: Template Gallery */}
-          <div className="w-[820px] lg:w-[900px] border-l border-[rgba(0,0,0,0.1)] bg-white flex flex-col" onClick={() => setActiveTemplateId(0)}>
+          <div className="w-[820px] lg:w-[900px] border-l border-[rgba(0,0,0,0.1)] bg-white flex flex-col">
             <div className="shrink-0 px-5 py-4 border-b border-[rgba(0,0,0,0.1)]">
               <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">Templates</h3>
-              <p className="text-xs text-warm-500 mt-0.5">Choose a template to apply</p>
+              <p className="text-xs text-warm-500 mt-0.5">Preview and download your resume with different templates</p>
             </div>
             <div className="flex-1 overflow-y-auto p-4 grid grid-cols-3 gap-3">
               {templates.map((tpl) => (
                 <div
                   key={tpl.id}
-                  className={`border rounded-lg p-4 transition-all flex flex-col aspect-[4/3] cursor-pointer ${
-                    activeTemplateId === tpl.id
-                      ? 'border-[#0075de] ring-1 ring-[#0075de] bg-[rgba(0,117,222,0.03)]'
-                      : 'border-[rgba(0,0,0,0.1)] hover:border-[rgba(0,0,0,0.2)]'
-                  }`}
-                  onClick={(e) => { e.stopPropagation(); setActiveTemplateId(tpl.id) }}
-                  onDoubleClick={(e) => {
-                    e.stopPropagation()
-                    setActiveTemplateId(tpl.id)
-                    setTemplateSettings(tpl.settings)
-                    setShowPreviewModal(true)
-                  }}
+                  className="border border-[rgba(0,0,0,0.1)] rounded-lg p-4 transition-all flex flex-col aspect-[4/3] hover:border-[rgba(0,0,0,0.2)]"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(0,117,222,0.08)] text-[#0075de]">
@@ -542,8 +608,10 @@ export default function ResumeEditorPage() {
                   <p className="text-[11px] text-warm-500 leading-snug mb-3 flex-1">{tpl.description}</p>
                   <div className="flex items-center gap-2 mt-auto">
                     <button
-                      onClick={() => {
-                        setActiveTemplateId(tpl.id)
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        prevTemplateSettingsRef.current = templateSettings
+                        setPreviewTemplateId(tpl.id)
                         setTemplateSettings(tpl.settings)
                         setShowPreviewModal(true)
                       }}
@@ -553,8 +621,18 @@ export default function ResumeEditorPage() {
                       Preview
                     </button>
                     <button
-                      onClick={handleDownloadPdf}
-                      disabled={isCompiling || !pdfBlobUrl}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const pdfUrl = templatePdfs[tpl.id]
+                        if (pdfUrl) {
+                          const a = document.createElement('a')
+                          a.href = pdfUrl
+                          const name = `${resumeData.personal.firstName || 'resume'}_${resumeData.personal.lastName || 'export'}.pdf`
+                          a.download = name
+                          a.click()
+                        }
+                      }}
+                      disabled={isCompiling || !templatePdfs[tpl.id]}
                       className="flex-1 text-xs font-medium px-3 py-1.5 rounded-md bg-[#0075de] text-white hover:bg-[#005bab] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40"
                     >
                       {isCompiling ? <FaSpinner className="animate-spin" /> : <FaDownload className="text-[10px]" />}
@@ -576,16 +654,23 @@ export default function ResumeEditorPage() {
             <div className="shrink-0 flex items-center justify-between px-5 py-3 border-b border-[rgba(0,0,0,0.1)]">
               <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">PDF Preview</h3>
               <button
-                onClick={() => setShowPreviewModal(false)}
+                onClick={() => {
+                  setShowPreviewModal(false)
+                  setPreviewTemplateId(null)
+                  if (prevTemplateSettingsRef.current) {
+                    setTemplateSettings(prevTemplateSettingsRef.current)
+                    prevTemplateSettingsRef.current = null
+                  }
+                }}
                 className="px-3 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] transition-colors"
               >
                 Close
               </button>
             </div>
             <div className="flex-1 p-4 bg-[#f0efed]">
-              {pdfBlobUrl ? (
+              {previewTemplateId && templatePdfs[previewTemplateId] ? (
                 <iframe
-                  src={pdfBlobUrl}
+                  src={templatePdfs[previewTemplateId]}
                   className="w-full h-full rounded-standard shadow-sm border border-[rgba(0,0,0,0.1)] bg-white"
                   title="PDF Preview"
                 />

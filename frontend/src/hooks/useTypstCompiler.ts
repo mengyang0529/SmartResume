@@ -2,13 +2,16 @@ import { useRef, useEffect, useCallback, useState } from 'react'
 
 export interface UseTypstCompilerOptions {
   debounceMs?: number
+  onCompileResult?: (pdfBytes: ArrayBuffer, compileId?: number) => void
 }
 
 export interface UseTypstCompilerReturn {
   pdfBlobUrl: string | null
   isCompiling: boolean
   error: string | null
-  compile: (source: string) => void
+  compile: (source: string, compileId?: number) => void
+  setPhoto: (dataUrl: string) => void
+  removePhoto: () => void
   reset: () => void
 }
 
@@ -20,6 +23,7 @@ export function useTypstCompiler(
   const workerRef = useRef<Worker | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sourceRef = useRef<string>('')
+  const pendingCompileIdRef = useRef<number | undefined>(undefined)
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
   const [isCompiling, setIsCompiling] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -33,7 +37,7 @@ export function useTypstCompiler(
     workerRef.current = worker
 
     worker.onmessage = (e: MessageEvent) => {
-      const { type, pdfBytes, error: errMsg } = e.data
+      const { type, pdfBytes, error: errMsg, compileId } = e.data
 
       switch (type) {
         case 'init_done':
@@ -51,6 +55,7 @@ export function useTypstCompiler(
             if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl)
             const blob = new Blob([pdfBytes], { type: 'application/pdf' })
             setPdfBlobUrl(URL.createObjectURL(blob))
+            options.onCompileResult?.(pdfBytes, compileId)
           }
           setError(null)
           break
@@ -83,17 +88,20 @@ export function useTypstCompiler(
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => {
       if (workerRef.current && sourceRef.current) {
+        const compileId = pendingCompileIdRef.current
+        pendingCompileIdRef.current = undefined
         setIsCompiling(true)
         workerRef.current.postMessage({
           type: 'compile',
-          payload: { source: sourceRef.current },
+          payload: { compileId },
         })
       }
     }, debounceMs)
   }, [debounceMs])
 
-  const compile = useCallback((source: string) => {
+  const compile = useCallback((source: string, compileId?: number) => {
     sourceRef.current = source
+    pendingCompileIdRef.current = compileId
     if (workerRef.current && workerReady) {
       workerRef.current.postMessage({
         type: 'set_source',
@@ -101,6 +109,21 @@ export function useTypstCompiler(
       })
     }
   }, [workerReady])
+
+  const setPhoto = useCallback((dataUrl: string) => {
+    if (workerRef.current) {
+      workerRef.current.postMessage({
+        type: 'set_photo',
+        payload: { dataUrl },
+      })
+    }
+  }, [])
+
+  const removePhoto = useCallback(() => {
+    if (workerRef.current) {
+      workerRef.current.postMessage({ type: 'remove_photo' })
+    }
+  }, [])
 
   // Resend pending source when worker becomes ready
   useEffect(() => {
@@ -123,5 +146,5 @@ export function useTypstCompiler(
     }
   }, [pdfBlobUrl])
 
-  return { pdfBlobUrl, isCompiling, error, compile, reset }
+  return { pdfBlobUrl, isCompiling, error, compile, setPhoto, removePhoto, reset }
 }

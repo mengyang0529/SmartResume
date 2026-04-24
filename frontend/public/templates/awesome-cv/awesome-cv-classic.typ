@@ -548,7 +548,7 @@
           radius: 2cm,
           width: 4cm,
           height: 4cm,
-          profile-picture,
+          align(center + horizon, profile-picture),
         )
       ],
     )
@@ -910,7 +910,7 @@
           radius: 2cm,
           width: 4cm,
           height: 4cm,
-          profile-picture,
+          align(center + horizon, profile-picture),
         )
       ],
       [

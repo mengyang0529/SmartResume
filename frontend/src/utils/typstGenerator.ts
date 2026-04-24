@@ -18,6 +18,16 @@ if (personal.homepage) authorEntries.push(`    homepage: "${escapeTypstString(pe
 
   const authorBlock = authorEntries.join('\n')
 
+  const photoUrl = personal.photo?.url
+  let photoEntry: string
+  if (photoUrl) {
+    photoEntry = `profile-picture: image(bytes((
+  ${dataUrlToTypstBytes(photoUrl)}
+)), height: 4cm, fit: "cover"),`
+  } else {
+    photoEntry = 'profile-picture: none,'
+  }
+
   const templateFile = settings.template === 'modern' ? 'awesome-cv-modern.typ' : 'awesome-cv-classic.typ'
   let typst = `#import "${templateFile}": *
 
@@ -25,7 +35,7 @@ if (personal.homepage) authorEntries.push(`    homepage: "${escapeTypstString(pe
   author: (
 ${authorBlock}
   ),
-  profile-picture: none,
+  ${photoEntry}
   date: datetime.today().display(),
   paper-size: "${paperSize}",
   accent-color: "${accentColor}",
@@ -176,6 +186,22 @@ function renderFormattedText(content: string, bold?: boolean, color?: string): s
     text = `#text(fill: rgb("${color}"))[${text}]`
   }
   return text
+}
+
+function dataUrlToTypstBytes(dataUrl: string): string {
+  const base64 = dataUrl.split(',')[1]
+  if (!base64) return '0x00'
+  const binaryStr = atob(base64)
+  const parts: string[] = []
+  for (let i = 0; i < binaryStr.length; i++) {
+    parts.push('0x' + binaryStr.charCodeAt(i).toString(16).toUpperCase().padStart(2, '0'))
+  }
+  // Group into lines of 16 hex bytes
+  const lines: string[] = []
+  for (let i = 0; i < parts.length; i += 16) {
+    lines.push('    ' + parts.slice(i, i + 16).join(', '))
+  }
+  return lines.join(',\n') + ','
 }
 
 function escapeTypstContent(text: string): string {
