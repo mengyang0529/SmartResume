@@ -9,6 +9,9 @@ async function ensureInitialized() {
   $typst.use(
     TypstSnippet.disableDefaultFontAssets(),
     TypstSnippet.preloadFontAssets({ assets: ['text', 'cjk'] }),
+    TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf'),
+    TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Bold.otf'),
+    TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf'),
     await TypstSnippet.fetchPackageRegistry(),
   )
 

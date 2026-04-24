@@ -30,7 +30,7 @@ ${authorBlock}
   accent-color: "${accentColor}",
   colored-headers: ${settings.sectionColorHighlight},
   language: "en",
-  font: ("Source Sans 3", "Source Sans Pro", "LXGW Neo XiHei"),
+  font: ("Noto Sans CJK SC", "Noto Sans CJK JP", "Source Sans 3"),
 )
 
 // Disable automatic uppercase for headings to respect user input
