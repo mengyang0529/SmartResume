@@ -28,7 +28,7 @@ export default function EditableBlock({
   onFocus,
   onBlur,
   onKeyDown,
-  headingColor,
+  headingColor: _headingColor,
 }: EditableBlockProps) {
   const contentRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
