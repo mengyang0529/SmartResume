@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'reac
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   FaPlus, FaTrash, FaSpinner,
-  FaSave, FaDownload, FaChevronRight, FaFingerprint,
+  FaDownload, FaChevronRight, FaFingerprint,
   FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLayerGroup, FaEye, FaUpload, FaWrench,
   FaHistory, FaFileDownload,
 } from 'react-icons/fa'
@@ -55,7 +55,6 @@ export default function ResumeEditorPage() {
   const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData)
   const [templateSettings] = useState<TemplateSettings>(defaultTemplateSettings)
   const [activeTab, setActiveTab] = useState('personal')
-  const [isSaved, setIsSaved] = useState(true)
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [isSample, setIsSample] = useState(false)
@@ -68,7 +67,6 @@ export default function ResumeEditorPage() {
   const navigate = useNavigate()
 
   const handleChange = useCallback(() => {
-    setIsSaved(false)
     setIsSample(false)
   }, [])
 
@@ -95,7 +93,6 @@ export default function ResumeEditorPage() {
           setModuleBlocks(modulesToBlocks(data.sections))
         }
         setIsSample(true)
-        setIsSaved(true)
       }
     })
   }, [])
@@ -219,7 +216,6 @@ export default function ResumeEditorPage() {
         setResumeData(normalized)
         setModuleBlocks(modulesToBlocks(normalized.sections))
         setIsSample(false)
-        setIsSaved(true)
       } catch (e) { /* ignore parse errors */ }
     }
     reader.readAsText(file)
@@ -230,9 +226,17 @@ export default function ResumeEditorPage() {
 
   const saveToLocal = async (data: ResumeData) => {
     await localforage.setItem('current_resume_data', data)
-    setIsSaved(true)
     historyService.saveSnapshot(data)
   }
+
+  // Auto-save whenever resume data changes
+  useEffect(() => {
+    if (resumeData === emptyResumeData) return
+    const timer = setTimeout(() => {
+      saveToLocal(resumeData)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [resumeData])
 
   const addSection = () => {
     handleChange()
@@ -283,7 +287,6 @@ export default function ResumeEditorPage() {
       setModuleBlocks(modulesToBlocks(data.sections))
     }
     setIsSample(false)
-    setIsSaved(false)
   }
 
   return (
@@ -377,16 +380,9 @@ export default function ResumeEditorPage() {
           </section>
         </div>
 
-        {!isSaved && (
-          <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-12 right-12 z-50">
-            <button onClick={() => saveToLocal(resumeData)} className="bg-red-600 text-white px-10 py-5 rounded shadow-[0_15px_40px_rgba(220,38,38,0.4)] hover:bg-red-500 transition-all flex items-center space-x-4 active:scale-95 group border border-red-400/20">
-              <FaSave className="text-xl" /> <span className="font-black uppercase tracking-[0.2em] text-xs">Save Changes</span>
-            </button>
-          </motion.div>
-        )}
-      </main>
+        </main>
 
-      <HistoryPanel
+        <HistoryPanel
         open={showHistory}
         onClose={() => setShowHistory(false)}
         onRestore={handleHistoryRestore}

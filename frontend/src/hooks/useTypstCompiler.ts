@@ -102,6 +102,16 @@ export function useTypstCompiler(
     }
   }, [workerReady])
 
+  // Resend pending source when worker becomes ready
+  useEffect(() => {
+    if (workerReady && sourceRef.current && workerRef.current) {
+      workerRef.current.postMessage({
+        type: 'set_source',
+        payload: { source: sourceRef.current },
+      })
+    }
+  }, [workerReady])
+
   const reset = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
     sourceRef.current = ''
