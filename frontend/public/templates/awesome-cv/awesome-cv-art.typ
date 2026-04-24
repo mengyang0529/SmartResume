@@ -302,6 +302,17 @@
 
 /// ---- Resume Template ----
 
+#let organic-shape(color: default-accent-color) = {
+  place(dx: 0pt, dy: 0pt, block(width: 100%, height: 140pt, inset: 0pt)[
+    #set align(top + left)
+    #place(dx: -30pt, dy: -25pt)[#circle(radius: 65pt, fill: gradient.linear(color.lighten(15%), color.lighten(40%)), stroke: none)]
+    #place(dx: 60pt, dy: -30pt)[#circle(radius: 50pt, fill: gradient.linear(color.lighten(20%), color.lighten(50%)), stroke: none)]
+    #place(dx: 150pt, dy: -5pt)[#circle(radius: 45pt, fill: gradient.linear(color.lighten(25%), color.lighten(55%)), stroke: none)]
+    #place(dx: 240pt, dy: -35pt)[#circle(radius: 55pt, fill: gradient.linear(color.lighten(30%), color.lighten(60%)), stroke: none)]
+    #place(dx: 330pt, dy: -10pt)[#circle(radius: 30pt, fill: gradient.linear(color.lighten(35%), color.lighten(65%)), stroke: none)]
+  ])
+}
+
 /// Inspired by https://github.com/posquit0/Awesome-CV
 #let resume(
   author: (:),
@@ -399,6 +410,8 @@
     set text(size: 10pt, weight: "regular")
     __apply_smallcaps(it.body, use-smallcaps)
   }
+
+  organic-shape(color: accent-color)
 
   let name = {
     align(center)[
