@@ -14,11 +14,12 @@ export function generateResumeTypst(data: ResumeData, settings: TemplateSettings
   authorEntries.push(`    email: "${escapeTypstString(personal.email)}",`)
   if (personal.mobile) authorEntries.push(`    phone: "${escapeTypstString(personal.mobile)}",`)
   if (personal.address) authorEntries.push(`    address: "${escapeTypstString(personal.address)}",`)
-  if (personal.github) authorEntries.push(`    github: "${escapeTypstString(personal.github.replace('https://github.com/', ''))}",`)
+if (personal.homepage) authorEntries.push(`    homepage: "${escapeTypstString(personal.homepage)}",`)
 
   const authorBlock = authorEntries.join('\n')
 
-  let typst = `#import "awesome-cv.typ": *
+  const templateFile = settings.template === 'modern' ? 'awesome-cv-modern.typ' : 'awesome-cv-classic.typ'
+  let typst = `#import "${templateFile}": *
 
 #show: resume.with(
   author: (
@@ -34,7 +35,7 @@ ${authorBlock}
 )
 
 // Disable automatic uppercase for headings to respect user input
-// Note: awesome-cv.typ handles this via styling if needed, but 'upper' is not a valid parameter for heading in Typst
+// Note: awesome-cv-classic.typ handles this via styling if needed, but 'upper' is not a valid parameter for heading in Typst
 
 `
 

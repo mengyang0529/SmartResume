@@ -12,6 +12,8 @@ async function ensureInitialized() {
     TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf'),
     TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Bold.otf'),
     TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf'),
+    TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/webfonts/fa-solid-900.ttf'),
+    TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/webfonts/fa-brands-400.ttf'),
     await TypstSnippet.fetchPackageRegistry(),
   )
 
@@ -21,10 +23,14 @@ async function ensureInitialized() {
 
   await $typst.getCompiler()
 
-  // Always fetch fresh template files to pick up edits to awesome-cv.typ
-  const resp = await fetch('/templates/awesome-cv/awesome-cv.typ')
-  const text = await resp.text()
-  await $typst.addSource('/awesome-cv.typ', text)
+  // Always fetch fresh template files to pick up edits
+  const classicResp = await fetch('/templates/awesome-cv/awesome-cv-classic.typ')
+  const classicText = await classicResp.text()
+  await $typst.addSource('/awesome-cv-classic.typ', classicText)
+
+  const modernResp = await fetch('/templates/awesome-cv/awesome-cv-modern.typ')
+  const modernText = await modernResp.text()
+  await $typst.addSource('/awesome-cv-modern.typ', modernText)
 
   const langResp = await fetch('/templates/awesome-cv/lang.toml')
   const langText = await langResp.text()

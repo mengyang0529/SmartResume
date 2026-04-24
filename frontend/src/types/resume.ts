@@ -7,7 +7,7 @@ export interface PersonalInfo {
   address?: string
   mobile?: string
   email: string
-  homePage?: string
+  homepage?: string
   linkedin?: string
   gitlab?: string
   github?: string
@@ -75,4 +75,5 @@ export interface TemplateSettings {
   headerAlignment: 'C' | 'L' | 'R'
   customColor?: string
   className?: string
+  template?: 'classic' | 'modern'
 }

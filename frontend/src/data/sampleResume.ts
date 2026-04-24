@@ -8,7 +8,7 @@ export const SAMPLE_RESUME_DATA: ResumeData = {
     email: 'smart.resume@kakuti.io',
     mobile: '+99 800-1234-5678',
     address: '404 Nebula Drive, Aether City, Zephyrus Province',
-    github: 'www.smartresume-vault.fake',
+    homepage: 'www.smartresume-vault.fake',
   },
   education: [],
   sections: [{

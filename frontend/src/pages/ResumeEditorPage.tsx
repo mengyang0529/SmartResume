@@ -60,7 +60,8 @@ function blocksToSkills(blocks: RichTextBlock[]): Skill[] {
 export default function ResumeEditorPage() {
 
   const templates = [
-    { id: 1, name: 'Classic', category: 'Awsome-CV', description: 'Optimized for ATS and corporate standards.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const } },
+    { id: 1, name: 'Classic', category: 'Awsome-CV', description: 'Minimal black-and-white elegant style.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const, template: 'classic' as const } },
+    { id: 2, name: 'Modern', category: 'Awsome-CV', description: 'Original Awesome CV style with colored accents.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const, template: 'modern' as const } },
   ]
 
   const defaultTemplateSettings: TemplateSettings = {
@@ -79,7 +80,7 @@ export default function ResumeEditorPage() {
       email: '',
       mobile: '',
       address: '',
-      github: '',
+      homepage: '',
     },
     education: [],
     sections: [],
@@ -244,7 +245,7 @@ export default function ResumeEditorPage() {
         email: String(data.personal?.email || ''),
         mobile: String(data.personal?.mobile || ''),
         address: String(data.personal?.address || ''),
-        github: String(data.personal?.github || ''),
+        homepage: String(data.personal?.homepage || ''),
       },
       education: [],
       sections,
@@ -464,7 +465,7 @@ export default function ResumeEditorPage() {
                     <NotionInput label="Last Name" value={resumeData.personal.lastName} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, lastName: v } })) }} />
                     <NotionInput label="Position / Title" value={resumeData.personal.position} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, position: v } })) }} />
                     <NotionInput label="Phone" value={resumeData.personal.mobile} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, mobile: v } })) }} icon={<FaPhone />} />
-                    <NotionInput label="Biography" value={resumeData.personal.github} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, github: v } })) }} icon={<FaUser />} />
+                    <NotionInput label="Homepage" value={resumeData.personal.homepage ?? ''} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, homepage: v } })) }} icon={<FaUser />} />
                     <NotionInput label="Email" value={resumeData.personal.email} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, email: v } })) }} icon={<FaEnvelope />} />
                     <div className="col-span-2">
                       <NotionInput label="Address" value={resumeData.personal.address} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, address: v } })) }} icon={<FaMapMarkerAlt />} />

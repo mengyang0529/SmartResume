@@ -1,6 +1,8 @@
 #import "@preview/fontawesome:0.6.0": *
 #import "@preview/linguify:0.5.0": *
 
+#fa-version("6")
+
 // const color
 #let color-darknight = rgb("#131A28")
 #let color-darkgray = rgb("#333333")
@@ -458,7 +460,7 @@
     #set text(size: 16pt, weight: "regular")
     #set align(left)
     #set block(above: 1em)
-    #text[#strong[#text(black)[#it.body]]]
+    #text[#strong[#text(accent-color)[#it.body]]]
     #box(width: 1fr, line(length: 100%))
   ]
 
@@ -479,10 +481,11 @@
           #set text(size: 32pt, style: "normal", font: header-font, fill: black)
           #if language == "zh" or language == "ja" [
             #text(weight: "bold")[#author.lastname]#text(
+              fill: accent-color,
               weight: "thin",
             )[#author.firstname]
           ] else [
-            #text(weight: "thin")[#author.firstname]
+            #text(fill: accent-color, weight: "thin")[#author.firstname]
             #text(weight: "bold")[#author.lastname]
           ]
         ]
