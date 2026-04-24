@@ -18,6 +18,7 @@ import HistoryPanel from '../components/HistoryPanel'
 import { historyService } from '../services/historyService'
 import { importExportService } from '../services/importExport'
 import clsx from 'clsx'
+import { SAMPLE_RESUME_DATA } from '../data/sampleResume'
 
 const generateId = (prefix = 'id') => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -57,6 +58,7 @@ export default function ResumeEditorPage() {
   const [isSaved, setIsSaved] = useState(true)
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([])
   const [showHistory, setShowHistory] = useState(false)
+  const [isSample, setIsSample] = useState(false)
 
   const { pdfBlobUrl, isCompiling, error: compileError, compile: triggerCompile } = useTypstCompiler({ debounceMs: 400 })
 
@@ -65,7 +67,10 @@ export default function ResumeEditorPage() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const handleChange = useCallback(() => setIsSaved(false), [])
+  const handleChange = useCallback(() => {
+    setIsSaved(false)
+    setIsSample(false)
+  }, [])
 
   const generateTypstNow = useCallback((data: ResumeData) => {
     const source = generateResumeTypst(data, templateSettings)
@@ -75,7 +80,7 @@ export default function ResumeEditorPage() {
     }
   }, [templateSettings, triggerCompile])
 
-  // Load saved data on mount
+  // Load saved data on mount, fall back to sample
   useEffect(() => {
     localforage.getItem<ResumeData>('current_resume_data').then(saved => {
       if (saved) {
@@ -83,6 +88,14 @@ export default function ResumeEditorPage() {
         if (saved.sections.length > 0) {
           setModuleBlocks(modulesToBlocks(saved.sections))
         }
+      } else {
+        const data = SAMPLE_RESUME_DATA
+        setResumeData(data)
+        if (data.sections.length > 0) {
+          setModuleBlocks(modulesToBlocks(data.sections))
+        }
+        setIsSample(true)
+        setIsSaved(true)
       }
     })
   }, [])
@@ -205,6 +218,7 @@ export default function ResumeEditorPage() {
         const normalized = normalizeResumeData(parsed)
         setResumeData(normalized)
         setModuleBlocks(modulesToBlocks(normalized.sections))
+        setIsSample(false)
         setIsSaved(true)
       } catch (e) { /* ignore parse errors */ }
     }
@@ -268,6 +282,7 @@ export default function ResumeEditorPage() {
     if (data.sections.length > 0) {
       setModuleBlocks(modulesToBlocks(data.sections))
     }
+    setIsSample(false)
     setIsSaved(false)
   }
 
@@ -315,7 +330,7 @@ export default function ResumeEditorPage() {
           </div>
         )}
 
-        <div className="w-full max-w-4xl space-y-16 pb-20">
+        <div className={clsx("w-full max-w-4xl space-y-16 pb-20", isSample && "opacity-60")}>
           <section id="section-personal">
             <ModuleWrapper>
               <div className="grid grid-cols-1 gap-y-3 mt-8">
@@ -352,8 +367,8 @@ export default function ResumeEditorPage() {
                 {resumeData.skills.map(skill => (
                   <div key={skill.id} className="bg-[#3a3a44] p-8 border border-gray-700/50 relative group hover:border-red-600/30 transition-all">
                     <button onClick={() => { handleChange(); setResumeData(p => ({...p, skills: p.skills.filter(s => s.id !== skill.id)})); }} className="absolute top-4 right-4 text-gray-700 hover:text-red-500 opacity-0 group-hover:opacity-100"><FaTrash className="text-xs" /></button>
-                    <FoundryInput clean label="Domain" value={skill.category} onChange={(v: string) => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, category: v} : s)}))} />
-                    <div className="mt-8"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-3 block">Protocols / Tools</label><textarea className="w-full bg-transparent border border-gray-700/50 p-4 text-sm font-mono text-red-500 focus:border-red-600 focus:ring-0 min-h-[80px] resize-none" value={skill.name} onChange={e => setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)}))} /></div>
+                    <FoundryInput clean label="Domain" value={skill.category} onChange={(v: string) => { handleChange(); setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, category: v} : s)})); }} />
+                    <div className="mt-8"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-3 block">Protocols / Tools</label><textarea className="w-full bg-transparent border border-gray-700/50 p-4 text-sm font-mono text-red-500 focus:border-red-600 focus:ring-0 min-h-[80px] resize-none" value={skill.name} onChange={e => { handleChange(); setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)})); }} /></div>
                   </div>
                 ))}
                 <button onClick={() => { handleChange(); setResumeData(p => ({...p, skills: [...p.skills, { id: generateId('sk'), category: "", name: "" }]})); }} className="col-span-2 py-8 border border-dashed border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-500 uppercase font-black tracking-widest text-[10px]">+ Add New Skill</button>
