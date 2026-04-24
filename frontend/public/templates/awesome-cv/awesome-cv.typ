@@ -481,7 +481,7 @@
     align(center)[
       #pad(bottom: 5pt)[
         #block[
-          #set text(size: 32pt, style: "normal", font: header-font, fill: color-darkgray)
+          #set text(size: 32pt, style: "normal", font: header-font, fill: black)
           #if language == "zh" or language == "ja" [
             #text(weight: "bold")[#author.lastname]#text(
               weight: "thin",
@@ -496,7 +496,7 @@
   }
 
   let positions-block = {
-    set text(fill: color-darkgray, size: 9pt, weight: "regular")
+    set text(fill: black, size: 9pt, weight: "regular")
     align(center)[
       #__apply_smallcaps(
         author.positions.join(text[#"  "#sym.dot.c#"  "]),

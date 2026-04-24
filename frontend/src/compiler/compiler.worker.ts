@@ -3,6 +3,10 @@ import localforage from 'localforage'
 
 let initialized = false
 
+const TEMPLATE_CACHE_VERSION = 2
+const CACHE_KEY_TEMPLATE = `cached_template_awesome_cv_v${TEMPLATE_CACHE_VERSION}`
+const CACHE_KEY_LANG = `cached_template_lang_v${TEMPLATE_CACHE_VERSION}`
+
 async function ensureInitialized() {
   if (initialized) return
 
@@ -18,23 +22,23 @@ async function ensureInitialized() {
 
   await $typst.getCompiler()
 
-  const cachedTemplate = await localforage.getItem<string>('cached_template_awesome_cv')
+  const cachedTemplate = await localforage.getItem<string>(CACHE_KEY_TEMPLATE)
   if (cachedTemplate) {
     await $typst.addSource('/awesome-cv.typ', cachedTemplate)
   } else {
     const resp = await fetch('/templates/awesome-cv/awesome-cv.typ')
     const text = await resp.text()
-    await localforage.setItem('cached_template_awesome_cv', text)
+    await localforage.setItem(CACHE_KEY_TEMPLATE, text)
     await $typst.addSource('/awesome-cv.typ', text)
   }
 
-  const cachedLang = await localforage.getItem<string>('cached_template_lang')
+  const cachedLang = await localforage.getItem<string>(CACHE_KEY_LANG)
   if (cachedLang) {
     await $typst.addSource('/lang.toml', cachedLang)
   } else {
     const resp = await fetch('/templates/awesome-cv/lang.toml')
     const text = await resp.text()
-    await localforage.setItem('cached_template_lang', text)
+    await localforage.setItem(CACHE_KEY_LANG, text)
     await $typst.addSource('/lang.toml', text)
   }
 
