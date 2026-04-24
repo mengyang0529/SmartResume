@@ -62,6 +62,7 @@ export default function ResumeEditorPage() {
   const templates = [
     { id: 1, name: 'Classic', category: 'Awsome-CV', description: 'Minimal black-and-white elegant style.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const, template: 'classic' as const } },
     { id: 2, name: 'Modern', category: 'Awsome-CV', description: 'Original Awesome CV style with colored accents.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const, template: 'modern' as const } },
+    { id: 3, name: 'Art', category: 'Awsome-CV', description: 'Dark-themed artistic style with vibrant accents.', settings: { colorScheme: '#262F99', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const, template: 'art' as const } },
   ]
 
   const emptyResumeData: ResumeData = {

@@ -75,5 +75,5 @@ export interface TemplateSettings {
   headerAlignment: 'C' | 'L' | 'R'
   customColor?: string
   className?: string
-  template?: 'classic' | 'modern'
+  template?: 'classic' | 'modern' | 'art'
 }

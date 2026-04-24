@@ -33,6 +33,10 @@ async function ensureInitialized() {
   const modernText = await modernResp.text()
   await $typst.addSource('/awesome-cv-modern.typ', modernText)
 
+  const artResp = await fetch('/templates/awesome-cv/awesome-cv-art.typ')
+  const artText = await artResp.text()
+  await $typst.addSource('/awesome-cv-art.typ', artText)
+
   const langResp = await fetch('/templates/awesome-cv/lang.toml')
   const langText = await langResp.text()
   await $typst.addSource('/lang.toml', langText)

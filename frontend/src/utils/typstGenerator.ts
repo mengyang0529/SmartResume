@@ -28,7 +28,12 @@ if (personal.homepage) authorEntries.push(`    homepage: "${escapeTypstString(pe
     photoEntry = 'profile-picture: none,'
   }
 
-  const templateFile = settings.template === 'modern' ? 'awesome-cv-modern.typ' : 'awesome-cv-classic.typ'
+  const templateFiles: Record<string, string> = {
+    classic: 'awesome-cv-classic.typ',
+    modern: 'awesome-cv-modern.typ',
+    art: 'awesome-cv-art.typ',
+  }
+  const templateFile = templateFiles[settings.template ?? 'classic'] || 'awesome-cv-classic.typ'
   let typst = `#import "${templateFile}": *
 
 #show: resume.with(
