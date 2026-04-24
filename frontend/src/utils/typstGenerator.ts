@@ -39,7 +39,13 @@ ${authorBlock}
 `
 
   if (summary) {
-    typst += `= Summary\n\n#resume-item[\n  ${escapeTypstContent(summary)}\n]\n\n`
+    typst += `#block(sticky: true, above: 1em)[
+  #set text(size: 16pt, weight: "regular")
+  #align(left)[
+    #text(fill: black)[*Summary*]
+    #box(width: 1fr, line(length: 100%))
+  ]
+]\n\n#resume-item[\n  ${escapeTypstContent(summary)}\n]\n\n`
   }
 
   // 1. Education
@@ -129,7 +135,16 @@ function renderBlocksAsEntries(blocks: RichTextBlock[]): string {
   blocks.forEach(block => {
     if (block.type === 'h1') {
       flush()
-      typst += `= ${escapeTypstContent(block.content)}\n\n`
+      // Manually render h1 with black color to bypass the template's
+      // heading show rule which applies accent-color to level-1 headings
+      const content = escapeTypstContent(block.content)
+      typst += `#block(sticky: true, above: 1em)[
+  #set text(size: 16pt, weight: "regular")
+  #align(left)[
+    #text(fill: black)[*${content}*]
+    #box(width: 1fr, line(length: 100%))
+  ]
+]\n\n`
     } else if (block.type === 'h2') {
       flush()
       currentEntry = {
@@ -183,7 +198,8 @@ function escapeTypstString(text: string): string {
   return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
-function getAccentColor(settings: TemplateSettings): string {
+export function getAccentColor(settings: TemplateSettings): string {
+  if (settings.colorScheme.startsWith('#')) return settings.colorScheme
   const colorMap: Record<string, string> = {
     'awesome-red': '#DC3522',
     'awesome-skyblue': '#0395DE',

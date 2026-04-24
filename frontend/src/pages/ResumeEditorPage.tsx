@@ -9,7 +9,7 @@ import { motion } from 'framer-motion'
 import localforage from 'localforage'
 import { ResumeData, TemplateSettings, ResumeSection } from '../types/resume'
 import type { RichTextBlock } from '../types/richText'
-import { generateResumeTypst } from '../utils/typstGenerator'
+import { generateResumeTypst, getAccentColor } from '../utils/typstGenerator'
 import { modulesToBlocks, blocksToModules } from '../utils/resumeTransforms'
 import { RichTextEditor } from '../components/RichTextEditor'
 import { useTypstCompiler } from '../hooks/useTypstCompiler'
@@ -128,6 +128,8 @@ export default function ResumeEditorPage() {
       navigate(location.pathname, { replace: true, state: {} })
     }
   }, [location, navigate])
+
+  const accentColor = useMemo(() => getAccentColor(templateSettings), [templateSettings])
 
   const sanitizeJsonText = (raw: string) => {
     let inString = false
@@ -430,6 +432,7 @@ export default function ResumeEditorPage() {
                         const sections = blocksToModules(blocks)
                         setResumeData(prev => ({ ...prev, sections }))
                       }}
+                      headingColor={accentColor}
                     />
                   </div>
                 </SectionCard>

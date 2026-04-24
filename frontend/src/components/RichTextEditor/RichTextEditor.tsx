@@ -3,23 +3,36 @@ import type { RichTextBlock, BlockType } from '../../types/richText'
 import EditableBlock from './EditableBlock'
 import RichTextToolbar from './RichTextToolbar'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaPlus, FaTrash, FaHeading, FaArrowUp, FaArrowDown } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaHeading, FaArrowUp, FaArrowDown, FaPalette } from 'react-icons/fa'
 import clsx from 'clsx'
+
+const COLORS = [
+  { label: 'Default', value: '' },
+  { label: 'Red', value: '#DC3522' },
+  { label: 'Sky', value: '#0395DE' },
+  { label: 'Emerald', value: '#00A388' },
+  { label: 'Orange', value: '#FF6138' },
+  { label: 'White', value: '#ffffff' },
+]
 
 interface RichTextEditorProps {
   blocks: RichTextBlock[]
   onChange: (blocks: RichTextBlock[]) => void
   placeholder?: string
+  headingColor?: string
 }
 
-export default function RichTextEditor({ blocks, onChange, placeholder }: RichTextEditorProps) {
+export default function RichTextEditor({ blocks, onChange, placeholder, headingColor }: RichTextEditorProps) {
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null)
   const [activeMenu, setActiveMenu] = useState<{ id: string, type: 'type' | 'color' | null }>({ id: '', type: null })
   const editorRef = useRef<HTMLDivElement>(null)
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const lastActiveIdRef = useRef<string | null>(null)
 
-  const activeBlock = blocks.find((b) => b.id === activeBlockId) || null
-  const activeIndex = activeBlock ? blocks.findIndex((b) => b.id === activeBlockId) : -1
+  const targetBlockId = activeBlockId || lastActiveIdRef.current
+
+  const activeBlock = blocks.find((b) => b.id === targetBlockId) || null
+  const activeIndex = activeBlock ? blocks.findIndex((b) => b.id === targetBlockId) : -1
 
   const handleFocus = useCallback((id: string) => {
     if (blurTimeoutRef.current) {
@@ -27,6 +40,7 @@ export default function RichTextEditor({ blocks, onChange, placeholder }: RichTe
       blurTimeoutRef.current = null
     }
     setActiveBlockId(id)
+    lastActiveIdRef.current = id
   }, [])
 
   const handleBlur = useCallback(() => {
@@ -192,15 +206,15 @@ export default function RichTextEditor({ blocks, onChange, placeholder }: RichTe
         activeBlockType={activeBlock?.type || null}
         activeBlockBold={activeBlock?.bold || false}
         activeBlockColor={activeBlock?.color}
-        onChangeType={(type) => activeBlockId && updateBlock(activeBlockId, { type })}
+        onChangeType={(type) => targetBlockId && updateBlock(targetBlockId, { type })}
         onToggleBold={() =>
-          activeBlockId && updateBlock(activeBlockId, { bold: !activeBlock?.bold })
+          targetBlockId && updateBlock(targetBlockId, { bold: !activeBlock?.bold })
         }
-        onChangeColor={(color) => activeBlockId && updateBlock(activeBlockId, { color })}
-        onAddBlock={() => addBlock(activeBlockId || undefined)}
-        onDeleteBlock={() => activeBlockId && deleteBlock(activeBlockId)}
-        onMoveBlock={(dir) => activeBlockId && moveBlock(activeBlockId, dir)}
-        canDelete={blocks.length > 1 && !!activeBlockId}
+        onChangeColor={(color) => targetBlockId && updateBlock(targetBlockId, { color })}
+        onAddBlock={() => addBlock(targetBlockId || undefined)}
+        onDeleteBlock={() => targetBlockId && deleteBlock(targetBlockId)}
+        onMoveBlock={(dir) => targetBlockId && moveBlock(targetBlockId, dir)}
+        canDelete={blocks.length > 1 && !!targetBlockId}
         canMoveUp={activeIndex > 0}
         canMoveDown={activeIndex >= 0 && activeIndex < blocks.length - 1}
       />
@@ -243,23 +257,51 @@ export default function RichTextEditor({ blocks, onChange, placeholder }: RichTe
                       initial={{ opacity: 0, scale: 0.9, x: -10 }}
                       animate={{ opacity: 1, scale: 1, x: 0 }}
                       exit={{ opacity: 0, scale: 0.9, x: -10 }}
-                      className="absolute left-8 top-0 flex bg-white border border-[rgba(0,0,0,0.1)] rounded-standard shadow-deep p-1 gap-1 z-50"
+                      className="absolute left-8 top-0 flex flex-col bg-white border border-[rgba(0,0,0,0.1)] rounded-standard shadow-deep p-1.5 gap-1.5 z-50 min-w-[140px]"
                     >
-                      {blockTypes.map((bt) => (
-                        <button
-                          key={bt.type}
-                          onClick={() => {
-                            updateBlock(block.id, { type: bt.type })
-                            setActiveMenu({ id: '', type: null })
-                          }}
-                          className={clsx(
-                            "px-2 py-1 rounded-micro text-[10px] font-bold transition-all",
-                            block.type === bt.type ? "bg-[#0075de] text-white" : "text-warm-400 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)]"
-                          )}
-                        >
-                          {bt.label}
-                        </button>
-                      ))}
+                      {/* Type selector */}
+                      <div className="flex items-center gap-0.5">
+                        {blockTypes.map((bt) => (
+                          <button
+                            key={bt.type}
+                            onClick={() => {
+                              updateBlock(block.id, { type: bt.type })
+                              setActiveMenu({ id: '', type: null })
+                            }}
+                            className={clsx(
+                              "px-2 py-1 rounded-micro text-[10px] font-bold transition-all",
+                              block.type === bt.type ? "bg-[#0075de] text-white" : "text-warm-400 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)]"
+                            )}
+                          >
+                            {bt.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-px bg-[rgba(0,0,0,0.08)]" />
+
+                      {/* Color palette */}
+                      <div className="flex items-center gap-1.5">
+                        <FaPalette className="text-[9px] text-warm-400 shrink-0" />
+                        {COLORS.map((c) => (
+                          <button
+                            key={c.label}
+                            onClick={() => {
+                              updateBlock(block.id, { color: c.value || undefined })
+                              setActiveMenu({ id: '', type: null })
+                            }}
+                            className={clsx(
+                              'w-4 h-4 rounded-full border-2 transition-all',
+                              (block.color || '') === c.value
+                                ? 'border-[#0075de] scale-110'
+                                : 'border-transparent hover:border-[rgba(0,0,0,0.2)]'
+                            )}
+                            style={{ backgroundColor: c.value || '#e0dfdd' }}
+                            title={c.label}
+                          />
+                        ))}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -312,6 +354,7 @@ export default function RichTextEditor({ blocks, onChange, placeholder }: RichTe
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
               onConvertType={(id, type) => updateBlock(id, { type })}
+              headingColor={headingColor}
             />
           </div>
         ))}
