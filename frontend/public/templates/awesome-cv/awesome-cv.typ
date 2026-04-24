@@ -458,12 +458,7 @@
     #set text(size: 16pt, weight: "regular")
     #set align(left)
     #set block(above: 1em)
-    #let color = if colored-headers {
-      accent-color
-    } else {
-      color-darkgray
-    }
-    #text[#strong[#text(color)[#it.body]]]
+    #text[#strong[#text(black)[#it.body]]]
     #box(width: 1fr, line(length: 100%))
   ]
 

@@ -1,7 +1,7 @@
 import { ResumeData, TemplateSettings } from '../types/resume'
 import { RichTextBlock } from '../types/richText'
 
-export function generateResumeTypst(data: ResumeData, settings: TemplateSettings): string {
+export function generateResumeTypst(data: ResumeData, settings: TemplateSettings, skillsBlocks?: RichTextBlock[]): string {
   const { personal, education, sections, skills, summary } = data
   
   const accentColor = getAccentColor(settings)
@@ -94,7 +94,11 @@ ${authorBlock}
 
   // 3. Skills
   if (skills && skills.length > 0) {
-    typst += `= Skills\n\n`
+    // Render H1 heading from skills blocks in black, or no heading if absent
+    const skillsHeading = skillsBlocks?.find(b => b.type === 'h1')?.content
+    if (skillsHeading) {
+      typst += `= ${escapeTypstContent(skillsHeading)}\n\n`
+    }
     const byCategory: any = {}
     skills.forEach(s => {
       if (!byCategory[s.category]) byCategory[s.category] = []
@@ -135,16 +139,8 @@ function renderBlocksAsEntries(blocks: RichTextBlock[]): string {
   blocks.forEach(block => {
     if (block.type === 'h1') {
       flush()
-      // Use black by default to bypass the template's accent-color rule
-      // for level-1 headings, but respect per-block color and bold settings
       const content = renderFormattedText(block.content, block.bold ?? false, block.color)
-      typst += `#block(sticky: true, above: 1em)[
-  #set text(size: 16pt, weight: "regular")
-  #align(left)[
-    #text(fill: black)[${content}]
-    #box(width: 1fr, line(length: 100%))
-  ]
-]\n\n`
+      typst += `= ${content}\n\n`
     } else if (block.type === 'h2') {
       flush()
       currentEntry = {

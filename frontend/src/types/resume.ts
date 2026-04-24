@@ -63,6 +63,7 @@ export interface ResumeData {
   education: Education[]
   sections: ResumeSection[]
   skills: Skill[]
+  skillsBlocks?: RichTextBlock[]
   summary?: string
 }
 

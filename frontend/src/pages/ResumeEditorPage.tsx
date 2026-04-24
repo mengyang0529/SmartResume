@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect, useCallback, useMemo, type ChangeEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  FaPlus, FaTrash, FaSpinner,
+  FaPlus, FaSpinner,
   FaDownload, FaEye, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLayerGroup, FaUpload, FaWrench,
   FaHistory, FaFileDownload, FaUser, FaBars,
 } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import localforage from 'localforage'
-import { ResumeData, TemplateSettings, ResumeSection } from '../types/resume'
+import { ResumeData, TemplateSettings, ResumeSection, Skill } from '../types/resume'
 import type { RichTextBlock } from '../types/richText'
 import { generateResumeTypst, getAccentColor } from '../utils/typstGenerator'
 import { modulesToBlocks, blocksToModules } from '../utils/resumeTransforms'
@@ -24,6 +24,37 @@ const generateId = (prefix = 'id') => {
     return `${prefix}-${crypto.randomUUID()}`
   }
   return `${prefix}-${Math.random().toString(36).slice(2, 11)}`
+}
+
+function skillsToBlocks(skills: Skill[]): RichTextBlock[] {
+  const byCategory: Record<string, string[]> = {}
+  skills.forEach(s => {
+    if (!byCategory[s.category]) byCategory[s.category] = []
+    byCategory[s.category].push(s.name)
+  })
+  const blocks: RichTextBlock[] = []
+  Object.entries(byCategory).forEach(([cat, names]) => {
+    if (cat) blocks.push({ id: generateId('blk'), type: 'h2', content: cat })
+    names.forEach(name => {
+      if (name.trim()) blocks.push({ id: generateId('blk'), type: 'h3', content: name.trim() })
+    })
+  })
+  return blocks
+}
+
+function blocksToSkills(blocks: RichTextBlock[]): Skill[] {
+  const skills: Skill[] = []
+  let currentCategory = ''
+  blocks.forEach((block, i) => {
+    if (block.type === 'h2') {
+      currentCategory = block.content
+    } else if (block.type === 'h3' || block.type === 'bullet' || block.type === 'paragraph') {
+      if (block.content.trim()) {
+        skills.push({ id: `sk-${i}`, category: currentCategory, name: block.content.trim() })
+      }
+    }
+  })
+  return skills
 }
 
 export default function ResumeEditorPage() {
@@ -60,6 +91,7 @@ export default function ResumeEditorPage() {
   const [activeTemplateId, setActiveTemplateId] = useState(1)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([])
+  const [skillsBlocks, setSkillsBlocks] = useState<RichTextBlock[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [isSample, setIsSample] = useState(false)
   const [showNav, setShowNav] = useState(false)
@@ -74,8 +106,8 @@ export default function ResumeEditorPage() {
     setIsSample(false)
   }, [])
 
-  const generateTypstNow = useCallback((data: ResumeData) => {
-    const source = generateResumeTypst(data, templateSettings)
+  const generateTypstNow = useCallback((data: ResumeData, skillsBlocks?: RichTextBlock[]) => {
+    const source = generateResumeTypst(data, templateSettings, skillsBlocks)
     if (source !== lastCompileSource.current) {
       lastCompileSource.current = source
       triggerCompile(source)
@@ -90,11 +122,19 @@ export default function ResumeEditorPage() {
         if (saved.sections.length > 0) {
           setModuleBlocks(modulesToBlocks(saved.sections))
         }
+        if (saved.skillsBlocks && saved.skillsBlocks.length > 0) {
+          setSkillsBlocks(saved.skillsBlocks)
+        } else if (saved.skills && saved.skills.length > 0) {
+          setSkillsBlocks(skillsToBlocks(saved.skills))
+        }
       } else {
         const data = SAMPLE_RESUME_DATA
         setResumeData(data)
         if (data.sections.length > 0) {
           setModuleBlocks(modulesToBlocks(data.sections))
+        }
+        if (data.skills && data.skills.length > 0) {
+          setSkillsBlocks(skillsToBlocks(data.skills))
         }
         setIsSample(true)
       }
@@ -104,15 +144,21 @@ export default function ResumeEditorPage() {
   // Trigger compilation when data changes (after initial load)
   useEffect(() => {
     if (resumeData.personal.firstName || resumeData.sections.length > 0) {
-      generateTypstNow(resumeData)
+      generateTypstNow(resumeData, skillsBlocks)
     }
-  }, [resumeData, generateTypstNow])
+  }, [resumeData, skillsBlocks, generateTypstNow])
 
   useEffect(() => {
     if (moduleBlocks.length === 0 && resumeData.sections.length > 0) {
       setModuleBlocks(modulesToBlocks(resumeData.sections))
     }
   }, [resumeData.sections])
+
+  useEffect(() => {
+    if (skillsBlocks.length === 0 && resumeData.skills.length > 0) {
+      setSkillsBlocks(skillsToBlocks(resumeData.skills))
+    }
+  }, [resumeData.skills])
 
   useEffect(() => {
     const openListener = () => openJsonFile()
@@ -207,6 +253,7 @@ export default function ResumeEditorPage() {
         category: String(skill.category || ''),
         name: String(skill.name || ''),
       })) : [],
+      skillsBlocks: Array.isArray(data.skillsBlocks) ? data.skillsBlocks : undefined,
     }
   }
 
@@ -221,6 +268,7 @@ export default function ResumeEditorPage() {
         const normalized = normalizeResumeData(parsed)
         setResumeData(normalized)
         setModuleBlocks(modulesToBlocks(normalized.sections))
+        setSkillsBlocks(normalized.skillsBlocks && normalized.skillsBlocks.length > 0 ? normalized.skillsBlocks : skillsToBlocks(normalized.skills))
         setIsSample(false)
       } catch (e) { /* ignore parse errors */ }
     }
@@ -235,14 +283,14 @@ export default function ResumeEditorPage() {
     historyService.saveSnapshot(data)
   }
 
-  // Auto-save whenever resume data changes
+  // Auto-save whenever resume data or skills blocks change
   useEffect(() => {
     if (resumeData === emptyResumeData) return
     const timer = setTimeout(() => {
-      saveToLocal(resumeData)
+      saveToLocal({ ...resumeData, skillsBlocks })
     }, 800)
     return () => clearTimeout(timer)
-  }, [resumeData])
+  }, [resumeData, skillsBlocks])
 
   const addSection = () => {
     handleChange()
@@ -280,13 +328,19 @@ export default function ResumeEditorPage() {
   }
 
   const handleExportJson = () => {
-    importExportService.downloadJson(resumeData, `${resumeData.personal.firstName || 'resume'}-backup.json`)
+    const exportData = { ...resumeData, skillsBlocks }
+    importExportService.downloadJson(exportData, `${resumeData.personal.firstName || 'resume'}-backup.json`)
   }
 
   const handleHistoryRestore = (data: ResumeData) => {
     setResumeData(data)
     if (data.sections.length > 0) {
       setModuleBlocks(modulesToBlocks(data.sections))
+    }
+    if (data.skillsBlocks && data.skillsBlocks.length > 0) {
+      setSkillsBlocks(data.skillsBlocks)
+    } else if (data.skills && data.skills.length > 0) {
+      setSkillsBlocks(skillsToBlocks(data.skills))
     }
     setIsSample(false)
   }
@@ -437,26 +491,17 @@ export default function ResumeEditorPage() {
               </section>
 
               <section id="section-skills">
-                <SectionCard title="Skills">
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    {resumeData.skills.map(skill => (
-                      <div key={skill.id} className="bg-white rounded-xl border border-[rgba(0,0,0,0.1)] p-5 relative group">
-                        <button onClick={() => { handleChange(); setResumeData(p => ({...p, skills: p.skills.filter(s => s.id !== skill.id)})) }} className="absolute top-3 right-3 text-warm-300 hover:text-[#dd5b00] opacity-0 group-hover:opacity-100 transition-opacity">
-                          <FaTrash className="text-xs" />
-                        </button>
-                        <div className="mb-3">
-                          <label className="text-xs font-medium text-warm-500 block mb-1.5">Category</label>
-                          <NotionInput clean label="" value={skill.category} onChange={(v) => { handleChange(); setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, category: v} : s)})) }} />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-warm-500 block mb-1.5">Skills / Tools</label>
-                          <textarea className="input min-h-[70px] resize-none text-sm leading-relaxed" value={skill.name} onChange={e => { handleChange(); setResumeData(p => ({...p, skills: p.skills.map(s => s.id === skill.id ? {...s, name: e.target.value} : s)})) }} placeholder="e.g. Python, React, AWS..." />
-                        </div>
-                      </div>
-                    ))}
-                    <button onClick={() => { handleChange(); setResumeData(p => ({...p, skills: [...p.skills, { id: generateId('sk'), category: "", name: "" }]})) }} className="col-span-2 py-6 border-2 border-dashed border-[rgba(0,0,0,0.1)] rounded-xl text-sm text-warm-300 hover:text-[#0075de] hover:border-[#0075de] transition-colors font-medium">
-                      + Add Skill Category
-                    </button>
+                <SectionCard title="Expertise" subtitle="Use H2 for category names and H3/bullet for individual skills">
+                  <div className="mt-4">
+                    <RichTextEditor
+                      blocks={skillsBlocks}
+                      onChange={(blocks) => {
+                        handleChange()
+                        setSkillsBlocks(blocks)
+                        setResumeData(p => ({ ...p, skills: blocksToSkills(blocks) }))
+                      }}
+                      headingColor={accentColor}
+                    />
                   </div>
                 </SectionCard>
               </section>
