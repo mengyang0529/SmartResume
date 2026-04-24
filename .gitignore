@@ -27,6 +27,8 @@ test.*
 npm-debug.log*
 yarn-debug.log*
 *.log
+dev_log.md
+devlog.md
 .DS_Store
 
 # Project specific
