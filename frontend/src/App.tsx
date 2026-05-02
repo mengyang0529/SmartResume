@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Layout from './components/Layout/Layout'
 import HomePage from './pages/HomePage'
 import ResumeEditorPage from './pages/ResumeEditorPage'
+import TemplatesPage from './pages/TemplatesPage'
 
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -24,6 +25,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
+          <Route path="templates" element={<TemplatesPage />} />
           <Route path="editor" element={<ResumeEditorPage />} />
           <Route path="editor/:templateId" element={<ResumeEditorPage />} />
           <Route path="404" element={<NotFoundPage />} />

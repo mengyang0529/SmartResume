@@ -1,9 +1,19 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FaArrowRight, FaUser, FaDownload, FaCloud } from 'react-icons/fa'
+import localforage from 'localforage'
+import type { ResumeData } from '../types/resume'
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const [hasSavedResume, setHasSavedResume] = useState(false)
+
+  useEffect(() => {
+    localforage.getItem<ResumeData>('current_resume_data').then(saved => {
+      setHasSavedResume(Boolean(saved?.personal || saved?.sections?.length))
+    })
+  }, [])
 
   return (
     <div className="bg-white">
@@ -34,17 +44,17 @@ export default function HomePage() {
           {/* CTA Buttons */}
           <div className="flex items-center justify-center gap-4 mt-10">
             <button
-              onClick={() => navigate('/editor')}
+              onClick={() => navigate('/templates')}
               className="btn-primary text-nav-button px-6 py-[10px] flex items-center gap-2"
             >
               Get Started
               <FaArrowRight className="text-xs" />
             </button>
             <button
-              onClick={() => navigate('/editor')}
+              onClick={() => navigate(hasSavedResume ? '/editor' : '/templates')}
               className="btn-secondary text-nav-button px-6 py-[10px]"
             >
-              View Templates
+              {hasSavedResume ? 'Continue Editing' : 'View Templates'}
             </button>
           </div>
 

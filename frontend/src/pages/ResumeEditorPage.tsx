@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo, type ChangeEvent } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   FaPlus, FaSpinner,
   FaDownload, FaEye, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLayerGroup, FaUpload, FaWrench,
@@ -18,6 +18,7 @@ import { historyService } from '../services/historyService'
 import { importExportService } from '../services/importExport'
 import clsx from 'clsx'
 import { SAMPLE_RESUME_DATA } from '../data/sampleResume'
+import { DEFAULT_TEMPLATE, findTemplateBySlug, RESUME_TEMPLATES } from '../data/templates'
 
 const generateId = (prefix = 'id') => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -58,12 +59,9 @@ function blocksToSkills(blocks: RichTextBlock[]): Skill[] {
 }
 
 export default function ResumeEditorPage() {
-
-  const templates = [
-    { id: 1, name: 'Classic', category: 'Awsome-CV', description: 'Minimal black-and-white elegant style.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const, template: 'classic' as const } },
-    { id: 2, name: 'Modern', category: 'Awsome-CV', description: 'Original Awesome CV style with colored accents.', settings: { colorScheme: 'awesome-red', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const, template: 'modern' as const } },
-    { id: 3, name: 'Art', category: 'Awsome-CV', description: 'Dark-themed artistic style with vibrant accents.', settings: { colorScheme: '#FF6138', fontSize: '11pt' as const, paperSize: 'a4paper' as const, sectionColorHighlight: true, headerAlignment: 'C' as const, template: 'art' as const } },
-  ]
+  const templates = RESUME_TEMPLATES
+  const { templateId } = useParams()
+  const initialTemplate = findTemplateBySlug(templateId)
 
   const emptyResumeData: ResumeData = {
     personal: {
@@ -81,7 +79,7 @@ export default function ResumeEditorPage() {
   }
 
   const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData)
-  const [templateSettings, setTemplateSettings] = useState<TemplateSettings>(templates[0].settings)
+  const [templateSettings, setTemplateSettings] = useState<TemplateSettings>((initialTemplate ?? DEFAULT_TEMPLATE).settings)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([])
   const [skillsBlocks, setSkillsBlocks] = useState<RichTextBlock[]>([])
@@ -113,6 +111,15 @@ export default function ResumeEditorPage() {
   const handleChange = useCallback(() => {
     setIsSample(false)
   }, [])
+
+  useEffect(() => {
+    const selectedTemplate = findTemplateBySlug(templateId)
+    if (!selectedTemplate) {
+      navigate('/templates', { replace: true })
+      return
+    }
+    setTemplateSettings(selectedTemplate.settings)
+  }, [templateId, navigate])
 
   const handlePhotoClick = () => {
     photoInputRef.current?.click()

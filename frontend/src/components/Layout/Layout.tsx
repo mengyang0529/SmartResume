@@ -6,6 +6,7 @@ export default function Layout() {
 
   const navItems = [
     { path: '/', label: 'Home' },
+    { path: '/templates', label: 'Templates' },
     { path: '/editor', label: 'Editor' },
   ]
 
