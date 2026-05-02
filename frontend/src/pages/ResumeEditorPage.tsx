@@ -34,6 +34,7 @@ function skillsToBlocks(skills: Skill[]): RichTextBlock[] {
     byCategory[s.category].push(s.name)
   })
   const blocks: RichTextBlock[] = []
+  blocks.push({ id: generateId('blk'), type: 'h1', content: 'Skills' })
   Object.entries(byCategory).forEach(([cat, names]) => {
     if (cat) blocks.push({ id: generateId('blk'), type: 'h2', content: cat })
     names.forEach(name => {
