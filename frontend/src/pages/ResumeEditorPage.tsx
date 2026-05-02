@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   FaPlus, FaSpinner,
   FaDownload, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLayerGroup, FaUpload, FaWrench,
-  FaHistory, FaFileDownload, FaUser, FaBars, FaCamera, FaThLarge,
+  FaHistory, FaFileDownload, FaUser, FaBars, FaCamera, FaThLarge, FaSync,
 } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import localforage from 'localforage'
@@ -216,8 +216,17 @@ export default function ResumeEditorPage() {
     }
   }, [resumeData.personal.photo?.url, setPhoto, removePhoto])
 
-  // Trigger compilation when data changes (after initial load)
+  // Initial auto-compile once on mount
+  const mountedRef = useRef(false)
   useEffect(() => {
+    if (!mountedRef.current && (resumeData.personal.firstName || resumeData.sections.length > 0)) {
+      mountedRef.current = true
+      generateTypstNow(resumeData, skillsBlocks)
+    }
+  }, [resumeData, skillsBlocks, generateTypstNow])
+
+  // Manual refresh — compiles current data to PDF on demand
+  const handleRefreshPreview = useCallback(() => {
     if (resumeData.personal.firstName || resumeData.sections.length > 0) {
       generateTypstNow(resumeData, skillsBlocks)
     }
@@ -642,14 +651,24 @@ export default function ResumeEditorPage() {
                 <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">{currentTemplate.name} Preview</h3>
                 <p className="text-xs text-warm-500 mt-0.5">Current template PDF preview</p>
               </div>
-              <button
-                onClick={handleDownloadPdf}
-                disabled={isCompiling || !pdfUrl}
-                className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#0075de] text-white hover:bg-[#005bab] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:pointer-events-none"
-              >
-                {isCompiling ? <FaSpinner className="animate-spin" /> : <FaDownload className="text-[10px]" />}
-                PDF
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRefreshPreview}
+                  disabled={isCompiling}
+                  className="text-xs font-medium px-3 py-1.5 rounded-md border border-[rgba(0,0,0,0.1)] text-warm-500 hover:bg-[rgba(0,0,0,0.04)] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40"
+                >
+                  {isCompiling ? <FaSpinner className="animate-spin" /> : <FaSync className="text-[10px]" />}
+                  Refresh
+                </button>
+                <button
+                  onClick={handleDownloadPdf}
+                  disabled={isCompiling || !pdfUrl}
+                  className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#0075de] text-white hover:bg-[#005bab] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:pointer-events-none"
+                >
+                  {isCompiling ? <FaSpinner className="animate-spin" /> : <FaDownload className="text-[10px]" />}
+                  PDF
+                </button>
+              </div>
             </div>
             <div className="flex-1 p-4 bg-[#f0efed]">
               {pdfUrl ? (
@@ -665,7 +684,7 @@ export default function ResumeEditorPage() {
                 </object>
               ) : (
                 <div className="flex items-center justify-center h-full text-warm-400 text-sm">
-                  {isCompiling ? 'Compiling...' : 'Generating preview...'}
+                  {isCompiling ? 'Compiling...' : 'Click Refresh to preview'}
                 </div>
               )}
             </div>
