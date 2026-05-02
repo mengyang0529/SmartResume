@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
@@ -6,54 +6,9 @@ import { spawnSync } from 'node:child_process'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const outputDir = join(root, 'public', 'template-previews')
-const workDir = join(outputDir, '.generated')
+const workDir = join(root, '.tmp-template-previews')
 
-const sample = {
-  personal: {
-    firstName: 'Smart',
-    lastName: 'Resume',
-    position: 'Senior Interdimensional Systems Architect',
-    email: 'smart.resume@kakuti.io',
-    mobile: '+99 800-1234-5678',
-    address: '404 Nebula Drive, Aether City, Zephyrus Province',
-    homepage: 'www.smartresume-vault.fake',
-  },
-  sections: [
-    {
-      title: 'Education',
-      entries: [
-        {
-          title: 'Caelum University of Synergy',
-          subtitle: 'Ph.D. in Multimodal Logic & Synthetics',
-          startDate: 'Sept 2015',
-          endDate: 'June 2019',
-          description: 'Recipient of the "Mobius Strip" Medal for Theoretical Excellence.',
-        },
-      ],
-    },
-    {
-      title: 'Professional Experience',
-      entries: [
-        {
-          title: 'kakuti Technologies',
-          subtitle: 'Lead Systems Architect',
-          startDate: 'March 2021',
-          endDate: 'Present',
-          description: [
-            'Spearheaded the design of the "Eternal Flame" framework, boosting data throughput efficiency by 350%.',
-            'Engineered an automated bias-correction protocol that successfully stabilized three major logical fluctuations.',
-            'Managed a distributed team of 50 virtual entities, achieving a 100% zero-latency delivery rate across disparate timelines.',
-          ],
-        },
-      ],
-    },
-  ],
-  skills: [
-    ['Languages', ['Lumina+', 'VoidScript', 'Neo-Python', 'BinaryFlow']],
-    ['Frameworks', ['Ethereal Framework', 'Ghost-V', 'DeepCore 9.0']],
-    ['Expertise', ['Quantum State Simulation', 'Neural Weaving', 'Logic Provenance']],
-  ],
-}
+const sample = JSON.parse(readFileSync(join(root, 'src', 'data', 'sampleResume.json'), 'utf8'))
 
 const templates = [
   { slug: 'classic', file: 'awesome-cv-classic.typ', accent: '#DC3522' },
@@ -61,19 +16,22 @@ const templates = [
   { slug: 'art', file: 'awesome-cv-art.typ', accent: '#FF6138' },
 ]
 
+rmSync(workDir, { recursive: true, force: true })
 mkdirSync(workDir, { recursive: true })
 
-for (const template of templates) {
-  const typPath = join(workDir, `${template.slug}.typ`)
-  const pngPath = join(workDir, `${template.slug}.png`)
-  const webpPath = join(outputDir, `${template.slug}.webp`)
+try {
+  for (const template of templates) {
+    const typPath = join(workDir, `${template.slug}.typ`)
+    const pngPath = join(workDir, `${template.slug}.png`)
+    const webpPath = join(outputDir, `${template.slug}.webp`)
 
-  writeFileSync(typPath, buildTypst(template), 'utf8')
-  run('typst', ['compile', typPath, pngPath, '--root', root])
-  run('magick', [pngPath, '-resize', '900x1125^', '-gravity', 'north', '-extent', '900x1125', '-quality', '88', webpPath])
+    writeFileSync(typPath, buildTypst(template), 'utf8')
+    run('typst', ['compile', typPath, pngPath, '--root', root])
+    run('magick', [pngPath, '-resize', '900x1125^', '-gravity', 'north', '-extent', '900x1125', '-quality', '88', webpPath])
+  }
+} finally {
+  rmSync(workDir, { recursive: true, force: true })
 }
-
-rmSync(workDir, { recursive: true, force: true })
 
 function buildTypst(template) {
   const p = sample.personal
@@ -83,7 +41,7 @@ function buildTypst(template) {
       : `= ${escapeTypstContent(section.title)}`
 
     const entries = section.entries.map(entry => {
-      const description = Array.isArray(entry.description) ? entry.description : [entry.description]
+      const description = String(entry.description ?? '').split('\n').filter(Boolean)
       return `#resume-entry(
   title: "${escapeTypstString(entry.title)}",
   location: "",
@@ -98,11 +56,17 @@ ${description.map(line => `  - ${escapeTypstContent(line)}`).join('\n')}
     return `${title}\n\n${entries}`
   }).join('\n\n')
 
-  const skills = sample.skills.map(([category, names]) => {
+  const skillsByCategory = new Map()
+  for (const skill of sample.skills) {
+    const names = String(skill.name ?? '').split(',').map(name => name.trim()).filter(Boolean)
+    skillsByCategory.set(skill.category, [...(skillsByCategory.get(skill.category) ?? []), ...names])
+  }
+
+  const skills = Array.from(skillsByCategory.entries()).map(([category, names]) => {
     return `#resume-skill-item("${escapeTypstString(category)}", (${names.map(name => `"${escapeTypstString(name)}"`).join(', ')}))`
   }).join('\n')
 
-  return `#import "../../templates/awesome-cv/${template.file}": *
+  return `#import "../public/templates/awesome-cv/${template.file}": *
 
 #show: resume.with(
   author: (
@@ -149,6 +113,6 @@ function escapeTypstContent(value) {
 function run(command, args) {
   const result = spawnSync(command, args, { stdio: 'inherit' })
   if (result.status !== 0) {
-    process.exit(result.status ?? 1)
+    throw new Error(`${command} exited with status ${result.status ?? 1}`)
   }
 }

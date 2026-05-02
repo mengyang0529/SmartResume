@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback, useMemo, type ChangeEvent } f
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   FaPlus, FaSpinner,
-  FaDownload, FaEye, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLayerGroup, FaUpload, FaWrench,
-  FaHistory, FaFileDownload, FaUser, FaBars, FaCamera,
+  FaDownload, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLayerGroup, FaUpload, FaWrench,
+  FaHistory, FaFileDownload, FaUser, FaBars, FaCamera, FaThLarge,
 } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import localforage from 'localforage'
@@ -58,47 +58,44 @@ function blocksToSkills(blocks: RichTextBlock[]): Skill[] {
   return skills
 }
 
+const EMPTY_RESUME_DATA: ResumeData = {
+  personal: {
+    firstName: '',
+    lastName: '',
+    position: '',
+    email: '',
+    mobile: '',
+    address: '',
+    homepage: '',
+  },
+  education: [],
+  sections: [],
+  skills: [],
+}
+
 export default function ResumeEditorPage() {
   const templates = RESUME_TEMPLATES
   const { templateId } = useParams()
   const initialTemplate = findTemplateBySlug(templateId)
 
-  const emptyResumeData: ResumeData = {
-    personal: {
-      firstName: '',
-      lastName: '',
-      position: '',
-      email: '',
-      mobile: '',
-      address: '',
-      homepage: '',
-    },
-    education: [],
-    sections: [],
-    skills: [],
-  }
-
-  const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData)
+  const [resumeData, setResumeData] = useState<ResumeData>(EMPTY_RESUME_DATA)
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings>((initialTemplate ?? DEFAULT_TEMPLATE).settings)
-  const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([])
   const [skillsBlocks, setSkillsBlocks] = useState<RichTextBlock[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [isSample, setIsSample] = useState(false)
   const [showNav, setShowNav] = useState(false)
-  const [templatePdfs, setTemplatePdfs] = useState<Record<number, string>>({})
-  const prevTemplateSettingsRef = useRef<TemplateSettings | null>(null)
-  const [previewTemplateId, setPreviewTemplateId] = useState<number | null>(null)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const pdfUrlRef = useRef<string | null>(null)
   const compilingTemplateRef = useRef(1)
 
   const onCompileResult = useCallback((pdfBytes: ArrayBuffer, compileId?: number) => {
-    const templateId = compileId ?? compilingTemplateRef.current
+    if (compileId && compileId !== compilingTemplateRef.current) return
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
     const url = URL.createObjectURL(blob)
-    setTemplatePdfs(prev => ({
-      ...prev,
-      [templateId]: url,
-    }))
+    if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current)
+    pdfUrlRef.current = url
+    setPdfUrl(url)
   }, [])
 
   const { isCompiling, error: compileError, compile: triggerCompile, setPhoto, removePhoto } = useTypstCompiler({ debounceMs: 400, onCompileResult })
@@ -166,7 +163,13 @@ export default function ResumeEditorPage() {
       compilingTemplateRef.current = templateId
       triggerCompile(source, templateId)
     }
-  }, [templateSettings, triggerCompile])
+  }, [templateSettings, triggerCompile, templates])
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current)
+    }
+  }, [])
 
   // Load saved data on mount, fall back to sample
   useEffect(() => {
@@ -353,7 +356,7 @@ export default function ResumeEditorPage() {
 
   // Auto-save whenever resume data or skills blocks change
   useEffect(() => {
-    if (resumeData === emptyResumeData) return
+    if (resumeData === EMPTY_RESUME_DATA) return
     const timer = setTimeout(() => {
       saveToLocal({ ...resumeData, skillsBlocks })
     }, 800)
@@ -388,6 +391,19 @@ export default function ResumeEditorPage() {
   const handleExportJson = () => {
     const exportData = { ...resumeData, skillsBlocks }
     importExportService.downloadJson(exportData, `${resumeData.personal.firstName || 'resume'}-backup.json`)
+  }
+
+  const currentTemplate = useMemo(
+    () => templates.find(t => t.settings.template === templateSettings.template) ?? DEFAULT_TEMPLATE,
+    [templateSettings.template, templates]
+  )
+
+  const handleDownloadPdf = () => {
+    if (!pdfUrl) return
+    const a = document.createElement('a')
+    a.href = pdfUrl
+    a.download = `${resumeData.personal.firstName || 'resume'}_${resumeData.personal.lastName || 'export'}.pdf`
+    a.click()
   }
 
   const handleHistoryRestore = (data: ResumeData) => {
@@ -430,11 +446,12 @@ export default function ResumeEditorPage() {
   }, [showNav])
 
   return (
-    <div className="h-[calc(100vh-55px)] bg-[#f0efed] flex flex-col selection:bg-[rgba(0,117,222,0.15)]">
+    <div className="min-h-[calc(100vh-55px)] lg:h-[calc(100vh-55px)] bg-[#f0efed] flex flex-col selection:bg-[rgba(0,117,222,0.15)]">
       {/* Toolbar */}
       <div className="shrink-0 bg-white border-b border-[rgba(0,0,0,0.1)] px-4 py-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-3 w-full">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
             {/* Nav hamburger */}
             <div className="relative">
               <button
@@ -497,15 +514,31 @@ export default function ResumeEditorPage() {
                 <FaHistory className="text-xs" />
                 <span className="hidden sm:inline text-xs">History</span>
               </button>
+
+              <span className="w-px h-5 bg-[rgba(0,0,0,0.1)]" />
+
+              <button
+                onClick={() => navigate('/templates')}
+                className="px-2.5 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)] transition-all flex items-center gap-1.5"
+              >
+                <FaThLarge className="text-xs" />
+                <span className="hidden sm:inline text-xs">Change Template</span>
+              </button>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2">
+              <span className="text-xs text-warm-400">Template</span>
+              <span className="text-xs font-semibold text-[rgba(0,0,0,0.95)]">{currentTemplate.name}</span>
             </div>
 
           </div>
         </div>
+      </div>
 
-        {/* Main content: editor + gallery */}
-        <div className="flex-1 flex flex-row overflow-hidden">
+      {/* Main content: editor + current preview */}
+      <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
           {/* Left: Editor */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 lg:overflow-y-auto">
             {compileError && (
               <div className="px-4 pt-4">
                 <div className="p-3 rounded-lg bg-[rgba(221,91,0,0.06)] border border-[rgba(221,91,0,0.15)] text-warm-600 text-xs">
@@ -514,25 +547,25 @@ export default function ResumeEditorPage() {
               </div>
             )}
 
-            <div className={clsx("px-4 py-6 space-y-6 pb-24", isSample && "opacity-60")}>
+            <div className={clsx("px-3 sm:px-4 py-4 sm:py-6 space-y-6 pb-8 lg:pb-24", isSample && "opacity-60")}>
               <section id="section-personal">
                 <SectionCard title="Personal Information">
-                  <div className="flex gap-6 mt-4">
-                    <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-3">
+                  <div className="flex flex-col sm:flex-row gap-6 mt-4">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                       <NotionInput label="First Name" value={resumeData.personal.firstName} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, firstName: v } })) }} />
                       <NotionInput label="Last Name" value={resumeData.personal.lastName} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, lastName: v } })) }} />
                       <NotionInput label="Position / Title" value={resumeData.personal.position} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, position: v } })) }} />
                       <NotionInput label="Phone" value={resumeData.personal.mobile} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, mobile: v } })) }} icon={<FaPhone />} />
                       <NotionInput label="Homepage" value={resumeData.personal.homepage ?? ''} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, homepage: v } })) }} icon={<FaUser />} />
                       <NotionInput label="Email" value={resumeData.personal.email} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, email: v } })) }} icon={<FaEnvelope />} />
-                      <div className="col-span-2">
+                      <div className="sm:col-span-2">
                         <NotionInput label="Address" value={resumeData.personal.address} onChange={(v) => { handleChange(); setResumeData(prev => ({ ...prev, personal: { ...prev.personal, address: v } })) }} icon={<FaMapMarkerAlt />} />
                       </div>
                     </div>
                     {/* Photo upload area */}
-                    <div className="w-[130px] flex-shrink-0 flex flex-col items-center justify-start pt-1">
+                    <div className="w-full sm:w-[130px] flex-shrink-0 flex flex-col items-center justify-start pt-1">
                       <div
-                        className="w-full h-[150px] rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-warm-400 hover:bg-warm-50 transition-colors overflow-hidden relative group"
+                        className="w-[130px] h-[150px] rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-warm-400 hover:bg-warm-50 transition-colors overflow-hidden relative group"
                         onClick={handlePhotoClick}
                       >
                         {resumeData.personal.photo?.url ? (
@@ -594,93 +627,28 @@ export default function ResumeEditorPage() {
             </div>
           </div>
 
-          {/* Right: Template Gallery */}
-          <div className="w-[820px] lg:w-[900px] border-l border-[rgba(0,0,0,0.1)] bg-white flex flex-col">
-            <div className="shrink-0 px-5 py-4 border-b border-[rgba(0,0,0,0.1)]">
-              <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">Templates</h3>
-              <p className="text-xs text-warm-500 mt-0.5">Preview and download your resume with different templates</p>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-3 gap-3">
-              {templates.map((tpl) => (
-                <div
-                  key={tpl.id}
-                  className="border border-[rgba(0,0,0,0.1)] rounded-lg p-4 transition-all flex flex-col aspect-[4/3] hover:border-[rgba(0,0,0,0.2)]"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(0,117,222,0.08)] text-[#0075de]">
-                      {tpl.category}
-                    </span>
-                    <span className="text-micro text-warm-300">0{tpl.id}</span>
-                  </div>
-                  <h4 className="text-xs font-semibold text-[rgba(0,0,0,0.95)] mb-1">{tpl.name}</h4>
-                  <p className="text-[11px] text-warm-500 leading-snug mb-3 flex-1">{tpl.description}</p>
-                  <div className="flex items-center gap-2 mt-auto">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        prevTemplateSettingsRef.current = templateSettings
-                        setPreviewTemplateId(tpl.id)
-                        setTemplateSettings(tpl.settings)
-                        setShowPreviewModal(true)
-                      }}
-                      className="flex-1 text-xs font-medium px-3 py-1.5 rounded-md border border-[rgba(0,0,0,0.1)] text-warm-500 hover:bg-[rgba(0,0,0,0.04)] transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <FaEye className="text-[10px]" />
-                      Preview
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        const pdfUrl = templatePdfs[tpl.id]
-                        if (pdfUrl) {
-                          const a = document.createElement('a')
-                          a.href = pdfUrl
-                          const name = `${resumeData.personal.firstName || 'resume'}_${resumeData.personal.lastName || 'export'}.pdf`
-                          a.download = name
-                          a.click()
-                        }
-                      }}
-                      disabled={isCompiling || !templatePdfs[tpl.id]}
-                      className="flex-1 text-xs font-medium px-3 py-1.5 rounded-md bg-[#0075de] text-white hover:bg-[#005bab] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40"
-                    >
-                      {isCompiling ? <FaSpinner className="animate-spin" /> : <FaDownload className="text-[10px]" />}
-                      PDF
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-      <HistoryPanel open={showHistory} onClose={() => setShowHistory(false)} onRestore={handleHistoryRestore} />
-
-      {/* Preview Modal */}
-      {showPreviewModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(0,0,0,0.5)] backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-[750px] max-w-[95vw] h-[90vh] flex flex-col overflow-hidden">
-            <div className="shrink-0 flex items-center justify-between px-5 py-3 border-b border-[rgba(0,0,0,0.1)]">
-              <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">PDF Preview</h3>
+          {/* Right: Current PDF preview */}
+          <div className="min-h-[520px] lg:min-h-0 lg:h-auto lg:w-[760px] xl:w-[860px] border-t lg:border-t-0 lg:border-l border-[rgba(0,0,0,0.1)] bg-white flex flex-col">
+            <div className="shrink-0 px-5 py-3 border-b border-[rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">{currentTemplate.name} Preview</h3>
+                <p className="text-xs text-warm-500 mt-0.5">Current template PDF preview</p>
+              </div>
               <button
-                onClick={() => {
-                  setShowPreviewModal(false)
-                  setPreviewTemplateId(null)
-                  if (prevTemplateSettingsRef.current) {
-                    setTemplateSettings(prevTemplateSettingsRef.current)
-                    prevTemplateSettingsRef.current = null
-                  }
-                }}
-                className="px-3 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] transition-colors"
+                onClick={handleDownloadPdf}
+                disabled={isCompiling || !pdfUrl}
+                className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#0075de] text-white hover:bg-[#005bab] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:pointer-events-none"
               >
-                Close
+                {isCompiling ? <FaSpinner className="animate-spin" /> : <FaDownload className="text-[10px]" />}
+                PDF
               </button>
             </div>
             <div className="flex-1 p-4 bg-[#f0efed]">
-              {previewTemplateId && templatePdfs[previewTemplateId] ? (
+              {pdfUrl ? (
                 <iframe
-                  src={templatePdfs[previewTemplateId]}
+                  src={pdfUrl}
                   className="w-full h-full rounded-standard shadow-sm border border-[rgba(0,0,0,0.1)] bg-white"
-                  title="PDF Preview"
+                  title={`${currentTemplate.name} PDF Preview`}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-warm-400 text-sm">
@@ -690,7 +658,8 @@ export default function ResumeEditorPage() {
             </div>
           </div>
         </div>
-      )}
+
+      <HistoryPanel open={showHistory} onClose={() => setShowHistory(false)} onRestore={handleHistoryRestore} />
     </div>
   )
 }
