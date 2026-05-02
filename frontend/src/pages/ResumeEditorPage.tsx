@@ -190,7 +190,9 @@ export default function ResumeEditorPage() {
         if (data.sections.length > 0) {
           setModuleBlocks(modulesToBlocks(data.sections))
         }
-        if (data.skills && data.skills.length > 0) {
+        if (data.skillsBlocks && data.skillsBlocks.length > 0) {
+          setSkillsBlocks(data.skillsBlocks)
+        } else if (data.skills && data.skills.length > 0) {
           setSkillsBlocks(skillsToBlocks(data.skills))
         }
         setIsSample(true)

@@ -41,6 +41,15 @@
       ]
     }
   ],
+  "skillsBlocks": [
+    { "id": "blk-skills-title", "type": "h1", "content": "Skills" },
+    { "id": "blk-lang", "type": "h2", "content": "Languages" },
+    { "id": "blk-lang-items", "type": "h3", "content": "Lumina+, VoidScript, Neo-Python, BinaryFlow" },
+    { "id": "blk-fw", "type": "h2", "content": "Frameworks" },
+    { "id": "blk-fw-items", "type": "h3", "content": "Ethereal Framework, Ghost-V, DeepCore 9.0" },
+    { "id": "blk-expert", "type": "h2", "content": "Expertise" },
+    { "id": "blk-expert-items", "type": "h3", "content": "Quantum State Simulation, Neural Weaving, Multi-dimensional Visualization, Logic Provenance" }
+  ],
   "skills": [
     {
       "id": "sk-lang",
