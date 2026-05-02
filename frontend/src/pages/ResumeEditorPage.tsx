@@ -181,7 +181,12 @@ export default function ResumeEditorPage() {
           setModuleBlocks(modulesToBlocks(saved.sections))
         }
         if (saved.skillsBlocks && saved.skillsBlocks.length > 0) {
-          setSkillsBlocks(saved.skillsBlocks)
+          // Upgrade: if saved blocks are missing H1 "Skills" heading, regenerate
+          if (saved.skillsBlocks[0].type !== 'h1' || saved.skillsBlocks[0].content !== 'Skills') {
+            setSkillsBlocks(skillsToBlocks(saved.skills))
+          } else {
+            setSkillsBlocks(saved.skillsBlocks)
+          }
         } else if (saved.skills && saved.skills.length > 0) {
           setSkillsBlocks(skillsToBlocks(saved.skills))
         }
