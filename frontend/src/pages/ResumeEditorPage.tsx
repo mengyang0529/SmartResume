@@ -673,7 +673,7 @@ export default function ResumeEditorPage() {
             <div className="flex-1 p-4 bg-[#f0efed]">
               {pdfUrl ? (
                 <object
-                  data={pdfUrl}
+                  data={`${pdfUrl}#toolbar=0`}
                   type="application/pdf"
                   className="w-full h-full rounded-standard shadow-sm border border-[rgba(0,0,0,0.1)] bg-white"
                   title={`${currentTemplate.name} PDF Preview`}
