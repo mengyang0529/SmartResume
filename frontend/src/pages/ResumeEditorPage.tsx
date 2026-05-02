@@ -628,7 +628,7 @@ export default function ResumeEditorPage() {
           </div>
 
           {/* Right: Current PDF preview */}
-          <div className="min-h-[300px] sm:min-h-[520px] lg:min-h-0 lg:h-auto lg:w-[760px] xl:w-[860px] border-t lg:border-t-0 lg:border-l border-[rgba(0,0,0,0.1)] bg-white flex flex-col">
+          <div className="flex-1 lg:flex-none min-h-[300px] sm:min-h-[520px] lg:min-h-0 lg:h-auto lg:w-[760px] xl:w-[860px] border-t lg:border-t-0 lg:border-l border-[rgba(0,0,0,0.1)] bg-white flex flex-col">
             <div className="shrink-0 px-5 py-3 border-b border-[rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
               <div>
                 <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">{currentTemplate.name} Preview</h3>
@@ -645,11 +645,16 @@ export default function ResumeEditorPage() {
             </div>
             <div className="flex-1 p-4 bg-[#f0efed]">
               {pdfUrl ? (
-                <iframe
-                  src={pdfUrl}
+                <object
+                  data={pdfUrl}
+                  type="application/pdf"
                   className="w-full h-full rounded-standard shadow-sm border border-[rgba(0,0,0,0.1)] bg-white"
                   title={`${currentTemplate.name} PDF Preview`}
-                />
+                >
+                  <div className="flex items-center justify-center h-full text-warm-400 text-sm">
+                    PDF preview not available on this browser. <a href={pdfUrl} className="text-[#0075de] underline ml-1" target="_blank">Open</a>
+                  </div>
+                </object>
               ) : (
                 <div className="flex items-center justify-center h-full text-warm-400 text-sm">
                   {isCompiling ? 'Compiling...' : 'Generating preview...'}
