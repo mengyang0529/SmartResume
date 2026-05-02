@@ -536,9 +536,9 @@ export default function ResumeEditorPage() {
       </div>
 
       {/* Main content: editor + current preview */}
-      <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Left: Editor */}
-          <div className="flex-1 lg:overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             {compileError && (
               <div className="px-4 pt-4">
                 <div className="p-3 rounded-lg bg-[rgba(221,91,0,0.06)] border border-[rgba(221,91,0,0.15)] text-warm-600 text-xs">
@@ -628,7 +628,7 @@ export default function ResumeEditorPage() {
           </div>
 
           {/* Right: Current PDF preview */}
-          <div className="min-h-[520px] lg:min-h-0 lg:h-auto lg:w-[760px] xl:w-[860px] border-t lg:border-t-0 lg:border-l border-[rgba(0,0,0,0.1)] bg-white flex flex-col">
+          <div className="min-h-[300px] sm:min-h-[520px] lg:min-h-0 lg:h-auto lg:w-[760px] xl:w-[860px] border-t lg:border-t-0 lg:border-l border-[rgba(0,0,0,0.1)] bg-white flex flex-col">
             <div className="shrink-0 px-5 py-3 border-b border-[rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
               <div>
                 <h3 className="text-sm font-semibold text-[rgba(0,0,0,0.95)]">{currentTemplate.name} Preview</h3>
