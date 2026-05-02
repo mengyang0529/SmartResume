@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import localforage from 'localforage'
-import { ResumeData, TemplateSettings, ResumeSection, Skill } from '../types/resume'
+import { ResumeData, TemplateSettings, Skill } from '../types/resume'
 import type { RichTextBlock } from '../types/richText'
 import { generateResumeTypst, getAccentColor } from '../utils/typstGenerator'
 import { modulesToBlocks, blocksToModules } from '../utils/resumeTransforms'
@@ -15,10 +15,10 @@ import { RichTextEditor } from '../components/RichTextEditor'
 import { useTypstCompiler } from '../hooks/useTypstCompiler'
 import HistoryPanel from '../components/HistoryPanel'
 import { historyService } from '../services/historyService'
-import { importExportService } from '../services/importExport'
 import clsx from 'clsx'
 import { SAMPLE_RESUME_DATA } from '../data/sampleResume'
 import { DEFAULT_TEMPLATE, findTemplateBySlug, RESUME_TEMPLATES } from '../data/templates'
+import { parseMarkdownResume, generateMarkdownResume } from '../utils/markdownImporter'
 
 const generateId = (prefix = 'id') => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -245,118 +245,31 @@ export default function ResumeEditorPage() {
   }, [resumeData.skills])
 
   useEffect(() => {
-    const openListener = () => openJsonFile()
+    const openListener = () => openImportFile()
     window.addEventListener('openResumeJsonFile', openListener)
     return () => window.removeEventListener('openResumeJsonFile', openListener)
   }, [])
 
   useEffect(() => {
-    if ((location.state as any)?.openJsonFile) {
-      openJsonFile()
+    if ((location.state as any)?.openImportFile) {
+      openImportFile()
       navigate(location.pathname, { replace: true, state: {} })
     }
   }, [location, navigate])
 
   const accentColor = useMemo(() => getAccentColor(templateSettings), [templateSettings])
 
-  const sanitizeJsonText = (raw: string) => {
-    let inString = false
-    let escaped = false
-    let sanitized = ''
-    for (let i = 0; i < raw.length; i += 1) {
-      const char = raw[i]
-      if (inString) {
-        if (escaped) { sanitized += char; escaped = false; continue }
-        if (char === '\\') { sanitized += char; escaped = true; continue }
-        if (char === '"') { sanitized += char; inString = false; continue }
-        if (char === '\r') { sanitized += '\\n'; if (raw[i + 1] === '\n') i += 1; continue }
-        if (char === '\n') { sanitized += '\\n'; continue }
-      } else if (char === '"') { inString = true }
-      sanitized += char
-    }
-    return sanitized
-  }
-
-  const parseJsonWithFallback = (raw: string) => {
-    try { return JSON.parse(raw) } catch (e) { return JSON.parse(sanitizeJsonText(raw)) }
-  }
-
-  const validateResumeFile = (data: any): data is ResumeData => {
-    return data && typeof data === 'object' && data.personal && typeof data.personal === 'object'
-  }
-
-  const normalizeResumeData = (data: any): ResumeData => {
-    const ensureId = (value: any, prefix: string) => typeof value === 'string' && value ? value : generateId(prefix)
-
-    let sections: ResumeSection[] = Array.isArray(data.sections) ? data.sections.map((section: any, sectionIndex: number) => ({
-      id: ensureId(section.id || `section-${sectionIndex}`, 'sec'),
-      title: String(section.title || `Section ${sectionIndex + 1}`),
-      blocks: Array.isArray(section.blocks) ? section.blocks : undefined,
-      entries: Array.isArray(section.entries) ? section.entries.map((entry: any, entryIndex: number) => ({
-        id: ensureId(entry.id || `entry-${entryIndex}`, 'entry'),
-        title: String(entry.title || ''),
-        subtitle: String(entry.subtitle || ''),
-        location: entry.location ? String(entry.location) : undefined,
-        startDate: String(entry.startDate || ''),
-        endDate: entry.endDate ? String(entry.endDate) : undefined,
-        description: entry.description ? String(entry.description) : undefined,
-      })) : [],
-    })) : []
-
-    if (Array.isArray(data.education) && data.education.length > 0 && !sections.some(s => s.title.toLowerCase() === 'education')) {
-      const eduSection: ResumeSection = {
-        id: generateId('sec-edu'),
-        title: 'Education',
-        entries: data.education.map((edu: any) => ({
-          id: ensureId(edu.id, 'entry-edu'),
-          title: String(edu.school || ''),
-          subtitle: String(edu.degree || ''),
-          location: edu.location ? String(edu.location) : undefined,
-          startDate: String(edu.startDate || ''),
-          endDate: edu.endDate ? String(edu.endDate) : undefined,
-          description: edu.description ? String(edu.description) : undefined,
-        }))
-      }
-      sections = [eduSection, ...sections]
-    }
-
-    return {
-      personal: {
-        firstName: String(data.personal?.firstName || ''),
-        lastName: String(data.personal?.lastName || ''),
-        position: String(data.personal?.position || ''),
-        email: String(data.personal?.email || ''),
-        mobile: String(data.personal?.mobile || ''),
-        address: String(data.personal?.address || ''),
-        homepage: String(data.personal?.homepage || ''),
-        photo: data.personal?.photo ? {
-          url: String(data.personal.photo.url || ''),
-          shape: (data.personal.photo.shape === 'circle' || data.personal.photo.shape === 'rectangle') ? data.personal.photo.shape : 'circle',
-        } : undefined,
-      },
-      education: [],
-      sections,
-      skills: Array.isArray(data.skills) ? data.skills.map((skill: any, skillIndex: number) => ({
-        id: ensureId(skill.id || `skill-${skillIndex}`, 'sk'),
-        category: String(skill.category || ''),
-        name: String(skill.name || ''),
-      })) : [],
-      skillsBlocks: Array.isArray(data.skillsBlocks) ? data.skillsBlocks : undefined,
-    }
-  }
-
-  const handleJsonFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
     reader.onload = () => {
       try {
-        const parsed = parseJsonWithFallback(reader.result as string)
-        if (!validateResumeFile(parsed)) { return }
-        const normalized = normalizeResumeData(parsed)
-        setResumeData(normalized)
-        setModuleBlocks(modulesToBlocks(normalized.sections))
-        setSkillsBlocks(normalized.skillsBlocks && normalized.skillsBlocks.length > 0 ? normalized.skillsBlocks : skillsToBlocks(normalized.skills))
+        const raw = reader.result as string
+        const parsed = parseMarkdownResume(raw)
+        setResumeData(parsed)
+        setModuleBlocks(modulesToBlocks(parsed.sections))
+        setSkillsBlocks(parsed.skillsBlocks && parsed.skillsBlocks.length > 0 ? parsed.skillsBlocks : skillsToBlocks(parsed.skills))
         setIsSample(false)
       } catch (e) { /* ignore parse errors */ }
     }
@@ -364,7 +277,7 @@ export default function ResumeEditorPage() {
     event.target.value = ''
   }
 
-  const openJsonFile = () => fileInputRef.current?.click()
+  const openImportFile = () => fileInputRef.current?.click()
 
   const saveToLocal = async (data: ResumeData) => {
     await localforage.setItem('current_resume_data', data)
@@ -405,9 +318,15 @@ export default function ResumeEditorPage() {
     [moduleBlocks]
   )
 
-  const handleExportJson = () => {
-    const exportData = { ...resumeData, skillsBlocks }
-    importExportService.downloadJson(exportData, `${resumeData.personal.firstName || 'resume'}-backup.json`)
+  const handleExportMarkdown = () => {
+    const md = generateMarkdownResume({ ...resumeData, skillsBlocks })
+    const blob = new Blob([md], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${resumeData.personal.firstName || 'resume'}-backup.md`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const currentTemplate = useMemo(
@@ -507,15 +426,15 @@ export default function ResumeEditorPage() {
               <span className="w-px h-5 bg-[rgba(0,0,0,0.1)]" />
 
               <button
-                onClick={openJsonFile}
+                onClick={openImportFile}
                 className="px-2.5 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)] transition-all flex items-center gap-1.5"
               >
                 <FaUpload className="text-xs" />
                 <span className="hidden sm:inline text-xs">Import</span>
               </button>
-              <input ref={fileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleJsonFileUpload} />
+              <input ref={fileInputRef} type="file" accept=".md,text/markdown" className="hidden" onChange={handleFileUpload} />
               <button
-                onClick={handleExportJson}
+                onClick={handleExportMarkdown}
                 className="px-2.5 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)] transition-all flex items-center gap-1.5"
               >
                 <FaFileDownload className="text-xs" />
@@ -673,7 +592,7 @@ export default function ResumeEditorPage() {
             <div className="flex-1 p-4 bg-[#f0efed]">
               {pdfUrl ? (
                 <object
-                  data={`${pdfUrl}#toolbar=0`}
+                  data={pdfUrl}
                   type="application/pdf"
                   className="w-full h-full rounded-standard shadow-sm border border-[rgba(0,0,0,0.1)] bg-white"
                   title={`${currentTemplate.name} PDF Preview`}
