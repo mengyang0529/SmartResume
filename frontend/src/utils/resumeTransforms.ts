@@ -25,6 +25,9 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
       type: 'h2',
       content: entry.title,
       rightContent: entry.location || '',
+      projectName: entry.projectName,
+      teamSize: entry.teamSize,
+      technologies: entry.technologies,
     })
 
     // H3 for subtitle (Role/Degree) and dates
@@ -73,7 +76,14 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
       if (inEntry && (current.title || current.description)) {
         section.entries.push(current as Entry)
       }
-      current = { id: crypto.randomUUID(), title: block.content, location: block.rightContent || undefined }
+      current = {
+        id: crypto.randomUUID(),
+        title: block.content,
+        location: block.rightContent || undefined,
+        projectName: block.projectName,
+        teamSize: block.teamSize,
+        technologies: block.technologies,
+      }
       inEntry = true
     } else if (block.type === 'h3' && inEntry) {
       current.subtitle = block.content

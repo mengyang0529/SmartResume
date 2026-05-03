@@ -165,14 +165,21 @@ ${escapeContentBlock(effectiveSummary)}
         for (const entry of sorted) {
           const period = formatPeriod(entry.startDate, entry.endDate);
           const subtitle = entry.subtitle ? escapeContentBlock(entry.subtitle) : '';
+          const projectName = entry.projectName ? escapeContentBlock(entry.projectName) : '';
+          const teamSize = entry.teamSize ? escapeContentBlock(entry.teamSize) : '';
           const desc = renderBulletItems(entry.description || '');
           const tech = entry.technologies || '';
 
           typst += `  [${escapeContentBlock(period)}],
   [#text(size: 9pt)[`;
 
+          if (projectName) {
+            typst += `*${projectName}*\n    #linebreak()`;
+          }
+
           if (subtitle) {
             typst += `${subtitle}`;
+            if (teamSize) typst += `（${teamSize}）`;
             if (desc || tech) typst += `\n    #linebreak()`;
           }
 

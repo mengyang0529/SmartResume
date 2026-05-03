@@ -39,4 +39,5 @@ compile.log
 # resumeme
 *.tex
 resume.pdf
-/data/*.*
+/data/*.*.tmp-template-previews
+frontend/.tmp-template-previews

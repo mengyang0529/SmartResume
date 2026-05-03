@@ -57,87 +57,65 @@
 
 ---
 
-## 🔧 [待办] 统一预览图生成与前端 PDF 生成逻辑
+## ✅ [已完成] 统一预览图生成与前端 PDF 生成逻辑
 
-### 问题描述
+### 背景
 
-当前模板预览图（`.webp`）和实际 PDF 的 Typst 源码由**两套完全独立的代码**生成：
+之前模板预览图（`.webp`）和实际 PDF 的 Typst 源码由两套独立的逻辑维护，导致排版容易不一致。
 
-| | 预览图 | 前端 PDF |
+### 实现结果
+
+- [x] 迁移脚本至 `frontend/scripts/generate-template-previews.ts`
+- [x] 使用 `tsx` 直接运行 TS 脚本
+- [x] **复用前端生成逻辑**：脚本直接调用 `generateResumeTypst` 纯函数，彻底消除重复代码
+- [x] **自动化配置**：脚本自动遍历 `RESUME_TEMPLATES` 配置，新增模板时无需修改脚本
+- [x] **环境适配**：脚本运行时自动处理 Typst 文件路径映射，兼容浏览器 Worker 环境
+
+### 文件变更清单
+
+| 文件 | 操作 | 说明 |
 |---|---|---|
-| 入口 | `scripts/generate-template-previews.mjs` | `utils/typstGenerators/*.ts` |
-| 运行环境 | Node.js + Typst CLI | 浏览器 + Web Worker + typst.ts wasm |
-| 数据输入 | `src/data/sample-xxx.md` | `ResumeData`（运行时状态） |
-| Typst 拼接 | `buildAwesomeCvTypst()` / `buildRirekishoTypst()` / `buildShokumuKeirekishoTypst()` | `generateAwesomeCvTypst()` / `generateRirekishoTypst()` / `generateShokumuKeirekishoTypst()` |
+| `frontend/package.json` | 修改 | `generate:template-previews` 脚本改为使用 `tsx` |
+| `frontend/scripts/generate-template-previews.ts` | 新建 | 基于 TS 的统一预览图生成脚本 |
+| `frontend/scripts/generate-template-previews.mjs` | 删除 | 移除旧的、包含冗余逻辑的 JS 脚本 |
 
-**风险**：
-- 修改模板排版时，容易只改前端而漏改预览图脚本，导致预览图与实际 PDF 不一致
-- 维护成本高（同一套 Typst 拼接逻辑写两遍）
-- 新增模板时必须同时维护两套生成逻辑
+---
 
-### 方案对比
+## ✅ [已完成] 職務経歴書编辑器增强（策略 B）
 
-| 方案 | 描述 | 优点 | 缺点 | 推荐度 |
-|---|---|---|---|---|
-| **A. 脚本直接复用前端生成器** | 脚本通过 tsx/ts-node 直接 import `utils/typstGenerators/*.ts` 的纯函数，传入构造好的 `ResumeData` | 零重复代码，单点维护 | 需要解决 TS→Node 的运行问题（tsx / ts-node） | ⭐ 推荐 |
-| **B. 抽离共享生成模块** | 把 Typst 拼接逻辑抽到 `shared/typst-generators/`（纯 JS/TS，不依赖 React），前端和脚本共同 import | 彻底解耦，两边都干净 | 需要重构目录，改动面较大 | 长期可行 |
-| **C. 脚本调用前端构建产物** | 前端 build 时把生成器编译为 ESM，脚本直接 import 产物 | 不需要 TS 运行时 | 增加了 build 步骤的耦合 | 一般 |
-| **D. 保持现状，加同步注释** | 在脚本和生成器文件顶部加注释，提醒修改时必须同步 | 零重构成本 | 靠人记忆，迟早会漏 | 短期兜底 |
+### 背景
 
-### 推荐方案：A（脚本复用前端生成器）
+職務経歴書（Shokumu Keirekisho）需要更结构化的数据输入，如项目名称、团队规模和技术栈。
 
-`utils/typstGenerators/*.ts` 已经是**纯函数**（只接收 data/settings，返回字符串，不依赖 React/DOM/Worker），理论上可以直接在 Node.js 运行。
+### 实现结果
 
-实施步骤：
+- [x] **数据模型扩展**：`RichTextBlock` 增加 `projectName`、`teamSize`、`technologies` 可选字段。
+- [x] **转换逻辑增强**：`blocksToSection` 和 `sectionToBlocks` 自动同步这些元数据字段。
+- [x] **UI 增强**：`RichTextEditor` 针对 `Shokumu Keirekisho` 模板开启 `showMetadata` 模式。
+- [x] **结构化输入**：当 `H2` 块被聚焦时，下方自动展开项目、团队规模、技术栈输入框；若已有内容，则始终显示。
+- [x] **渲染适配**：PDF 生成器自动根据这些字段生成加粗的项目名称、带括号的团队规模及独立的技术栈行。
+- [x] **示例数据迁移**：更新 `SHOKUMU_SAMPLE_DATA`，将原描述中的技术栈等信息迁移到结构化字段中，使预览图更专业。
 
-1. **改造脚本运行方式**
-   - 将 `generate-template-previews.mjs` 改为 `.mts`（或保持 `.mjs` 但用 `tsx` 执行）
-   - 安装 `tsx` 作为 devDependency：`npm install -D tsx`
-   - package.json 脚本改为：`"generate:template-previews": "tsx scripts/generate-template-previews.ts"`
+### 文件变更清单
 
-2. **改造数据准备**
-   - 脚本不再自己解析 Markdown 拼接 Typst
-   - 直接 import 前端的 sample data：`SAMPLE_RESUME_DATA`、`RIREKISHO_SAMPLE_DATA`、`SHOKUMU_SAMPLE_DATA`
-   - 或者通过 `parseMarkdownResume()` 把 `sample-xxx.md` 转成 `ResumeData`
-
-3. **调用前端生成器**
-   ```typescript
-   import { generateResumeTypst } from '../src/utils/typstGenerators/index';
-   
-   const source = generateResumeTypst(resumeData, template.settings);
-   // 然后 typst compile → magick → webp
-   ```
-
-4. **删除冗余代码**
-   - 删除脚本中的 `buildAwesomeCvTypst()` / `buildRirekishoTypst()` / `buildShokumuKeirekishoTypst()`
-   - 删除脚本中的 Markdown 解析逻辑（如果改用 import sample data）
-
-### 验收标准
-
-- [ ] `npm run generate:template-previews` 成功生成所有 5 张预览图
-- [ ] 删除脚本中所有 `buildXxxTypst()` 函数
-- [ ] 预览图与实际 PDF 的 Typst 源码来自同一套生成器
-- [ ] 新增第 6 个模板时，只需维护 `utils/typstGenerators/*.ts`，无需修改脚本
+| 文件 | 操作 | 说明 |
+|---|---|---|
+| `frontend/src/types/richText.ts` | 修改 | `RichTextBlock` 增加元数据字段 |
+| `frontend/src/utils/resumeTransforms.ts` | 修改 | 增强 Block <-> Section 转换逻辑 |
+| `frontend/src/components/RichTextEditor/RichTextEditor.tsx` | 修改 | 增加 `showMetadata` 属性并传递 |
+| `frontend/src/components/RichTextEditor/EditableBlock.tsx` | 修改 | 实现元数据输入 UI |
+| `frontend/src/pages/ResumeEditorPage.tsx` | 修改 | 根据模板动态开启元数据编辑 |
+| `frontend/src/utils/typstGenerators/shokumukeirekisho.ts` | 修改 | 适配结构化字段渲染 |
+| `frontend/src/data/sampleResume.ts` | 修改 | 更新示例数据 |
 
 ---
 
 ## 📋 后续迭代（低优先级）
 
-### 職務経歴書编辑器增强（策略 B）
 
-当前職務経歴書采用 **策略 A**（MVP）：继续使用现有 RichTextEditor，所有经历信息压缩在 `description` 文本中。
-
-未来可考虑为 Shokumu Keirekisho 定制增强型编辑器：
-- 每条经历可独立填写 `projectName`、`teamSize`、`technologies` 字段
-- 在 `ResumePersonalInfoSection` 或 `RichTextEditor` 旁增加结构化输入面板
-- 需要评估：改动面较大，收益是 UX 更好，但当前策略 A 已满足基本使用
-
-### ProfilePage 路由注册或移除
-
-`pages/ProfilePage.tsx` 是一个完整的 Job Application Tracker 页面，但 `App.tsx` 路由表中没有 `/profile` 路径。需要决策：
-- 加路由 → 在导航栏增加 Profile 入口
-- 删除 → 移除死代码
+- [x] **ProfilePage 路由注册或移除**：已确认 `ProfilePage.tsx` 已作为死代码移除，并已清理 `README.md` 中的相关引用。
 
 ### 测试覆盖
 
-`utils/resumeTransforms.test.ts` 目前只有一处测试文件，可以考虑为 `typstGenerators/*.ts` 添加单元测试（验证生成器输出包含预期 Typst 语法）。
+- [x] **单元测试增强**：新建 `frontend/src/utils/typstGenerators/generators.test.ts`，涵盖所有 5 种模板的 Typst 源码生成逻辑验证。
+- [x] **回归验证**：通过测试确保了结构化字段（projectName, teamSize, technologies）在 `Shokumu Keirekisho` 模板中的正确渲染，以及未知模板的 fallback 逻辑。

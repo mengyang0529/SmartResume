@@ -10,6 +10,7 @@ interface RichTextEditorProps {
   onChange: (blocks: RichTextBlock[]) => void
   placeholder?: string
   headingColor?: string
+  showMetadata?: boolean
 }
 
 export default function RichTextEditor({ blocks, onChange, placeholder, headingColor }: RichTextEditorProps) {
@@ -237,6 +238,7 @@ export default function RichTextEditor({ blocks, onChange, placeholder, headingC
               onKeyDown={handleKeyDown}
               onConvertType={(id, type) => updateBlock(id, { type })}
               headingColor={headingColor}
+              showMetadata={showMetadata}
             />
           </div>
         ))}

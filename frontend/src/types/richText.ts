@@ -7,6 +7,10 @@ export interface RichTextBlock {
   rightContent?: string
   bold?: boolean
   color?: string
+  // Optional metadata for structured entries (e.g. Shokumu Keirekisho)
+  projectName?: string
+  teamSize?: string
+  technologies?: string
 }
 
 export interface RichTextSection {

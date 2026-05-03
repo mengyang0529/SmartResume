@@ -77,6 +77,7 @@ export default function ResumeEditorPage() {
                   blocks={editor.moduleBlocks}
                   onChange={handleModuleChange}
                   headingColor={editor.accentColor}
+                  showMetadata={editor.currentTemplate.settings.template === 'shokumukeirekisho'}
                 />
               </SectionCard>
             </section>

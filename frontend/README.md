@@ -51,12 +51,8 @@ Preview images at `public/template-previews/*.webp` (900×1125) are generated fr
 ```bash
 # Requires: typst CLI (https://github.com/typst/typst) and ImageMagick
 cd frontend
-node scripts/generate-template-previews.mjs
+npm run generate:template-previews
 ```
-
-### Profile (`/profile`)
-
-Job application tracking dashboard with statistics, application list, and interview timeline.
 
 ## Routing
 
@@ -65,7 +61,6 @@ Job application tracking dashboard with statistics, application list, and interv
 | `/` | HomePage |
 | `/templates` | TemplatesPage |
 | `/editor/:templateId` | ResumeEditorPage |
-| `/profile` | ProfilePage |
 | `*` | NotFoundPage (redirect to `/404`) |
 
 ## PDF Generation
