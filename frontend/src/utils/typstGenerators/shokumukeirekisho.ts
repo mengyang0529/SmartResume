@@ -123,7 +123,7 @@ ${escapeContentBlock(effectiveSummary)}
   }
 
   // ── 職務経歴 ──
-  const workSections = sections.filter(s => !/免許・資格|education|学歴|educ|職務要約/i.test(s.title));
+  const workSections = sections.filter(s => !/免許・資格|education|学歴|educ|職務要約|スキル|経験|技術/i.test(s.title));
   if (workSections.length > 0) {
     typst += `// ── Work Experience ──
 #section-title[職務経歴]
@@ -202,9 +202,12 @@ ${escapeContentBlock(effectiveSummary)}
   // ── Section divider ──
   typst += `#section-divider\n\n`;
 
-  // ── 活かせるスキル・知識 ──
+  // ── 活かせるスキル・知識 / 経験 / 技術 ──
+  const skillSections = sections.filter(s => /スキル|経験|技術/.test(s.title));
+  
+  // Also include the legacy skills array if not already represented
   if (skills && skills.length > 0) {
-    typst += `// ── Skills ──
+    typst += `// ── Skills (Data) ──
 #section-title[活かせるスキル・知識]
 #list(
   marker: [・],
@@ -219,6 +222,23 @@ ${escapeContentBlock(effectiveSummary)}
     }
     typst += `)\n\n`;
   }
+
+  // Render sections that matched skill keywords
+  for (const sec of skillSections) {
+    typst += `// ── Skill Section: ${sec.title} ──
+#section-title[${escapeTypstString(sec.title)}]
+#list(
+  marker: [・],
+`;
+    for (const entry of sec.entries) {
+      const content = [entry.title, entry.description].filter(Boolean).join(' : ');
+      if (content) {
+        typst += `  [${escapeContentBlock(content)}],\n`;
+      }
+    }
+    typst += `)\n\n`;
+  }
+
 
   // ── 資格 ──
   const certSection = sections.find(s => /免許・資格/.test(s.title));
@@ -263,10 +283,6 @@ ${escapeContentBlock(selfPrContent)}
 
 `;
   }
-
-  // ── 以上 ──
-  typst += `#align(right + bottom)[#text(size: 10pt)[以上]]
-`;
 
   return typst;
 }

@@ -46,10 +46,21 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
         .map((l) => l.trim())
         .filter((l) => l.length > 0)
         .forEach((line, i) => {
+          let content = line
+          let bold = false
+
+          // Detect whole-line bold: **text**
+          const boldMatch = line.match(/^\*\*(.+)\*\*$/)
+          if (boldMatch) {
+            content = boldMatch[1]
+            bold = true
+          }
+
           blocks.push({
             id: `ent-b-${entry.id}-${i}`,
             type: 'bullet',
-            content: line,
+            content,
+            bold,
           })
         })
     }
@@ -101,9 +112,11 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
         inEntry = true
         current = { id: crypto.randomUUID(), title: '', subtitle: '', startDate: '', endDate: '' }
       }
+      
+      const content = block.bold ? `**${block.content}**` : block.content
       current.description = current.description
-        ? current.description + '\n' + block.content
-        : block.content
+        ? current.description + '\n' + content
+        : content
     }
   })
 

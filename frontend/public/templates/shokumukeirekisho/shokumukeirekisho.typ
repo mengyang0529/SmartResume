@@ -27,11 +27,11 @@
   ]
 }
 
-#let work-header(company, period) = {
+#let work-header(company, right-content) = {
   block(above: 0.8em, below: 0.3em)[
     #text(size: 10.5pt, weight: "bold")[#company]
-    #h(6pt)
-    #text(size: 9pt, weight: "regular")[（#period）]
+    #h(1fr)
+    #text(size: 9pt, weight: "regular")[#right-content]
   ]
 }
 

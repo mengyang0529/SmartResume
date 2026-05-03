@@ -44,9 +44,12 @@ export function parseMarkdownResume(md: string): ResumeData {
       continue
     }
 
+    // Skip standalone separators or common markdown horizontal rules (3 or more chars)
+    const hrMatch = trimmed.match(/^([-*_])\1{2,}\s*$/) || trimmed.match(/^-\s+([-*_])\1{2,}\s*$/)
+    if (hrMatch) continue
+
     // --- Skills section terminator ---
     if (trimmed === '## Skills') {
-      // flush current section/entry before switching
       flushEntry()
       flushSection()
       inFirstSection = false
@@ -64,83 +67,168 @@ export function parseMarkdownResume(md: string): ResumeData {
 
     // --- Regular sections ---
 
-    // H2 = new section
+    // H2 = new section (maps to Editor H1)
     const h2Match = trimmed.match(/^##\s+(.+)/)
     if (h2Match) {
       flushEntry()
       flushSection()
       const title = h2Match[1].trim()
-      if (title === 'Education') {
-        // Special handling: Education entries are H3 under ## Education
-        currentSection = { id: genId('sec'), title: 'Education', entries: [] }
-      } else {
-        currentSection = { id: genId('sec'), title, entries: [] }
-      }
+      currentSection = { id: genId('sec'), title, entries: [], blocks: [] }
+      currentSection.blocks!.push({ id: genId('blk'), type: 'h1', content: title })
       continue
     }
 
-    // 免許・資格 section: each "- **Category**: names" line is its own entry
-    if (currentSection && /免許・資格/.test(currentSection.title)) {
-      const certMatch = trimmed.match(/^-\s+\*\*([^*]+)\*\*:\s*(.+)/)
-      if (certMatch) {
-        flushEntry()
-        currentEntry = { title: certMatch[1].trim(), subtitle: '', startDate: '', endDate: '', description: certMatch[2].trim() }
-        currentEntryLines = []
-        flushEntry() // each line is a separate entry
-      } else if (trimmed) {
-        if (!currentEntry) {
-          currentEntry = { title: '', subtitle: '', startDate: '', endDate: '', description: '' }
-          currentEntryLines = []
-        }
-        currentEntryLines.push(trimmed)
-      }
-      continue
-    }
-
-    // H3 = new entry (section entry or education entry)
+    // H3 = new entry (maps to Editor H2 / Company)
     const h3Match = trimmed.match(/^###\s+(.+)/)
-    if (h3Match) {
+    if (h3Match && currentSection) {
       flushEntry()
-      currentEntry = { title: h3Match[1].trim(), subtitle: '', startDate: '', endDate: '', description: '' }
+      const content = h3Match[1].trim()
+      let title = content
+      let rightContent = ''
+      const pipeIdx = content.indexOf('|')
+      if (pipeIdx !== -1) {
+        title = content.slice(0, pipeIdx).trim()
+        rightContent = content.slice(pipeIdx + 1).trim()
+      }
+
+      currentEntry = { title, subtitle: '', startDate: '', endDate: '', description: '' }
       currentEntryLines = []
+      currentSection.blocks!.push({ id: genId('blk'), type: 'h2', content: title, rightContent })
       continue
     }
 
-    // Bold line: **subtitle** [| dates]
-    const boldMatch = trimmed.match(/^\*\*(.+?)\*\*(\s*\|\s*(.+))?/)
-    if (boldMatch && currentEntry) {
-      currentEntry.subtitle = boldMatch[1].trim()
-      if (boldMatch[3]) {
-        const datePart = boldMatch[3].trim()
-        const dateSep = datePart.indexOf(' - ')
-        if (dateSep > 0) {
-          currentEntry.startDate = datePart.slice(0, dateSep).trim()
-          currentEntry.endDate = datePart.slice(dateSep + 3).trim()
-        } else {
-          currentEntry.startDate = datePart
+    // H4 = entry subtitle (maps to Editor H3 / Project or Role)
+    const h4Match = trimmed.match(/^####\s+(.+)/)
+    if (h4Match && currentSection) {
+      const content = h4Match[1].trim()
+      let subtitle = content
+      let rightContent = ''
+      
+      const pipeIdx = content.indexOf('|')
+      if (pipeIdx !== -1) {
+        subtitle = content.slice(0, pipeIdx).trim()
+        rightContent = content.slice(pipeIdx + 1).trim()
+      }
+
+      // Check for merging into H2 (Treating as Role for Shokumu Keirekisho)
+      const lastBlock = currentSection.blocks![currentSection.blocks!.length - 1];
+      const isWorkHistory = /職務経歴|職歴|職務経験|Work|Experience/i.test(currentSection.title);
+      
+      if (isWorkHistory && lastBlock && lastBlock.type === 'h2' && !lastBlock.rightContent) {
+        const existing = lastBlock.rightContent || '';
+        const fullRight = rightContent ? `${rightContent} | ${subtitle}` : subtitle;
+        lastBlock.rightContent = existing ? `${existing} | ${fullRight}` : fullRight;
+        // Also set currentEntry fields so the generator sees correct data
+        currentEntry.subtitle = subtitle;
+        if (rightContent) {
+          const dateSep = rightContent.indexOf(' - ');
+          if (dateSep > 0) {
+            currentEntry.startDate = rightContent.slice(0, dateSep).trim();
+            currentEntry.endDate = rightContent.slice(dateSep + 3).trim();
+          } else {
+            currentEntry.startDate = rightContent;
+          }
         }
+      } else {
+        if (currentEntry) {
+          if (currentEntry.subtitle) {
+            if (isWorkHistory) {
+              // In work history, subtitle is already set by a bold line (role).
+              // Treat this H4 as a project-name heading — add to description instead.
+              currentEntryLines.push(`**${content}**`);
+              currentSection.blocks!.push({ id: genId('blk'), type: 'paragraph', content, bold: true });
+              continue;
+            }
+            const savedTitle = currentEntry.title
+            flushEntry()
+            currentEntry = { title: savedTitle, subtitle: '', startDate: '', endDate: '', description: '' }
+          }
+          currentEntry.subtitle = subtitle
+          if (rightContent) {
+            const dateSep = rightContent.indexOf(' - ')
+            if (dateSep > 0) {
+              currentEntry.startDate = rightContent.slice(0, dateSep).trim()
+              currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
+            } else {
+              currentEntry.startDate = rightContent
+            }
+          }
+        }
+        currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent })
       }
       continue
     }
 
-    // Italic line (alternative role): *role*
-    const italicMatch = trimmed.match(/^\*(.+)\*/)
-    if (italicMatch && currentEntry && !currentEntry.subtitle) {
-      currentEntry.subtitle = italicMatch[1].trim()
+    // Bold line support (Legacy / Alternate Role)
+    // ONLY treat as header/role if it contains a pipe '|'
+    const boldMatch = trimmed.match(/^\*\*(.+?)\*\*(\s*\|\s*(.+))/)
+    if (boldMatch && currentEntry && currentSection) {
+      const subtitle = boldMatch[1].trim()
+      const rightContent = boldMatch[3] ? boldMatch[3].trim() : ''
+      
+      const lastBlock = currentSection.blocks![currentSection.blocks!.length - 1];
+      const isWorkHistory = /職務経歴|職歴|職務経験|Work|Experience/i.test(currentSection.title);
+
+      if (isWorkHistory && lastBlock && lastBlock.type === 'h2' && !lastBlock.rightContent) {
+        const existing = lastBlock.rightContent || '';
+        const fullRight = rightContent ? `${rightContent} | ${subtitle}` : subtitle;
+        lastBlock.rightContent = existing ? `${existing} | ${fullRight}` : fullRight;
+        // Also set currentEntry fields so the generator sees correct data
+        currentEntry.subtitle = subtitle;
+        if (rightContent) {
+          const dateSep = rightContent.indexOf(' - ');
+          if (dateSep > 0) {
+            currentEntry.startDate = rightContent.slice(0, dateSep).trim();
+            currentEntry.endDate = rightContent.slice(dateSep + 3).trim();
+          } else {
+            currentEntry.startDate = rightContent;
+          }
+        }
+        // Also push an H3 block so the editor round-trip preserves subtitle/dates
+        const dateStr = [currentEntry.startDate, currentEntry.endDate].filter(Boolean).join(' -- ');
+        currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent: dateStr });
+      } else {
+        if (currentEntry.subtitle) {
+          const savedTitle = currentEntry.title
+          flushEntry()
+          currentEntry = { title: savedTitle, subtitle, startDate: '', endDate: '', description: '' }
+        } else {
+          currentEntry.subtitle = subtitle
+        }
+
+        if (rightContent) {
+          const dateSep = rightContent.indexOf(' - ')
+          if (dateSep > 0) {
+            currentEntry.startDate = rightContent.slice(0, dateSep).trim()
+            currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
+          } else {
+            currentEntry.startDate = rightContent
+          }
+        }
+        currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent })
+      }
       continue
     }
 
-    // Collect other lines (description)
-    // Auto-create entry for sections with plain text (no H3 headers),
-    // e.g. 志望の動機, 本人希望記入欄 in rirekisho resumes.
-    if (trimmed) {
-      if (!currentEntry && currentSection) {
+    // Content lines
+    if (trimmed && currentSection) {
+      if (!currentEntry) {
         currentEntry = { title: '', subtitle: '', startDate: '', endDate: '', description: '' }
-        currentEntryLines = []
       }
-      if (currentEntry) {
-        currentEntryLines.push(trimmed)
+      currentEntryLines.push(trimmed)
+      
+      const type = trimmed.startsWith('- ') ? 'bullet' : 'paragraph'
+      const content = trimmed.startsWith('- ') ? trimmed.slice(2).trim() : trimmed
+      
+      let finalContent = content
+      let bold = false
+      const bMatch = content.match(/^\*\*(.+)\*\*$/)
+      if (bMatch) {
+        finalContent = bMatch[1]
+        bold = true
       }
+      
+      currentSection.blocks!.push({ id: genId('blk'), type, content: finalContent, bold })
     }
   }
 
@@ -155,7 +243,6 @@ export function parseMarkdownResume(md: string): ResumeData {
         .filter(Boolean)
         .join('\n')
     }
-    // If it's Education section, map to education array
     if (currentSection.title === 'Education') {
       education.push({
         id: genId('edu'),
@@ -181,13 +268,12 @@ export function parseMarkdownResume(md: string): ResumeData {
   }
 
   function flushSection() {
-    if (currentSection && currentSection.entries.length > 0) {
+    if (currentSection && (currentSection.entries.length > 0 || currentSection.blocks?.length)) {
       sections.push(currentSection)
     }
     currentSection = null
   }
 
-  // Extract summary from 職務要約 or 志望の動機 section (if present)
   const summary = sections.find(s => /職務要約|志望の動機|自己PR/i.test(s.title))?.entries?.[0]?.description || ''
 
   return {
@@ -224,7 +310,6 @@ function escapeYaml(val: string): string {
 export function generateMarkdownResume(data: ResumeData): string {
   const lines: string[] = []
 
-  // YAML frontmatter
   lines.push('---')
   if (data.personal.firstName) lines.push(`firstName: ${escapeYaml(data.personal.firstName)}`)
   if (data.personal.lastName) lines.push(`lastName: ${escapeYaml(data.personal.lastName)}`)
@@ -239,24 +324,22 @@ export function generateMarkdownResume(data: ResumeData): string {
   lines.push('---')
   lines.push('')
 
-  // Education section
   if (data.education && data.education.length > 0) {
     lines.push('## Education')
     lines.push('')
     for (const edu of data.education) {
       lines.push(`### ${edu.school}`)
       const dateStr = [edu.startDate, edu.endDate].filter(Boolean).join(' - ')
-      const meta = [edu.degree, dateStr].filter(Boolean).join(' | ')
-      if (meta) lines.push(`**${meta}**`)
+      if (edu.degree || dateStr) {
+        lines.push(`#### ${[edu.degree, dateStr].filter(Boolean).join(' | ')}`)
+      }
       if (edu.description) lines.push(edu.description)
       if (edu.location) lines.push(edu.location)
       lines.push('')
     }
   }
 
-  // Sections
   for (const section of data.sections) {
-    // 免許・資格 uses "- **Category**: names" format
     if (/免許・資格/.test(section.title)) {
       lines.push(`## ${section.title}`)
       lines.push('')
@@ -273,18 +356,9 @@ export function generateMarkdownResume(data: ResumeData): string {
     lines.push('')
     for (const entry of section.entries) {
       lines.push(`### ${entry.title}`)
-      if (entry.subtitle && (entry.startDate || entry.endDate)) {
-        const dateStr = [entry.startDate, entry.endDate].filter(Boolean).join(' - ')
-        lines.push(`**${entry.subtitle}** | ${dateStr}`)
-      } else if (entry.subtitle) {
-        const dateStr = [entry.startDate, entry.endDate].filter(Boolean).join(' - ')
-        if (dateStr) {
-          lines.push(`**${entry.subtitle}** | ${dateStr}`)
-        } else {
-          lines.push(`*${entry.subtitle}*`)
-        }
-      } else if (entry.startDate || entry.endDate) {
-        lines.push(`**${[entry.startDate, entry.endDate].filter(Boolean).join(' - ')}**`)
+      const dateStr = [entry.startDate, entry.endDate].filter(Boolean).join(' - ')
+      if (entry.subtitle || dateStr) {
+        lines.push(`#### ${[entry.subtitle, dateStr].filter(Boolean).join(' | ')}`)
       }
       if (entry.description) {
         for (const descLine of entry.description.split('\n')) {
@@ -295,7 +369,6 @@ export function generateMarkdownResume(data: ResumeData): string {
     }
   }
 
-  // Skills
   if (data.skills && data.skills.length > 0) {
     lines.push('## Skills')
     lines.push('')

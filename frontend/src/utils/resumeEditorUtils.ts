@@ -55,10 +55,17 @@ export function educationToBlocks(education: Education[]): RichTextBlock[] {
     if (edu.description) {
       edu.description
         .split('\n')
-        .filter(l => l.trim())
-        .forEach(line => {
-          blocks.push({ id: generateId('blk'), type: 'bullet', content: line.trim() });
-        });
+        .filter((l) => l.trim())
+        .forEach((line) => {
+          let content = line.trim()
+          let bold = false
+          const boldMatch = content.match(/^\*\*(.+)\*\*$/)
+          if (boldMatch) {
+            content = boldMatch[1]
+            bold = true
+          }
+          blocks.push({ id: generateId('blk'), type: 'bullet', content, bold })
+        })
     }
   });
   return blocks;

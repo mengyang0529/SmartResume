@@ -47,9 +47,41 @@ export default function EditableBlock({
   }, [block.id])
 
   const handleContentInput = useCallback(() => {
-    const text = contentRef.current?.textContent || ''
+    let text = contentRef.current?.textContent || ''
+
+    // 1. Detect whole-line bold shortcut: **text**
+    if (!block.bold && text.startsWith('**') && text.endsWith('**') && text.length > 4) {
+      const newContent = text.slice(2, -2)
+      if (contentRef.current) contentRef.current.textContent = newContent
+      onChange(block.id, { content: newContent, bold: true })
+      return
+    }
+
+    // 2. Detect header shortcuts at the start of a paragraph/bullet
+    if (block.type === 'paragraph' || block.type === 'bullet') {
+      if (text.startsWith('# ')) {
+        const newContent = text.slice(2)
+        if (contentRef.current) contentRef.current.textContent = newContent
+        onChange(block.id, { content: newContent, type: 'h1' })
+        return
+      }
+      if (text.startsWith('## ')) {
+        const newContent = text.slice(3)
+        if (contentRef.current) contentRef.current.textContent = newContent
+        onChange(block.id, { content: newContent, type: 'h2' })
+        return
+      }
+      if (text.startsWith('### ') || text.startsWith('#### ')) {
+        const offset = text.startsWith('#### ') ? 5 : 4
+        const newContent = text.slice(offset)
+        if (contentRef.current) contentRef.current.textContent = newContent
+        onChange(block.id, { content: newContent, type: 'h3' })
+        return
+      }
+    }
+
     onChange(block.id, { content: text })
-  }, [block.id, onChange])
+  }, [block.id, block.type, block.bold, onChange])
 
   const handleRightInput = useCallback(() => {
     const text = rightRef.current?.textContent || ''
@@ -93,51 +125,6 @@ export default function EditableBlock({
             data-placeholder={getPlaceholder(block.type)}
             style={{ color: block.color || undefined }}
           />
-
-          {/* Metadata for Shokumu Keirekisho */}
-          {showMetadata && block.type === 'h2' && (
-            <div className={clsx(
-              "mt-2 ml-1 pl-3 border-l-2 border-[rgba(0,0,0,0.05)] space-y-1.5 transition-all overflow-hidden",
-              !isActive && !block.projectName && !block.teamSize && !block.technologies ? "h-0 opacity-0" : "h-auto opacity-100 py-1"
-            )}>
-              {(isActive || block.projectName) && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-warm-400 uppercase tracking-wider w-20 shrink-0">Project</span>
-                  <input
-                    className="bg-transparent outline-none w-full text-xs text-warm-700 placeholder:text-warm-300"
-                    placeholder="Project Name (e.g. EC Site Renewal)"
-                    value={block.projectName || ''}
-                    onChange={e => onChange(block.id, { projectName: e.target.value })}
-                    onFocus={() => onFocus(block.id)}
-                  />
-                </div>
-              )}
-              {(isActive || block.teamSize) && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-warm-400 uppercase tracking-wider w-20 shrink-0">Team Size</span>
-                  <input
-                    className="bg-transparent outline-none w-full text-xs text-warm-700 placeholder:text-warm-300"
-                    placeholder="Team Size (e.g. 5 members)"
-                    value={block.teamSize || ''}
-                    onChange={e => onChange(block.id, { teamSize: e.target.value })}
-                    onFocus={() => onFocus(block.id)}
-                  />
-                </div>
-              )}
-              {(isActive || block.technologies) && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-warm-400 uppercase tracking-wider w-20 shrink-0">Tech Stack</span>
-                  <input
-                    className="bg-transparent outline-none w-full text-xs text-warm-700 placeholder:text-warm-300"
-                    placeholder="Technologies (e.g. React, TypeScript, Node.js)"
-                    value={block.technologies || ''}
-                    onChange={e => onChange(block.id, { technologies: e.target.value })}
-                    onFocus={() => onFocus(block.id)}
-                  />
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Right content */}
