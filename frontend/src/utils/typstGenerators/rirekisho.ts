@@ -203,12 +203,24 @@ ${authorBlock}
     for (let i = 0; i < skillsBlocks.length; i++) {
       const bk = skillsBlocks[i];
       if (bk.type === 'h1' && /志望の動機|自己PR/i.test(bk.content)) {
-        const next = skillsBlocks.slice(i + 1).find(b => b.type !== 'h1');
-        if (next) motivationContent = next.content;
+        const contents: string[] = [];
+        for (let j = i + 1; j < skillsBlocks.length; j++) {
+          if (skillsBlocks[j].type === 'h1') break;
+          contents.push(skillsBlocks[j].content);
+        }
+        if (contents.length > 0) {
+          motivationContent = contents.join('\n').trim();
+        }
       }
       if (bk.type === 'h1' && /本人希望記入欄/i.test(bk.content)) {
-        const next = skillsBlocks.slice(i + 1).find(b => b.type !== 'h1');
-        if (next) requestsContent = next.content;
+        const contents: string[] = [];
+        for (let j = i + 1; j < skillsBlocks.length; j++) {
+          if (skillsBlocks[j].type === 'h1') break;
+          contents.push(skillsBlocks[j].content);
+        }
+        if (contents.length > 0) {
+          requestsContent = contents.join('\n').trim();
+        }
       }
     }
   }

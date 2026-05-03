@@ -70,7 +70,7 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
     if (block.type === 'h1') {
       section.title = block.content
     } else if (block.type === 'h2') {
-      if (inEntry && current.title) {
+      if (inEntry && (current.title || current.description)) {
         section.entries.push(current as Entry)
       }
       current = { id: crypto.randomUUID(), title: block.content, location: block.rightContent || undefined }
@@ -86,14 +86,18 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
       } else {
         current.startDate = rc.trim()
       }
-    } else if (inEntry && (block.type === 'bullet' || block.type === 'paragraph')) {
+    } else if (block.type === 'bullet' || block.type === 'paragraph') {
+      if (!inEntry) {
+        inEntry = true
+        current = { id: crypto.randomUUID(), title: '', subtitle: '', startDate: '', endDate: '' }
+      }
       current.description = current.description
         ? current.description + '\n' + block.content
         : block.content
     }
   })
 
-  if (inEntry && current.title) {
+  if (inEntry && (current.title || current.description)) {
     section.entries.push(current as Entry)
   }
   

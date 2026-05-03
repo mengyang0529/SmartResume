@@ -1,14 +1,16 @@
 # 开发日志
 
-## [计划] 添加日式職務経歴書（Shokumu Keirekisho）模板
+---
+
+## ✅ [已完成] 添加日式職務経歴書（Shokumu Keirekisho）模板
 
 ### 背景
 
-目前已有两种日式简历支持：
+已有两种日式简历支持：
 - **履歴書（Rirekisho）**：表格格式，简洁呈现学歴・職歴・免許・資格・志望の動機
 - **Awesome-CV 系列**：西式简历，基于条目（entry/item）排版
 
-需要新增 **職務経歴書（Shokumu Keirekisho）**，用于详细描述职业经历和项目经验，是日企招聘中常见的补充材料。与履歴書的核心区别在于：
+新增 **職務経歴書（Shokumu Keirekisho）**，用于详细描述职业经历和项目经验，是日企招聘中常见的补充材料。
 
 | 维度 | 履歴書（Rirekisho） | 職務経歴書（Shokumu Keirekisho） |
 |---|---|---|
@@ -20,165 +22,26 @@
 ### 職務経歴書的标准结构
 
 1. **基本情報**：氏名、生年月日、最終学歴、住所、連絡先
-2. **職務要約**：职业概述（3-5 句话概括职业方向、核心优势、目标岗位）
-3. **職務経歴**（核心）：
-   - 期間（YYYY年MM月 ～ YYYY年MM月）
-   - 所属会社名
-   - プロジェクト名（可选）
-   - チーム規模 / 役割
-   - 使用技術（技术栈）
-   - 担当業務・実績（详细描述，可含 bullet points）
-4. **活かせるスキル・知識**：技能矩阵（语言、框架、工具、领域知识）
+2. **職務要約**：职业概述
+3. **職務経歴**（核心）：期間、所属会社名、プロジェクト名、チーム規模/役割、使用技術、担当業務・実績
+4. **活かせるスキル・知識**：技能矩阵
 5. **資格**：资格证书列表
 6. **自己PR**：自我推销（可选）
 
----
+### 实现结果
 
-### 实现步骤
+| Step | 内容 | 状态 |
+|---|---|---|
+| 1 | 扩展 `Entry` 接口（新增 `projectName` / `teamSize` / `technologies`）；扩展 `TemplateSettings.template` 联合类型 | ✅ |
+| 2 | 创建 `public/templates/shokumukeirekisho/shokumukeirekisho.typ` | ✅ |
+| 3 | 创建 `utils/typstGenerators/shokumukeirekisho.ts` | ✅ |
+| 4 | 注册模板（`index.ts` / `templates.ts` / `compiler.worker.ts` / `types/resume.ts`） | ✅ |
+| 5 | 添加 `SHOKUMU_SAMPLE_DATA` 示例数据 | ✅ |
+| 6 | `useResumePersistence.ts` sample data 选择逻辑适配 | ✅ |
+| 7 | 生成 `shokumukeirekisho.webp` 预览图 | ✅ |
+| 8 | 编辑器采用策略 A（继续使用现有 RichTextEditor，不新增独立字段） | ✅ |
 
-#### Step 1: 扩展数据模型（`types/resume.ts`）
-
-`Entry` 接口新增職務経歴書专用的可选字段，不破坏现有模板：
-
-```typescript
-export interface Entry {
-  id: string
-  title: string          // 公司名
-  subtitle: string       // 职位/役割
-  location?: string      // 地点
-  startDate: string
-  endDate?: string
-  description?: string   // 详细描述（担当業務・実績）
-  highlights?: string[]  // 亮点/成果列表
-  // --- 職務経歴書新增字段（全部可选） ---
-  projectName?: string   // プロジェクト名
-  teamSize?: string      // チーム規模
-  technologies?: string  // 使用技術（逗号分隔）
-}
-```
-
-#### Step 2: 创建 Typst 模板文件
-
-新建 `frontend/public/templates/shokumukeirekisho/shokumukeirekisho.typ`：
-
-- 页面设置：A4，上下左右 margins 约 15-20mm
-- 字体：Noto Sans CJK JP（正文 10pt，标题 12pt）
-- 排版逻辑：
-  - 头部：基本情報区块（氏名、生年月日、最終学歴、住所、連絡先）
-  - 職務要約：独立区块，带下划线标题
-  - 職務経歴：每条经历为一个独立卡片/区块，包含：
-    - 期間 + 会社名（加粗标题行）
-    - プロジェクト名（如有，子标题）
-    - チーム規模・役割（小字灰色）
-    - 使用技術（标签式排版）
-    - 担当業務・実績（正文段落 + bullet list）
-  - 活かせるスキル・知識：分类列表（Languages / Frameworks / Tools / Domains）
-  - 資格：列表
-  - 自己PR：段落
-
-#### Step 3: 创建 JS 生成器
-
-新建 `frontend/src/utils/typstGenerators/shokumukeirekisho.ts`：
-
-- `generateShokumuKeirekishoTypst(data, settings, skillsBlocks)`
-- 日期格式：统一为 `YYYY年MM月`
-- 技能处理：与 rirekisho 类似，按 category 分组
-- 经历排序：按 startDate 倒序（最新在前）
-- 经历详细渲染逻辑：
-  - 如果 entry 有 `projectName` / `teamSize` / `technologies`，生成结构化区块
-  - 如果只有 `description`，生成简化版（兼容现有数据）
-
-#### Step 4: 注册模板
-
-修改以下文件：
-
-1. **`utils/typstGenerators/index.ts`**
-   ```typescript
-   import { generateShokumuKeirekishoTypst } from './shokumukeirekisho';
-   const generators: Record<string, TypstGenerator> = {
-     // ... existing
-     shokumukeirekisho: generateShokumuKeirekishoTypst,
-   };
-   ```
-
-2. **`data/templates.ts`**
-   新增模板配置项：
-   ```typescript
-   {
-     id: 5,
-     slug: 'shokumukeirekisho',
-     name: 'Shokumu Keirekisho',
-     category: 'Japanese',
-     description: 'Japanese career history document (職務経歴書) with detailed project experience, tech stacks, and achievements.',
-     previewImage: '/template-previews/shokumukeirekisho.webp',
-     settings: {
-       colorScheme: 'awesome-red',
-       fontSize: '10pt',
-       paperSize: 'a4paper',
-       sectionColorHighlight: false,
-       headerAlignment: 'L',
-       template: 'shokumukeirekisho',
-     },
-   }
-   ```
-
-3. **`compiler/compiler.worker.ts`**
-   在 `ensureInitialized()` 中加载新模板：
-   ```typescript
-   const skResp = await fetch('/templates/shokumukeirekisho/shokumukeirekisho.typ')
-   const skText = await skResp.text()
-   await $typst.addSource('/shokumukeirekisho/shokumukeirekisho.typ', skText)
-   ```
-
-4. **`types/resume.ts` 中 `TemplateSettings.template`**
-   扩展联合类型：
-   ```typescript
-   template?: 'classic' | 'modern' | 'art' | 'rirekisho' | 'shokumukeirekisho'
-   ```
-
-#### Step 5: 添加示例数据
-
-在 `data/sampleResume.ts` 中新增 `SHOKUMU_SAMPLE_DATA`：
-
-- 包含 2-3 条详细工作经历（带 projectName、teamSize、technologies）
-- 職務要約段落
-- 活かせるスキル・知識分类
-- 資格列表
-- 自己PR
-
-#### Step 6: 持久化层适配
-
-`useResumePersistence.ts` 中模板切换时的 sample data 选择逻辑，新增 `shokumukeirekisho` 分支：
-
-```typescript
-const data =
-  templateSettings.template === 'rirekisho'
-    ? RIREKISHO_SAMPLE_DATA
-    : templateSettings.template === 'shokumukeirekisho'
-      ? SHOKUMU_SAMPLE_DATA
-      : SAMPLE_RESUME_DATA;
-```
-
-#### Step 7: 预览图
-
-- 生成 `public/template-previews/shokumukeirekisho.webp`
-- 尺寸参考现有预览图（约 4:5 比例）
-
-#### Step 8: 编辑器 UX 微调（可选）
-
-職務経歴書的每条工作经历需要更多字段输入，但目前编辑器使用 `RichTextBlock`（H1/H2/H3/bullet/paragraph），所有经历信息都压缩在 `description` 文本里。
-
-**有两种策略：**
-
-**策略 A（推荐，MVP）：** 继续使用现有 RichTextEditor，通过约定格式让用户在 description 中输入结构化信息（如 Markdown 列表），生成器负责解析。优点是改动最小，零 UI 变更。
-
-**策略 B（增强版）：** 为 Shokumu Keirekisho 模板定制一个增强型编辑器区域，每个 entry 可填写 projectName、teamSize、technologies 等独立字段。优点是体验更好，但需要修改编辑器 UI 和数据流。
-
-**MVP 采用策略 A**，后续迭代可考虑策略 B。
-
----
-
-### 文件变更清单
+### 文件变更清单（已落地）
 
 | 文件 | 操作 | 说明 |
 |---|---|---|
@@ -194,12 +57,87 @@ const data =
 
 ---
 
+## 🔧 [待办] 统一预览图生成与前端 PDF 生成逻辑
+
+### 问题描述
+
+当前模板预览图（`.webp`）和实际 PDF 的 Typst 源码由**两套完全独立的代码**生成：
+
+| | 预览图 | 前端 PDF |
+|---|---|---|
+| 入口 | `scripts/generate-template-previews.mjs` | `utils/typstGenerators/*.ts` |
+| 运行环境 | Node.js + Typst CLI | 浏览器 + Web Worker + typst.ts wasm |
+| 数据输入 | `src/data/sample-xxx.md` | `ResumeData`（运行时状态） |
+| Typst 拼接 | `buildAwesomeCvTypst()` / `buildRirekishoTypst()` / `buildShokumuKeirekishoTypst()` | `generateAwesomeCvTypst()` / `generateRirekishoTypst()` / `generateShokumuKeirekishoTypst()` |
+
+**风险**：
+- 修改模板排版时，容易只改前端而漏改预览图脚本，导致预览图与实际 PDF 不一致
+- 维护成本高（同一套 Typst 拼接逻辑写两遍）
+- 新增模板时必须同时维护两套生成逻辑
+
+### 方案对比
+
+| 方案 | 描述 | 优点 | 缺点 | 推荐度 |
+|---|---|---|---|---|
+| **A. 脚本直接复用前端生成器** | 脚本通过 tsx/ts-node 直接 import `utils/typstGenerators/*.ts` 的纯函数，传入构造好的 `ResumeData` | 零重复代码，单点维护 | 需要解决 TS→Node 的运行问题（tsx / ts-node） | ⭐ 推荐 |
+| **B. 抽离共享生成模块** | 把 Typst 拼接逻辑抽到 `shared/typst-generators/`（纯 JS/TS，不依赖 React），前端和脚本共同 import | 彻底解耦，两边都干净 | 需要重构目录，改动面较大 | 长期可行 |
+| **C. 脚本调用前端构建产物** | 前端 build 时把生成器编译为 ESM，脚本直接 import 产物 | 不需要 TS 运行时 | 增加了 build 步骤的耦合 | 一般 |
+| **D. 保持现状，加同步注释** | 在脚本和生成器文件顶部加注释，提醒修改时必须同步 | 零重构成本 | 靠人记忆，迟早会漏 | 短期兜底 |
+
+### 推荐方案：A（脚本复用前端生成器）
+
+`utils/typstGenerators/*.ts` 已经是**纯函数**（只接收 data/settings，返回字符串，不依赖 React/DOM/Worker），理论上可以直接在 Node.js 运行。
+
+实施步骤：
+
+1. **改造脚本运行方式**
+   - 将 `generate-template-previews.mjs` 改为 `.mts`（或保持 `.mjs` 但用 `tsx` 执行）
+   - 安装 `tsx` 作为 devDependency：`npm install -D tsx`
+   - package.json 脚本改为：`"generate:template-previews": "tsx scripts/generate-template-previews.ts"`
+
+2. **改造数据准备**
+   - 脚本不再自己解析 Markdown 拼接 Typst
+   - 直接 import 前端的 sample data：`SAMPLE_RESUME_DATA`、`RIREKISHO_SAMPLE_DATA`、`SHOKUMU_SAMPLE_DATA`
+   - 或者通过 `parseMarkdownResume()` 把 `sample-xxx.md` 转成 `ResumeData`
+
+3. **调用前端生成器**
+   ```typescript
+   import { generateResumeTypst } from '../src/utils/typstGenerators/index';
+   
+   const source = generateResumeTypst(resumeData, template.settings);
+   // 然后 typst compile → magick → webp
+   ```
+
+4. **删除冗余代码**
+   - 删除脚本中的 `buildAwesomeCvTypst()` / `buildRirekishoTypst()` / `buildShokumuKeirekishoTypst()`
+   - 删除脚本中的 Markdown 解析逻辑（如果改用 import sample data）
+
 ### 验收标准
 
-- [ ] 模板选择页面出现 "Shokumu Keirekisho" 卡片
-- [ ] 点击后进入编辑器，加载示例数据（含详细工作经历）
-- [ ] 预览 PDF 正确渲染職務経歴書格式（基本情報 → 職務要約 → 職務経歴 → スキル → 資格 → 自己PR）
-- [ ] 每条工作经历展示：期間、会社名、プロジェクト名、チーム規模、使用技術、担当業務
-- [ ] 日期格式统一为日式 `YYYY年MM月`
-- [ ] 技能按 category 分组展示
-- [ ] 无编译错误，现有模板不受影响
+- [ ] `npm run generate:template-previews` 成功生成所有 5 张预览图
+- [ ] 删除脚本中所有 `buildXxxTypst()` 函数
+- [ ] 预览图与实际 PDF 的 Typst 源码来自同一套生成器
+- [ ] 新增第 6 个模板时，只需维护 `utils/typstGenerators/*.ts`，无需修改脚本
+
+---
+
+## 📋 后续迭代（低优先级）
+
+### 職務経歴書编辑器增强（策略 B）
+
+当前職務経歴書采用 **策略 A**（MVP）：继续使用现有 RichTextEditor，所有经历信息压缩在 `description` 文本中。
+
+未来可考虑为 Shokumu Keirekisho 定制增强型编辑器：
+- 每条经历可独立填写 `projectName`、`teamSize`、`technologies` 字段
+- 在 `ResumePersonalInfoSection` 或 `RichTextEditor` 旁增加结构化输入面板
+- 需要评估：改动面较大，收益是 UX 更好，但当前策略 A 已满足基本使用
+
+### ProfilePage 路由注册或移除
+
+`pages/ProfilePage.tsx` 是一个完整的 Job Application Tracker 页面，但 `App.tsx` 路由表中没有 `/profile` 路径。需要决策：
+- 加路由 → 在导航栏增加 Profile 入口
+- 删除 → 移除死代码
+
+### 测试覆盖
+
+`utils/resumeTransforms.test.ts` 目前只有一处测试文件，可以考虑为 `typstGenerators/*.ts` 添加单元测试（验证生成器输出包含预期 Typst 语法）。

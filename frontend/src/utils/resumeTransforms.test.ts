@@ -64,5 +64,21 @@ describe('resumeTransforms', () => {
       expect(blocks[0].content).toBe('Real School')
       expect(blocks[0].color).toBe('#123456')
     })
+
+    it('should parse text-only sections into a default entry', () => {
+      const blocks: RichTextBlock[] = [
+        { id: 'b1', type: 'h1', content: 'Professional Summary' },
+        { id: 'b2', type: 'paragraph', content: 'An experienced software engineer with a passion for building great products.' },
+        { id: 'b3', type: 'bullet', content: 'Proficient in TypeScript and React.' },
+      ]
+
+      const section = blocksToSection(blocks, 'sec-1')
+      expect(section.title).toBe('Professional Summary')
+      expect(section.entries).toHaveLength(1)
+      expect(section.entries[0].title).toBe('')
+      expect(section.entries[0].description).toBe(
+        'An experienced software engineer with a passion for building great products.\nProficient in TypeScript and React.'
+      )
+    })
   })
 })

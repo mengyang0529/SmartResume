@@ -89,9 +89,31 @@ ${authorBlock}
 `;
 
   // ── 職務要約 ──
-  const summarySection = sections.find(s => /職務要約/.test(s.title));
-  const summaryFromSection = summarySection?.entries?.[0]?.description || '';
-  const effectiveSummary = data.summary || summaryFromSection;
+  const summarySection = sections.find(s => /職務要約/i.test(s.title));
+  const summaryFromSection = summarySection?.entries?.map(e => e.description).filter(Boolean).join('\n') || '';
+  
+  // Prefer the editor section content over the (potentially stale) data.summary
+  let effectiveSummary = (summaryFromSection || data.summary || '').trim();
+
+  // Fallback: search in skillsBlocks if still not found
+  if (!effectiveSummary && skillsBlocks) {
+    for (let i = 0; i < skillsBlocks.length; i++) {
+      const bk = skillsBlocks[i];
+      if (bk.type === 'h1' && /職務要約/i.test(bk.content)) {
+        // Collect all subsequent blocks until next H1
+        const contents: string[] = [];
+        for (let j = i + 1; j < skillsBlocks.length; j++) {
+          if (skillsBlocks[j].type === 'h1') break;
+          contents.push(skillsBlocks[j].content);
+        }
+        if (contents.length > 0) {
+          effectiveSummary = contents.join('\n').trim();
+        }
+        break;
+      }
+    }
+  }
+
   if (effectiveSummary) {
     typst += `// ── Professional Summary ──
 #section-title[職務要約]
@@ -215,8 +237,14 @@ ${escapeContentBlock(effectiveSummary)}
     for (let i = 0; i < skillsBlocks.length; i++) {
       const bk = skillsBlocks[i];
       if (bk.type === 'h1' && /志望の動機|自己PR/i.test(bk.content)) {
-        const next = skillsBlocks.slice(i + 1).find(b => b.type !== 'h1');
-        if (next) selfPrContent = next.content;
+        const contents: string[] = [];
+        for (let j = i + 1; j < skillsBlocks.length; j++) {
+          if (skillsBlocks[j].type === 'h1') break;
+          contents.push(skillsBlocks[j].content);
+        }
+        if (contents.length > 0) {
+          selfPrContent = contents.join('\n').trim();
+        }
         break;
       }
     }
