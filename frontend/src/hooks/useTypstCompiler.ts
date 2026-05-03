@@ -24,6 +24,13 @@ export function useTypstCompiler(
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sourceRef = useRef<string>('')
   const pendingCompileIdRef = useRef<number | undefined>(undefined)
+  const onCompileResultRef = useRef(options.onCompileResult)
+
+  // Update ref when callback changes
+  useEffect(() => {
+    onCompileResultRef.current = options.onCompileResult
+  }, [options.onCompileResult])
+
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null)
   const [isCompiling, setIsCompiling] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +62,8 @@ export function useTypstCompiler(
             if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl)
             const blob = new Blob([pdfBytes], { type: 'application/pdf' })
             setPdfBlobUrl(URL.createObjectURL(blob))
-            options.onCompileResult?.(pdfBytes, compileId)
+            // Use the ref to call the LATEST callback
+            onCompileResultRef.current?.(pdfBytes, compileId)
           }
           setError(null)
           break

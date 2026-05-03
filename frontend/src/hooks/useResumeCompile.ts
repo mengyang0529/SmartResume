@@ -29,7 +29,9 @@ export function useResumeCompile(config: {
     setPdfUrl(url);
 
     // Save to history on successful compile
-    historyService.saveSnapshot({ ...resumeData, skillsBlocks });
+    historyService.saveSnapshot({ ...resumeData, skillsBlocks }).then(() => {
+      console.log('✅ Resume snapshot saved to Time Machine');
+    });
   }, [resumeData, skillsBlocks]);
 
   const {
