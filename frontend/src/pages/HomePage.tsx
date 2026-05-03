@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaArrowRight, FaEdit, FaFilePdf, FaShieldAlt, FaLanguage, FaRocket } from 'react-icons/fa';
+import { 
+  FaArrowRight, 
+  FaShieldAlt, 
+  FaLanguage, 
+  FaRocket, 
+  FaMagic,
+  FaDownload,
+  FaRobot,
+  FaFileImport,
+  FaImage
+} from 'react-icons/fa';
 import localforage from 'localforage';
 import type { ResumeData } from '../types/resume';
 import { RESUME_TEMPLATES } from '../data/templates';
@@ -41,17 +51,17 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(0,117,222,0.08)] border border-[rgba(0,117,222,0.1)] text-[#0075de] text-[10px] font-bold uppercase tracking-widest mb-6">
-                <FaRocket className="text-[9px]" />
-                Powered by Typst & Markdown
+                <FaMagic className="text-[9px]" />
+                LLM-Assisted Resume Engineering
               </div>
 
               <h1 className="text-4xl md:text-6xl font-extrabold text-[rgba(0,0,0,0.95)] leading-[1.1] tracking-tight">
-                Your Resume, <br />
-                <span className="text-[#0075de]">Professionally Engineered.</span>
+                From PDF to Professional <br />
+                <span className="text-[#0075de]">Powered by AI.</span>
               </h1>
 
               <p className="mt-8 text-lg md:text-xl text-warm-500 max-w-2xl mx-auto leading-relaxed">
-                Skip the formatting headache. Write your content in a clean, block-based editor and get a production-grade PDF instantly. 100% private, 100% free.
+                Transform your existing resume into a perfectly formatted PDF using LLMs. Select a style, follow the guide, and get hired.
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -59,7 +69,7 @@ export default function HomePage() {
                   onClick={() => navigate('/templates')}
                   className="w-full sm:w-auto px-8 py-4 bg-[#0075de] text-white rounded-xl font-bold shadow-lg shadow-[rgba(0,117,222,0.25)] hover:bg-[#005bab] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group"
                 >
-                  Start Building Now
+                  Get Started
                   <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
                 </button>
                 {hasSavedResume && (
@@ -75,17 +85,17 @@ export default function HomePage() {
               <div className="mt-8 flex items-center justify-center gap-6 text-[11px] text-warm-400 font-medium">
                 <div className="flex items-center gap-1.5">
                   <FaShieldAlt className="text-[#2a9d99]" />
-                  Client-side Only
+                  100% Private
                 </div>
                 <div className="w-1 h-1 rounded-full bg-warm-300" />
                 <div className="flex items-center gap-1.5">
-                  <FaFilePdf className="text-[#dc3522]" />
-                  Vector PDF Export
+                  <FaRobot className="text-[#0075de]" />
+                  LLM Ready
                 </div>
                 <div className="w-1 h-1 rounded-full bg-warm-300" />
                 <div className="flex items-center gap-1.5">
                   <FaLanguage className="text-[#0075de]" />
-                  JP Support
+                  EN/JP Support
                 </div>
               </div>
             </motion.div>
@@ -93,24 +103,50 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. Feature Grid */}
-      <section className="py-20 bg-[#f6f5f4] border-y border-[rgba(0,0,0,0.05)]">
+      {/* 2. Guided Workflow Section */}
+      <section className="py-24 bg-[#f6f5f4] border-y border-[rgba(0,0,0,0.05)]">
         <div className="container-narrow">
-          <div className="grid md:grid-cols-3 gap-12">
-            <FeatureItem
-              icon={<FaEdit className="text-[#0075de]" />}
-              title="Block-Based Editing"
-              description="Forget dragging text boxes. Organize your career into structured blocks that stay perfectly aligned."
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-[rgba(0,0,0,0.95)]">How it Works</h2>
+            <p className="mt-4 text-warm-500 max-w-xl mx-auto">Follow these 4 simple steps to regenerate your resume with professional formatting.</p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-8 relative">
+            {/* Step 1 */}
+            <WorkflowStep
+              number={1}
+              icon={<FaRocket className="text-[#0075de]" />}
+              title="Pick a Template"
+              description="Browse our gallery and choose the visual style that fits your career goals."
             />
-            <FeatureItem
-              icon={<FaFilePdf className="text-[#dc3522]" />}
-              title="Typst Rendering"
-              description="High-fidelity typography used by researchers. Get perfectly kerned, professional-looking PDFs every time."
+            {/* Step 2 */}
+            <WorkflowStep
+              number={2}
+              icon={<FaDownload className="text-[#2a9d99]" />}
+              title="Download Schema"
+              description="Get the specialized Markdown schema for your chosen template to guide the AI."
             />
-            <FeatureItem
-              icon={<FaLanguage className="text-[#2a9d99]" />}
-              title="Japanese Ready"
-              description="Built-in support for traditional Rirekisho and Shokumukeirekisho formats with precise layouts."
+            {/* Step 3 */}
+            <WorkflowStep
+              number={3}
+              icon={<FaRobot className="text-[#dc3522]" />}
+              title="Process with AI"
+              description="Convert your PDF to image for better accuracy, then send it to ChatGPT/Claude with the schema."
+              tip={
+                <div className="mt-3 p-2 bg-yellow-50 border border-yellow-100 rounded-lg text-[10px] text-yellow-800 leading-tight">
+                  <div className="flex items-center gap-1 font-bold mb-1 text-left">
+                    <FaImage /> Pro Tip
+                  </div>
+                  <p className="text-left">Images (PNG/JPG) work better than raw PDF text for complex layouts.</p>
+                </div>
+              }
+            />
+            {/* Step 4 */}
+            <WorkflowStep
+              number={4}
+              icon={<FaFileImport className="text-[#0075de]" />}
+              title="Import & Polish"
+              description="Paste the generated Markdown into our editor to get your production-grade PDF."
             />
           </div>
         </div>
@@ -184,16 +220,28 @@ export default function HomePage() {
   );
 }
 
-function FeatureItem({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+interface WorkflowStepProps {
+  number: number;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+  tip?: React.ReactNode;
+}
+
+function WorkflowStep({ number, icon, title, description, action, tip }: WorkflowStepProps) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-[rgba(0,0,0,0.05)] flex items-center justify-center text-xl">
+    <div className="relative flex flex-col items-center text-center">
+      <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-[rgba(0,0,0,0.05)] flex items-center justify-center text-2xl relative mb-6">
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#0075de] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg">
+          {number}
+        </div>
         {icon}
       </div>
-      <div>
-        <h3 className="font-bold text-[rgba(0,0,0,0.95)] text-lg mb-2">{title}</h3>
-        <p className="text-warm-500 text-sm leading-relaxed">{description}</p>
-      </div>
+      <h3 className="font-bold text-[rgba(0,0,0,0.95)] text-lg mb-3">{title}</h3>
+      <p className="text-warm-500 text-sm leading-relaxed mb-2">{description}</p>
+      {action}
+      {tip}
     </div>
   );
 }

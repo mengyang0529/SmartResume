@@ -27,7 +27,7 @@ export default function TemplatesPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: index * 0.04 }}
-              onClick={() => navigate(`/editor/${template.slug}`)}
+              onClick={() => navigate(`/import/${template.slug}`)}
               className="group text-left bg-white border border-[rgba(0,0,0,0.1)] rounded-lg p-4 md:p-5 shadow-sm hover:shadow-deep hover:border-[rgba(0,117,222,0.35)] transition-all"
             >
               <div className="aspect-[4/5] rounded-md bg-[#f0efed] border border-[rgba(0,0,0,0.08)] mb-4 overflow-hidden">
