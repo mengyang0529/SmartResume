@@ -24,7 +24,6 @@ export function useResumeEditor() {
   );
   const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([]);
   const [skillsBlocks, setSkillsBlocks] = useState<RichTextBlock[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
   const [isSample, setIsSample] = useState(false);
 
   // ── Compile ──────────────────────────────────────────────────
@@ -136,8 +135,6 @@ export function useResumeEditor() {
     setModuleBlocks,
     skillsBlocks,
     setSkillsBlocks,
-    showHistory,
-    setShowHistory,
     isSample,
     setIsSample,
     pdfUrl: compile.pdfUrl,
@@ -157,7 +154,6 @@ export function useResumeEditor() {
     openImportFile: persist.openImportFile,
     handleExportMarkdown,
     handleDownloadPdf: compile.handleDownloadPdf,
-    handleHistoryRestore: persist.handleHistoryRestore,
     addSection,
   };
 }

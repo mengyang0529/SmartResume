@@ -2,7 +2,6 @@ import { useCallback } from 'react'
 import clsx from 'clsx'
 
 import { RichTextEditor } from '../components/RichTextEditor'
-import HistoryPanel from '../components/HistoryPanel'
 import ResumeEditorToolbar from '../components/ResumeEditorToolbar'
 import ResumePdfPreview from '../components/ResumePdfPreview'
 import ResumePersonalInfoSection from '../components/ResumePersonalInfoSection'
@@ -39,7 +38,6 @@ export default function ResumeEditorPage() {
       <ResumeEditorToolbar
         openImportFile={editor.openImportFile}
         handleExportMarkdown={editor.handleExportMarkdown}
-        setShowHistory={editor.setShowHistory}
         currentTemplate={editor.currentTemplate}
       />
 
@@ -100,12 +98,6 @@ export default function ResumeEditorPage() {
       </div>
 
       <input ref={editor.fileInputRef} type="file" accept=".md,text/markdown" className="hidden" onChange={editor.handleFileUpload} />
-
-      <HistoryPanel
-        open={editor.showHistory}
-        onClose={() => editor.setShowHistory(false)}
-        onRestore={editor.handleHistoryRestore}
-      />
     </div>
   )
 }

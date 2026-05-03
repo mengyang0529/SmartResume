@@ -1,16 +1,14 @@
-import { FaUpload, FaFileDownload, FaHistory } from 'react-icons/fa'
+import { FaUpload, FaFileDownload } from 'react-icons/fa'
 
 interface ResumeEditorToolbarProps {
   openImportFile: () => void
   handleExportMarkdown: () => void
-  setShowHistory: (v: boolean) => void
   currentTemplate: { name: string }
 }
 
 export default function ResumeEditorToolbar({
   openImportFile,
   handleExportMarkdown,
-  setShowHistory,
   currentTemplate,
 }: ResumeEditorToolbarProps) {
   return (
@@ -31,16 +29,6 @@ export default function ResumeEditorToolbar({
             >
               <FaFileDownload className="text-xs" />
               <span className="hidden sm:inline text-xs">Export</span>
-            </button>
-
-            <span className="w-px h-5 bg-[rgba(0,0,0,0.1)]" />
-
-            <button
-              onClick={() => setShowHistory(true)}
-              className="px-2.5 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)] transition-all flex items-center gap-1.5"
-            >
-              <FaHistory className="text-xs" />
-              <span className="hidden sm:inline text-xs">History</span>
             </button>
           </div>
 
