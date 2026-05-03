@@ -1,6 +1,6 @@
 import { ResumeData, TemplateSettings } from '../../types/resume';
 import { RichTextBlock } from '../../types/richText';
-import { escapeTypstContent, escapeTypstString } from './shared';
+import { escapeTypstString } from './shared';
 
 function formatDateJapanese(dateStr: string): string {
   if (!dateStr) return '';
@@ -24,27 +24,26 @@ function formatPeriod(startDate: string, endDate?: string): string {
   return `${start} ～ ${end}`;
 }
 
-function renderDescription(description: string, indent: number = 4): string {
+function todayJapanese(): string {
+  const d = new Date();
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+function escapeContentBlock(value: string): string {
+  return String(value ?? '').replace(/\\/g, '\\\\').replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/#/g, '\\#').replace(/@/g, '\\@');
+}
+
+function renderBulletItems(description: string, indent: number = 6): string {
   if (!description) return '';
   const lines = description.split('\n');
   const otherLines = lines.filter(l => !/使用技術[:：]/.test(l));
   let result = '';
   for (const line of otherLines) {
     if (line.trim()) {
-      result += `${' '.repeat(indent)}[${escapeTypstContent(line.trim())}],\n`;
+      result += `${' '.repeat(indent)}[${escapeContentBlock(line.trim())}],\n`;
     }
   }
   return result;
-}
-
-function extractTechnologies(description: string): string {
-  if (!description) return '';
-  const lines = description.split('\n');
-  const techLine = lines.find(l => /使用技術[:：]/.test(l));
-  if (techLine) {
-    return techLine.replace(/使用技術[:：]\s*/, '').trim();
-  }
-  return '';
 }
 
 export function generateShokumuKeirekishoTypst(
@@ -52,20 +51,15 @@ export function generateShokumuKeirekishoTypst(
   _settings: TemplateSettings,
   skillsBlocks?: RichTextBlock[]
 ): string {
-  const { personal, education, sections, skills } = data;
+  const { personal, sections, skills } = data;
 
   const authorEntries: string[] = [];
   authorEntries.push(`    firstname: "${escapeTypstString(personal.firstName)}",`);
   authorEntries.push(`    lastname: "${escapeTypstString(personal.lastName)}",`);
-  if (personal.birth) authorEntries.push(`    birth: "${escapeTypstString(personal.birth)}",`);
-  if (personal.address) authorEntries.push(`    address: "${escapeTypstString(personal.address)}",`);
-  if (personal.mobile) authorEntries.push(`    phone: "${escapeTypstString(personal.mobile)}",`);
-  authorEntries.push(`    email: "${escapeTypstString(personal.email)}",`);
-  if (personal.furiganaFirstName || personal.furiganaLastName) {
-    authorEntries.push(`    furigana: "${escapeTypstString((personal.furiganaLastName || '') + ' ' + (personal.furiganaFirstName || ''))}",`);
-  }
 
   const authorBlock = authorEntries.join('\n');
+
+  const dateStr = todayJapanese();
 
   let typst = `#import "shokumukeirekisho/shokumukeirekisho.typ": *
 
@@ -73,47 +67,32 @@ export function generateShokumuKeirekishoTypst(
   author: (
 ${authorBlock}
   ),
+  date: "${dateStr}",
   language: "ja",
   font: ("Noto Sans CJK JP", "Noto Sans CJK SC"),
 )
 
 `;
 
-  // ── 基本情報 ──
-  typst += `// ── Basic Info ──
-#section-title[基本情報]
-#grid(
-  columns: (auto, 1fr),
-  row-gutter: 2pt,
-  column-gutter: 8pt,
+  // ── Document header ──
+  typst += `// ── Document Header ──
+#align(center)[#text(size: 15pt, weight: "bold")[職務経歴書]]
+#v(2pt)
+#align(right)[
+  #text(size: 9pt)[${dateStr}現在]
+  #linebreak()
+  #text(size: 9pt)[氏名 ${escapeContentBlock(personal.lastName + ' ' + personal.firstName)}]
+]
+
+#v(6pt)
+
 `;
-
-  const nameKana = personal.furiganaLastName || personal.furiganaFirstName
-    ? `（${escapeTypstContent([personal.furiganaLastName, personal.furiganaFirstName].filter(Boolean).join(' '))}）`
-    : '';
-  typst += `  [#text(size: 9pt, weight: "bold")[氏名]], [#text(size: 9pt)[${escapeTypstContent(personal.lastName + ' ' + personal.firstName)}${nameKana}]],\n`;
-
-  if (personal.birth) {
-    typst += `  [#text(size: 9pt, weight: "bold")[生年月日]], [#text(size: 9pt)[${escapeTypstContent(personal.birth)}]],\n`;
-  }
-
-  // Final education for 最終学歴
-  const lastEdu = education && education.length > 0 ? education[education.length - 1] : null;
-  if (lastEdu) {
-    typst += `  [#text(size: 9pt, weight: "bold")[最終学歴]], [#text(size: 9pt)[${escapeTypstContent(lastEdu.school)}${lastEdu.degree ? ' ' + lastEdu.degree : ''}]],\n`;
-  }
-
-  if (personal.address) {
-    typst += `  [#text(size: 9pt, weight: "bold")[現住所]], [#text(size: 9pt)[${escapeTypstContent(personal.address)}]],\n`;
-  }
-  typst += `  [#text(size: 9pt, weight: "bold")[連絡先]], [#text(size: 9pt)[TEL: ${escapeTypstContent(personal.mobile || '')}  Email: ${escapeTypstContent(personal.email)}]],\n`;
-  typst += `)\n\n`;
 
   // ── 職務要約 ──
   if (data.summary) {
     typst += `// ── Professional Summary ──
 #section-title[職務要約]
-${escapeTypstContent(data.summary)}
+${escapeContentBlock(data.summary)}
 
 `;
   }
@@ -125,42 +104,81 @@ ${escapeTypstContent(data.summary)}
 #section-title[職務経歴]
 `;
     for (const sec of workSections) {
-      // Sort entries by startDate descending (newest first)
-      const sorted = [...(sec.entries || [])].sort((a, b) => {
-        return (b.startDate || '').localeCompare(a.startDate || '');
-      });
+      // Group entries by company (title) for multi-role entries
+      const byCompany: Record<string, typeof sec.entries> = {};
+      for (const entry of (sec.entries || [])) {
+        const key = entry.title;
+        if (!byCompany[key]) byCompany[key] = [];
+        byCompany[key].push(entry);
+      }
 
-      for (const entry of sorted) {
-        const period = formatPeriod(entry.startDate, entry.endDate);
-        const tech = entry.technologies || extractTechnologies(entry.description || '');
-        const desc = renderDescription(entry.description || '');
+      for (const [company, entries] of Object.entries(byCompany)) {
+        // Sort entries within company by startDate descending
+        const sorted = [...entries].sort((a, b) => {
+          return (b.startDate || '').localeCompare(a.startDate || '');
+        });
 
-        typst += `#exp-header("${escapeTypstString(entry.title)}", "${escapeTypstString(period)}")\n`;
+        // Overall period range for this company
+        const allDates = sorted.map(e => e.startDate).filter(Boolean);
+        const oldest = allDates.length > 1
+          ? sorted[sorted.length - 1].startDate
+          : sorted[0].startDate;
+        const newest = sorted[0].endDate || '現在';
+        const overallPeriod = formatPeriod(oldest, newest);
 
-        if (entry.subtitle) {
-          typst += `#exp-row("役割", "${escapeTypstString(entry.subtitle)}")\n`;
+        typst += `#work-header("${escapeTypstString(company)}", "${escapeTypstString(overallPeriod)}")\n`;
+
+        // Table for this company
+        typst += `#table(
+  columns: (3cm, 1fr),
+  inset: (x: 5pt, y: 3pt),
+  stroke: 0.5pt + black,
+  table.header(
+    fill: luma(220),
+    [#align(center)[*期間*]],
+    [#align(center)[*業務内容*]],
+  ),
+`;
+
+        for (const entry of sorted) {
+          const period = formatPeriod(entry.startDate, entry.endDate);
+          const subtitle = entry.subtitle ? escapeContentBlock(entry.subtitle) : '';
+          const desc = renderBulletItems(entry.description || '');
+          const tech = entry.technologies || '';
+
+          typst += `  [${escapeContentBlock(period)}],
+  [#text(size: 9pt)[`;
+
+          if (subtitle) {
+            typst += `${subtitle}`;
+            if (desc || tech) typst += `\n    #linebreak()`;
+          }
+
+          if (desc) {
+            typst += `\n    #list(\n      marker: [・],\n${desc}    )`;
+          }
+
+          if (tech) {
+            typst += `\n    #linebreak()\n    #text(size: 8.5pt, fill: luma(100))[使用技術: ${escapeContentBlock(tech)}]`;
+          }
+
+          typst += `\n  ]],\n`;
         }
-        if (entry.projectName) {
-          typst += `#exp-row("案件", "${escapeTypstString(entry.projectName)}")\n`;
-        }
-        if (entry.teamSize) {
-          typst += `#exp-row("規模", "${escapeTypstString(entry.teamSize)}")\n`;
-        }
-        if (tech) {
-          typst += `#exp-row("使用技術", "${escapeTypstString(tech)}")\n`;
-        }
-        if (desc) {
-          typst += `#block-separator\n#bullet-items(\n${desc})\n`;
-        }
-        typst += '\n';
+
+        typst += `)\n\n`;
       }
     }
   }
+
+  // ── Section divider ──
+  typst += `#section-divider\n\n`;
 
   // ── 活かせるスキル・知識 ──
   if (skills && skills.length > 0) {
     typst += `// ── Skills ──
 #section-title[活かせるスキル・知識]
+#list(
+  marker: [・],
 `;
     const byCategory: Record<string, string[]> = {};
     for (const s of skills) {
@@ -168,24 +186,27 @@ ${escapeTypstContent(data.summary)}
       byCategory[s.category].push(s.name);
     }
     for (const [cat, names] of Object.entries(byCategory)) {
-      typst += `#skill-category("${escapeTypstString(cat)}", "${escapeTypstString(names.join('、'))}")\n`;
+      typst += `  [${escapeContentBlock(cat)} : ${escapeContentBlock(names.join('、'))}],\n`;
     }
-    typst += '\n';
+    typst += `)\n\n`;
   }
 
   // ── 資格 ──
   const certSection = sections.find(s => /免許・資格/.test(s.title));
-  if (certSection && certSection.entries.length > 0) {
+  const hasCerts = (certSection && certSection.entries.length > 0);
+  if (hasCerts) {
     typst += `// ── Certifications ──
 #section-title[資格]
+#list(
+  marker: [・],
 `;
-    for (const entry of certSection.entries) {
+    for (const entry of certSection!.entries) {
       if (entry.title) {
         const certName = [entry.title, entry.description].filter(Boolean).join(': ');
-        typst += `- ${escapeTypstContent(certName)}\n`;
+        typst += `  [${escapeContentBlock(certName)}],\n`;
       }
     }
-    typst += '\n';
+    typst += `)\n\n`;
   }
 
   // ── 自己PR (from skillsBlocks) ──
@@ -203,10 +224,14 @@ ${escapeTypstContent(data.summary)}
   if (selfPrContent) {
     typst += `// ── Self PR ──
 #section-title[自己PR]
-${escapeTypstContent(selfPrContent)}
+${escapeContentBlock(selfPrContent)}
 
 `;
   }
+
+  // ── 以上 ──
+  typst += `#align(right + bottom)[#text(size: 10pt)[以上]]
+`;
 
   return typst;
 }
