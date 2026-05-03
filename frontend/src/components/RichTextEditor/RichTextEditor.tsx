@@ -13,7 +13,13 @@ interface RichTextEditorProps {
   showMetadata?: boolean
 }
 
-export default function RichTextEditor({ blocks, onChange, placeholder, headingColor }: RichTextEditorProps) {
+export default function RichTextEditor({ 
+  blocks, 
+  onChange, 
+  placeholder, 
+  headingColor,
+  showMetadata 
+}: RichTextEditorProps) {
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null)
   const [activeMenu, setActiveMenu] = useState<{ id: string, type: 'type' | 'color' | null }>({ id: '', type: null })
   const editorRef = useRef<HTMLDivElement>(null)
@@ -236,7 +242,6 @@ export default function RichTextEditor({ blocks, onChange, placeholder, headingC
               onFocus={handleFocus}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
-              onConvertType={(id, type) => updateBlock(id, { type })}
               headingColor={headingColor}
               showMetadata={showMetadata}
             />

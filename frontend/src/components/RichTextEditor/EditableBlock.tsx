@@ -9,8 +9,8 @@ interface EditableBlockProps {
   onFocus: (id: string) => void
   onBlur: () => void
   onKeyDown: (e: React.KeyboardEvent, id: string) => void
-  onConvertType: (id: string, type: BlockType) => void
   headingColor?: string
+  showMetadata?: boolean
 }
 
 const typeStyles: Record<BlockType, string> = {
