@@ -1,12 +1,6 @@
-import type { ResumeData, Skill, Education } from '../types/resume';
+import type { Skill, Education } from '../types/resume';
 import type { RichTextBlock } from '../types/richText';
-
-export const generateId = (prefix = 'id') => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return `${prefix}-${crypto.randomUUID()}`;
-  }
-  return `${prefix}-${Math.random().toString(36).slice(2, 11)}`;
-};
+import { generateId } from './id';
 
 export function skillsToBlocks(skills: Skill[]): RichTextBlock[] {
   const byCategory: Record<string, string[]> = {};
@@ -69,18 +63,3 @@ export function educationToBlocks(education: Education[]): RichTextBlock[] {
   });
   return blocks;
 }
-
-export const EMPTY_RESUME_DATA: ResumeData = {
-  personal: {
-    firstName: '',
-    lastName: '',
-    position: '',
-    email: '',
-    mobile: '',
-    address: '',
-    homepage: '',
-  },
-  education: [],
-  sections: [],
-  skills: [],
-};

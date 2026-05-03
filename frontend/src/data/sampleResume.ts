@@ -171,3 +171,18 @@ export const RIREKISHO_SAMPLE_DATA: ResumeData = {
   ],
   skills: [],
 }
+
+export const EMPTY_RESUME_DATA: ResumeData = {
+  personal: {
+    firstName: '',
+    lastName: '',
+    position: '',
+    email: '',
+    mobile: '',
+    address: '',
+    homepage: '',
+  },
+  education: [],
+  sections: [],
+  skills: [],
+}

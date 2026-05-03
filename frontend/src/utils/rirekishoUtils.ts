@@ -1,4 +1,5 @@
 import type { RichTextBlock } from '../types/richText';
+import { generateId } from './id';
 
 // Convert a section (e.g. 志望の動機, 本人希望記入欄) into RichTextBlocks
 // for inclusion in skillsBlocks: h1 for title, paragraph for content.
@@ -7,13 +8,13 @@ export function sectionToRirekiBlocks(section: {
   entries: { description?: string }[];
 }): RichTextBlock[] {
   const blocks: RichTextBlock[] = [];
-  blocks.push({ id: crypto.randomUUID(), type: 'h1', content: section.title });
+  blocks.push({ id: generateId('blk'), type: 'h1', content: section.title });
   const desc = section.entries
     .map(e => e.description || '')
     .filter(Boolean)
     .join('\n');
   if (desc) {
-    blocks.push({ id: crypto.randomUUID(), type: 'paragraph', content: desc });
+    blocks.push({ id: generateId('blk'), type: 'paragraph', content: desc });
   }
   return blocks;
 }
