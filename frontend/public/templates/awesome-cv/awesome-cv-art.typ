@@ -417,7 +417,7 @@
     __apply_smallcaps(it.body, use-smallcaps)
   }
 
-  organic-shape(color: accent-color, transparent: profile-picture != none)
+  // organic-shape(color: accent-color, transparent: profile-picture != none)
 
   let name = {
     align(center)[
@@ -474,25 +474,25 @@
     align(center, items.join(contact-items-separator))
   }
 
-  grid(
-    columns: (100% - 4cm, 4cm),
-    rows: 100pt,
-    gutter: 10pt,
-    [
-      #name
-      #positions-block
-      #address
-      #contacts
-    ],
-    align(left + horizon)[
-      #block(
-        width: 4cm,
-        height: 4cm,
-        radius: 2cm,
-        fill: if profile-picture != none { white } else { accent-color.lighten(45%) },
-        inset: 0pt,
-      )[
-        #if profile-picture != none [
+  if profile-picture != none {
+    grid(
+      columns: (100% - 4cm, 4cm),
+      rows: 100pt,
+      gutter: 10pt,
+      [
+        #name
+        #positions-block
+        #address
+        #contacts
+      ],
+      align(left + horizon)[
+        #block(
+          width: 4cm,
+          height: 4cm,
+          radius: 2cm,
+          fill: white,
+          inset: 0pt,
+        )[
           #block(
             clip: true,
             stroke: 0pt,
@@ -502,9 +502,20 @@
             align(center + horizon, profile-picture),
           )
         ]
-      ]
-    ],
-  )
+      ],
+    )
+  } else {
+    grid(
+      columns: (1fr,),
+      gutter: 10pt,
+      [
+        #name
+        #positions-block
+        #address
+        #contacts
+      ],
+    )
+  }
 
   body
 }

@@ -31,7 +31,7 @@ function renderDescription(description: string, indent: number = 4): string {
   let result = '';
   for (const line of otherLines) {
     if (line.trim()) {
-      result += `${' '.repeat(indent)}- ${escapeTypstContent(line.trim())}\n`;
+      result += `${' '.repeat(indent)}[${escapeTypstContent(line.trim())}],\n`;
     }
   }
   return result;
@@ -84,7 +84,8 @@ ${authorBlock}
 #section-title[基本情報]
 #grid(
   columns: (auto, 1fr),
-  gutter: (x: 8pt, y: 2pt),
+  row-gutter: 2pt,
+  column-gutter: 8pt,
 `;
 
   const nameKana = personal.furiganaLastName || personal.furiganaFirstName
