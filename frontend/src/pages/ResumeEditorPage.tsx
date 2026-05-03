@@ -37,10 +37,6 @@ export default function ResumeEditorPage() {
   return (
     <div className="min-h-[calc(100vh-55px)] lg:h-[calc(100vh-55px)] bg-[#f0efed] flex flex-col selection:bg-[rgba(0,117,222,0.15)]">
       <ResumeEditorToolbar
-        showNav={editor.showNav}
-        setShowNav={editor.setShowNav}
-        navItems={editor.navItems}
-        addSection={editor.addSection}
         openImportFile={editor.openImportFile}
         handleExportMarkdown={editor.handleExportMarkdown}
         setShowHistory={editor.setShowHistory}
