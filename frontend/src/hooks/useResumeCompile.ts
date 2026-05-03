@@ -5,6 +5,7 @@ import type { ResumeTemplate } from '../data/templates';
 import { DEFAULT_TEMPLATE } from '../data/templates';
 import { useTypstCompiler } from './useTypstCompiler';
 import { generateResumeTypst } from '../utils/typstGenerators';
+import { historyService } from '../services/historyService';
 
 export function useResumeCompile(config: {
   templateSettings: TemplateSettings;
@@ -26,7 +27,10 @@ export function useResumeCompile(config: {
     if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current);
     pdfUrlRef.current = url;
     setPdfUrl(url);
-  }, []);
+
+    // Save to history on successful compile
+    historyService.saveSnapshot({ ...resumeData, skillsBlocks });
+  }, [resumeData, skillsBlocks]);
 
   const {
     isCompiling,
