@@ -1,6 +1,6 @@
 # Smart Resume Markdown Schema (Japanese Version / 日本語版)
 
-このガイドは、日本の「履歴書」および「職務経歴書」用です。
+このガイドは、日本の「職務経歴書」用です。
 
 ---
 
