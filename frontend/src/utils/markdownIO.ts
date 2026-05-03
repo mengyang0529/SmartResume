@@ -131,8 +131,16 @@ export function parseMarkdownResume(md: string): ResumeData {
     }
 
     // Collect other lines (description)
-    if (currentEntry && trimmed) {
-      currentEntryLines.push(trimmed)
+    // Auto-create entry for sections with plain text (no H3 headers),
+    // e.g. 志望の動機, 本人希望記入欄 in rirekisho resumes.
+    if (trimmed) {
+      if (!currentEntry && currentSection) {
+        currentEntry = { title: '', subtitle: '', startDate: '', endDate: '', description: '' }
+        currentEntryLines = []
+      }
+      if (currentEntry) {
+        currentEntryLines.push(trimmed)
+      }
     }
   }
 
