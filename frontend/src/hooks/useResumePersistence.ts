@@ -3,7 +3,7 @@ import localforage from 'localforage';
 import type { ResumeData, TemplateSettings } from '../types/resume';
 import type { RichTextBlock } from '../types/richText';
 import { modulesToBlocks } from '../utils/resumeTransforms';
-import { SAMPLE_RESUME_DATA, RIREKISHO_SAMPLE_DATA } from '../data/sampleResume';
+import { SAMPLE_RESUME_DATA, RIREKISHO_SAMPLE_DATA, SHOKUMU_SAMPLE_DATA } from '../data/sampleResume';
 import {
   skillsToBlocks,
   educationToBlocks,
@@ -75,7 +75,11 @@ export function useResumePersistence(config: {
         applySeparatedData(saved, setModuleBlocks, setSkillsBlocks, setResumeData);
       } else {
         const data =
-          templateSettings.template === 'rirekisho' ? RIREKISHO_SAMPLE_DATA : SAMPLE_RESUME_DATA;
+          templateSettings.template === 'rirekisho'
+            ? RIREKISHO_SAMPLE_DATA
+            : templateSettings.template === 'shokumukeirekisho'
+              ? SHOKUMU_SAMPLE_DATA
+              : SAMPLE_RESUME_DATA;
         applySeparatedData(data, setModuleBlocks, setSkillsBlocks, setResumeData);
         setIsSample(true);
       }

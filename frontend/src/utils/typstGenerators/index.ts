@@ -2,6 +2,7 @@ import { ResumeData, TemplateSettings } from '../../types/resume';
 import { RichTextBlock } from '../../types/richText';
 import { generateAwesomeCvTypst } from './awesomeCv';
 import { generateRirekishoTypst } from './rirekisho';
+import { generateShokumuKeirekishoTypst } from './shokumukeirekisho';
 import { getAccentColor } from './shared';
 
 export { getAccentColor };
@@ -17,6 +18,7 @@ const generators: Record<string, TypstGenerator> = {
   modern: generateAwesomeCvTypst,
   art: generateAwesomeCvTypst,
   rirekisho: generateRirekishoTypst,
+  shokumukeirekisho: generateShokumuKeirekishoTypst,
 };
 
 export function generateResumeTypst(

@@ -75,6 +75,22 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
       template: 'rirekisho',
     },
   },
+  {
+    id: 5,
+    slug: 'shokumukeirekisho',
+    name: 'Shokumu Keirekisho',
+    category: 'Japanese',
+    description: 'Japanese career history document (職務経歴書) with detailed project experience, tech stacks, and achievements.',
+    previewImage: '/template-previews/shokumukeirekisho.webp',
+    settings: {
+      colorScheme: 'awesome-red',
+      fontSize: '10pt',
+      paperSize: 'a4paper',
+      sectionColorHighlight: false,
+      headerAlignment: 'L',
+      template: 'shokumukeirekisho',
+    },
+  },
 ]
 
 export const DEFAULT_TEMPLATE = RESUME_TEMPLATES[0]

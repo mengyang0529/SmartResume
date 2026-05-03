@@ -46,6 +46,10 @@ export interface Entry {
   endDate?: string
   description?: string
   highlights?: string[]
+  // --- 職務経歴書 fields (all optional) ---
+  projectName?: string   // プロジェクト名
+  teamSize?: string      // チーム規模
+  technologies?: string  // 使用技術（comma-separated）
 }
 
 export interface ResumeSection {
@@ -78,5 +82,5 @@ export interface TemplateSettings {
   headerAlignment: 'C' | 'L' | 'R'
   customColor?: string
   className?: string
-  template?: 'classic' | 'modern' | 'art' | 'rirekisho'
+  template?: 'classic' | 'modern' | 'art' | 'rirekisho' | 'shokumukeirekisho'
 }

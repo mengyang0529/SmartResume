@@ -172,6 +172,63 @@ export const RIREKISHO_SAMPLE_DATA: ResumeData = {
   skills: [],
 }
 
+export const SHOKUMU_SAMPLE_DATA: ResumeData = {
+  personal: {
+    firstName: '太郎',
+    lastName: '山田',
+    furiganaFirstName: 'たろう',
+    furiganaLastName: 'やまだ',
+    position: 'システムエンジニア',
+    birth: '1990年3月15日',
+    email: 'taro.yamada@example.com',
+    mobile: '090-1234-5678',
+    address: '東京都渋谷区神宮前1-2-3',
+    homepage: 'github.com/taro-yamada',
+  },
+  education: [
+    {
+      id: 'edu-1',
+      school: '東京理科大学',
+      degree: '工学部情報工学科 卒業',
+      startDate: '2014年4月',
+      endDate: '2018年3月',
+      description: '情報セキュリティ研究室に所属。卒業研究: 「IoT機器における機械学習を用いた異常検知システムの提案」',
+    },
+  ],
+  sections: [
+    {
+      id: 'sec-work',
+      title: '職務経歴',
+      entries: [
+        {
+          id: 'entry-work-1',
+          title: '株式会社テックイノベーション',
+          subtitle: 'システムエンジニア',
+          startDate: '2021年4月',
+          endDate: '現在',
+          description: '大手金融機関向け顧客管理システムの開発に従事。Java/Spring BootによるRESTful APIの設計・開発を担当\nAPIレスポンスタイムを平均800msから200msに改善、キャッシュ戦略（Redis）とDBインデックスを最適化\nマイクロサービスアーキテクチャの導入を推進、モノリスから段階的なサービス分割を実施\n5名チームでスクラム開発を推進、スプリント計画やレトロスペクティブをファシリテーション\nコードレビューや設計レビューを通じてチーム全体の品質向上に貢献\n使用技術: Java 11, Spring Boot, PostgreSQL, Redis, AWS ECS, Docker, GitHub Actions',
+        },
+        {
+          id: 'entry-work-2',
+          title: '株式会社未来システム',
+          subtitle: 'プログラマ',
+          startDate: '2018年4月',
+          endDate: '2021年3月',
+          description: '社内勤怠管理システムのフルリプレイスプロジェクトを担当。PHP(Laravel)からPython(Django)への段階的な移行を主導\nPostgreSQLを用いたDB設計（正規化・インデックス設計）とRESTful APIの開発\n既存のバッチ処理をAWS Lambdaに移行し、サーバ管理コストを削減、処理時間を40%短縮\nユニットテスト・結合テストの導入を推進、テストカバレッジを60%から85%に向上\n入社1年目で後輩エンジニア1名のOJTメンターを担当\n使用技術: Python 3, Django, PHP 7, Laravel 5, PostgreSQL, AWS Lambda, Docker',
+        },
+      ],
+    },
+  ],
+  skills: [
+    { id: 'sk-1', category: 'Languages', name: 'Java, Python, PHP, JavaScript, TypeScript' },
+    { id: 'sk-2', category: 'Frameworks', name: 'Spring Boot, Django, Laravel' },
+    { id: 'sk-3', category: 'Database', name: 'PostgreSQL, MySQL, Redis' },
+    { id: 'sk-4', category: 'Cloud/Infra', name: 'AWS (ECS, Lambda, RDS, EC2, S3), Docker' },
+    { id: 'sk-5', category: 'DevOps', name: 'CI/CD (GitHub Actions), Git, Jira, Confluence' },
+  ],
+  summary: '情報セキュリティを専攻した大学を卒業後、株式会社未来システムにてWebシステム開発に従事。その後、株式会社テックイノベーションにて金融系システムの開発を経験。Java/Spring Bootによるバックエンド開発を中心に、マイクロサービスアーキテクチャの導入やCI/CDパイプラインの構築など、モダンな開発手法の導入に積極的に取り組んでいる。チーム開発の推進やコード品質の向上にも貢献。',
+}
+
 export const EMPTY_RESUME_DATA: ResumeData = {
   personal: {
     firstName: '',

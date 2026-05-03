@@ -46,6 +46,10 @@ async function ensureInitialized() {
   const rirekishoText = await rirekishoResp.text()
   await $typst.addSource('/rirekisho/rirekisho.typ', rirekishoText)
 
+  const skResp = await fetch('/templates/shokumukeirekisho/shokumukeirekisho.typ')
+  const skText = await skResp.text()
+  await $typst.addSource('/shokumukeirekisho/shokumukeirekisho.typ', skText)
+
   // Clean up any previously cached template data
   const keys = await localforage.keys()
   for (const key of keys) {
