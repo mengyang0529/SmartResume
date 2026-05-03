@@ -1,6 +1,8 @@
 ---
 firstName: 太郎
 lastName: 山田
+furiganaFirstName: たろう
+furiganaLastName: やまだ
 birth: 1985年6月10日
 position: 営業マネージャー
 email: taro.yamada@example.com
