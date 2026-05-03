@@ -97,116 +97,65 @@ export function parseMarkdownResume(md: string): ResumeData {
       continue
     }
 
-    // H4 = entry subtitle (maps to Editor H3 / Project or Role)
+    // H4 = project entry (maps to Editor H3 / Project name)
     const h4Match = trimmed.match(/^####\s+(.+)/)
     if (h4Match && currentSection) {
       const content = h4Match[1].trim()
       let subtitle = content
       let rightContent = ''
-      
+
       const pipeIdx = content.indexOf('|')
       if (pipeIdx !== -1) {
         subtitle = content.slice(0, pipeIdx).trim()
         rightContent = content.slice(pipeIdx + 1).trim()
       }
 
-      // Check for merging into H2 (Treating as Role for Shokumu Keirekisho)
-      const lastBlock = currentSection.blocks![currentSection.blocks!.length - 1];
-      const isWorkHistory = /職務経歴|職歴|職務経験|Work|Experience/i.test(currentSection.title);
-      
-      if (isWorkHistory && lastBlock && lastBlock.type === 'h2' && !lastBlock.rightContent) {
-        const existing = lastBlock.rightContent || '';
-        const fullRight = rightContent ? `${rightContent} | ${subtitle}` : subtitle;
-        lastBlock.rightContent = existing ? `${existing} | ${fullRight}` : fullRight;
-        // Also set currentEntry fields so the generator sees correct data
-        currentEntry.subtitle = subtitle;
-        if (rightContent) {
-          const dateSep = rightContent.indexOf(' - ');
-          if (dateSep > 0) {
-            currentEntry.startDate = rightContent.slice(0, dateSep).trim();
-            currentEntry.endDate = rightContent.slice(dateSep + 3).trim();
-          } else {
-            currentEntry.startDate = rightContent;
-          }
-        }
+      // H4 always creates a new project entry under the current company
+      if (currentEntry) {
+        const savedTitle = currentEntry.title
+        flushEntry()
+        currentEntry = { title: savedTitle, subtitle, startDate: '', endDate: '', description: '' }
       } else {
-        if (currentEntry) {
-          if (currentEntry.subtitle) {
-            if (isWorkHistory) {
-              // In work history, subtitle is already set by a bold line (role).
-              // Treat this H4 as a project-name heading — add to description instead.
-              currentEntryLines.push(`**${content}**`);
-              currentSection.blocks!.push({ id: genId('blk'), type: 'paragraph', content, bold: true });
-              continue;
-            }
-            const savedTitle = currentEntry.title
-            flushEntry()
-            currentEntry = { title: savedTitle, subtitle: '', startDate: '', endDate: '', description: '' }
-          }
-          currentEntry.subtitle = subtitle
-          if (rightContent) {
-            const dateSep = rightContent.indexOf(' - ')
-            if (dateSep > 0) {
-              currentEntry.startDate = rightContent.slice(0, dateSep).trim()
-              currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
-            } else {
-              currentEntry.startDate = rightContent
-            }
-          }
-        }
-        currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent })
+        currentEntry = { title: '', subtitle, startDate: '', endDate: '', description: '' }
       }
+
+      if (rightContent) {
+        const dateSep = rightContent.indexOf(' - ')
+        if (dateSep > 0) {
+          currentEntry.startDate = rightContent.slice(0, dateSep).trim()
+          currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
+        } else {
+          currentEntry.startDate = rightContent
+        }
+      }
+
+      const dateStr = [currentEntry.startDate, currentEntry.endDate].filter(Boolean).join(' -- ')
+      currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent: dateStr })
       continue
     }
 
-    // Bold line support (Legacy / Alternate Role)
-    // ONLY treat as header/role if it contains a pipe '|'
-    const boldMatch = trimmed.match(/^\*\*(.+?)\*\*(\s*\|\s*(.+))/)
+    // Bold line: **Project Name** | Dates — creates a project entry
+    const boldMatch = trimmed.match(/^\*\*(.+?)\*\*(\s*\|\s*(.+))?/)
     if (boldMatch && currentEntry && currentSection) {
       const subtitle = boldMatch[1].trim()
       const rightContent = boldMatch[3] ? boldMatch[3].trim() : ''
-      
-      const lastBlock = currentSection.blocks![currentSection.blocks!.length - 1];
-      const isWorkHistory = /職務経歴|職歴|職務経験|Work|Experience/i.test(currentSection.title);
 
-      if (isWorkHistory && lastBlock && lastBlock.type === 'h2' && !lastBlock.rightContent) {
-        const existing = lastBlock.rightContent || '';
-        const fullRight = rightContent ? `${rightContent} | ${subtitle}` : subtitle;
-        lastBlock.rightContent = existing ? `${existing} | ${fullRight}` : fullRight;
-        // Also set currentEntry fields so the generator sees correct data
-        currentEntry.subtitle = subtitle;
-        if (rightContent) {
-          const dateSep = rightContent.indexOf(' - ');
-          if (dateSep > 0) {
-            currentEntry.startDate = rightContent.slice(0, dateSep).trim();
-            currentEntry.endDate = rightContent.slice(dateSep + 3).trim();
-          } else {
-            currentEntry.startDate = rightContent;
-          }
-        }
-        // Also push an H3 block so the editor round-trip preserves subtitle/dates
-        const dateStr = [currentEntry.startDate, currentEntry.endDate].filter(Boolean).join(' -- ');
-        currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent: dateStr });
-      } else {
-        if (currentEntry.subtitle) {
-          const savedTitle = currentEntry.title
-          flushEntry()
-          currentEntry = { title: savedTitle, subtitle, startDate: '', endDate: '', description: '' }
+      const savedTitle = currentEntry.title
+      flushEntry()
+      currentEntry = { title: savedTitle, subtitle, startDate: '', endDate: '', description: '' }
+
+      if (rightContent) {
+        const dateSep = rightContent.indexOf(' - ')
+        if (dateSep > 0) {
+          currentEntry.startDate = rightContent.slice(0, dateSep).trim()
+          currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
         } else {
-          currentEntry.subtitle = subtitle
+          currentEntry.startDate = rightContent
         }
-
-        if (rightContent) {
-          const dateSep = rightContent.indexOf(' - ')
-          if (dateSep > 0) {
-            currentEntry.startDate = rightContent.slice(0, dateSep).trim()
-            currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
-          } else {
-            currentEntry.startDate = rightContent
-          }
-        }
-        currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent })
       }
+
+      const dateStr = [currentEntry.startDate, currentEntry.endDate].filter(Boolean).join(' -- ')
+      currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent: dateStr })
       continue
     }
 
@@ -253,7 +202,7 @@ export function parseMarkdownResume(md: string): ResumeData {
         location: '',
         description: currentEntry.description || '',
       })
-    } else {
+    } else if (currentEntry.subtitle || currentEntry.description) {
       currentSection.entries.push({
         id: genId('entry'),
         title: currentEntry.title,
@@ -354,8 +303,15 @@ export function generateMarkdownResume(data: ResumeData): string {
     }
     lines.push(`## ${section.title}`)
     lines.push('')
+    let lastCompany = ''
     for (const entry of section.entries) {
-      lines.push(`### ${entry.title}`)
+      if (entry.title && entry.title !== lastCompany) {
+        lastCompany = entry.title
+        lines.push(`### ${entry.title}`)
+      } else if (!entry.title && !lastCompany) {
+        lastCompany = entry.subtitle
+        lines.push(`### ${entry.subtitle}`)
+      }
       const dateStr = [entry.startDate, entry.endDate].filter(Boolean).join(' - ')
       if (entry.subtitle || dateStr) {
         lines.push(`#### ${[entry.subtitle, dateStr].filter(Boolean).join(' | ')}`)

@@ -150,13 +150,8 @@ ${escapeContentBlock(effectiveSummary)}
           : sorted[0].startDate;
         const newest = sorted[0].endDate || '現在';
         const overallPeriod = formatPeriod(oldest, newest);
-        const latestRole = sorted[0].subtitle || '';
 
-        const headerRight = latestRole
-          ? `${escapeTypstString(overallPeriod)} ｜ ${escapeTypstString(latestRole)}`
-          : escapeTypstString(overallPeriod);
-
-        typst += `#work-header("${escapeTypstString(company)}", "${headerRight}")\n`;
+        typst += `#work-header("${escapeTypstString(company)}", "${escapeTypstString(overallPeriod)}")\n`;
 
         // Table for this company
         typst += `#table(
@@ -166,26 +161,14 @@ ${escapeContentBlock(effectiveSummary)}
 `;
 
         for (const entry of sorted) {
-          const subtitle = entry.subtitle ? escapeContentBlock(entry.subtitle) : '';
-          const projectName = entry.projectName ? escapeContentBlock(entry.projectName) : '';
-          const teamSize = entry.teamSize ? escapeContentBlock(entry.teamSize) : '';
+          const projectName = entry.subtitle ? escapeContentBlock(entry.subtitle) : '';
           const desc = renderBulletItems(entry.description || '');
           const tech = entry.technologies || '';
 
           typst += `  [#text(size: 9pt)[`;
 
-          // Use subtitle as fallback heading when projectName is empty
-          const heading = projectName || subtitle;
-          if (heading) {
-            typst += `*${heading}*`;
-            if (teamSize && projectName) typst += `（${teamSize}）`;
-            if (desc || tech || (subtitle && projectName)) typst += `\n    #linebreak()`;
-          }
-
-          // Show subtitle as sub-line when projectName exists and differs
-          if (projectName && subtitle && subtitle !== projectName) {
-            typst += `${subtitle}`;
-            if (teamSize) typst += `（${teamSize}）`;
+          if (projectName) {
+            typst += `*${projectName}*`;
             if (desc || tech) typst += `\n    #linebreak()`;
           }
 

@@ -10,7 +10,7 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
   if (section.blocks && section.blocks.length > 0) return section.blocks
 
   const blocks: RichTextBlock[] = []
-  
+
   // H1 for Section Title
   blocks.push({
     id: `sec-h1-${section.id}`,
@@ -18,19 +18,30 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
     content: section.title,
   })
 
-  section.entries.forEach((entry) => {
-    // H2 for main entity (Company/School)
-    blocks.push({
-      id: `ent-h2-${entry.id}`,
-      type: 'h2',
-      content: entry.title,
-      rightContent: entry.location || '',
-      projectName: entry.projectName,
-      teamSize: entry.teamSize,
-      technologies: entry.technologies,
-    })
+  let lastCompany = ''
 
-    // H3 for subtitle (Role/Degree) and dates
+  section.entries.forEach((entry) => {
+    // H2 for company (only emit when company changes)
+    if (entry.title && entry.title !== lastCompany) {
+      lastCompany = entry.title
+      blocks.push({
+        id: `ent-h2-${entry.id}`,
+        type: 'h2',
+        content: entry.title,
+        rightContent: entry.location || '',
+      })
+    } else if (!entry.title && entry.subtitle && !lastCompany) {
+      // Fallback: entry without company title, but with a project name
+      lastCompany = entry.subtitle
+      blocks.push({
+        id: `ent-h2-${entry.id}`,
+        type: 'h2',
+        content: entry.subtitle,
+        rightContent: '',
+      })
+    }
+
+    // H3 for project name
     const dateStr = `${entry.startDate}${entry.endDate ? ' -- ' + entry.endDate : ''}`
     blocks.push({
       id: `ent-h3-${entry.id}`,
@@ -70,34 +81,42 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
 }
 
 export function blocksToSection(blocks: RichTextBlock[], sectionId: string): ResumeSection {
-  const section: ResumeSection = { 
-    id: sectionId, 
-    title: '', 
+  const section: ResumeSection = {
+    id: sectionId,
+    title: '',
     entries: [],
-    blocks: [...blocks] 
+    blocks: [...blocks]
   }
-  
+
   let current: Partial<Entry> & { id: string } = { id: crypto.randomUUID() }
   let inEntry = false
+  let companyName = ''
 
   blocks.forEach((block) => {
     if (block.type === 'h1') {
       section.title = block.content
     } else if (block.type === 'h2') {
+      // h2 = company, sets context but does NOT create an entry
       if (inEntry && (current.title || current.description)) {
+        section.entries.push(current as Entry)
+      }
+      companyName = block.content
+      current = { id: crypto.randomUUID(), title: '', subtitle: '', startDate: '', endDate: '' }
+      inEntry = false  // wait for h3 to start the first project
+    } else if (block.type === 'h3') {
+      // h3 = project name, creates a new entry under the current company
+      if (inEntry && (current.subtitle || current.description)) {
         section.entries.push(current as Entry)
       }
       current = {
         id: crypto.randomUUID(),
-        title: block.content,
-        location: block.rightContent || undefined,
+        title: companyName,
+        subtitle: block.content,
         projectName: block.projectName,
         teamSize: block.teamSize,
         technologies: block.technologies,
       }
-      inEntry = true
-    } else if (block.type === 'h3' && inEntry) {
-      current.subtitle = block.content
+      // Parse dates from rightContent
       const rc = block.rightContent || ''
       const m = rc.match(/^(.+?)\s*--\s*(.*)$/)
       if (m) {
@@ -107,12 +126,13 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
       } else {
         current.startDate = rc.trim()
       }
+      inEntry = true
     } else if (block.type === 'bullet' || block.type === 'paragraph') {
       if (!inEntry) {
         inEntry = true
-        current = { id: crypto.randomUUID(), title: '', subtitle: '', startDate: '', endDate: '' }
+        current = { id: crypto.randomUUID(), title: companyName, subtitle: '', startDate: '', endDate: '' }
       }
-      
+
       const content = block.bold ? `**${block.content}**` : block.content
       current.description = current.description
         ? current.description + '\n' + content
@@ -123,7 +143,7 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
   if (inEntry && (current.title || current.description)) {
     section.entries.push(current as Entry)
   }
-  
+
   return section
 }
 
