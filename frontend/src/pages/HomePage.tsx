@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { FaArrowRight, FaUser, FaDownload, FaCloud } from 'react-icons/fa'
-import localforage from 'localforage'
-import type { ResumeData } from '../types/resume'
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { FaArrowRight, FaUser, FaDownload, FaCloud } from 'react-icons/fa';
+import localforage from 'localforage';
+import type { ResumeData } from '../types/resume';
 
 export default function HomePage() {
-  const navigate = useNavigate()
-  const [hasSavedResume, setHasSavedResume] = useState(false)
+  const navigate = useNavigate();
+  const [hasSavedResume, setHasSavedResume] = useState(false);
 
   useEffect(() => {
     // Check template-scoped keys and fallback to the old shared key
@@ -15,10 +15,10 @@ export default function HomePage() {
       localforage.getItem<ResumeData>('current_resume_data_default'),
       localforage.getItem<ResumeData>('current_resume_data'),
     ]).then(([scoped, legacy]) => {
-      const saved = scoped || legacy
-      setHasSavedResume(Boolean(saved?.personal?.firstName) || Boolean(saved?.sections?.length))
-    })
-  }, [])
+      const saved = scoped || legacy;
+      setHasSavedResume(Boolean(saved?.personal?.firstName) || Boolean(saved?.sections?.length));
+    });
+  }, []);
 
   return (
     <div className="bg-white">
@@ -43,7 +43,8 @@ export default function HomePage() {
 
           {/* Subtitle */}
           <p className="text-body-large text-warm-500 max-w-lg mx-auto mt-6">
-            Write your story in a simple editor. We handle the professional typography and PDF generation automatically.
+            Write your story in a simple editor. We handle the professional typography and PDF
+            generation automatically.
           </p>
 
           {/* CTA Buttons */}
@@ -96,7 +97,8 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-card-title text-[rgba(0,0,0,0.95)] mb-3">Manually Fill</h3>
                 <p className="text-body text-warm-500 mb-8 max-w-xs mx-auto leading-relaxed">
-                  Fill in your identity, write modules with the rich text editor, add skills, then preview and download the PDF.
+                  Fill in your identity, write modules with the rich text editor, add skills, then
+                  preview and download the PDF.
                 </p>
                 <div className="grid grid-cols-4 gap-3">
                   <MiniStep number="1" label="Identity" />
@@ -113,7 +115,9 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-card-title text-[rgba(0,0,0,0.95)] mb-3">Import from JSON</h3>
                 <p className="text-body text-warm-500 mb-8 max-w-xs mx-auto leading-relaxed">
-                  If you already have a resume JSON file, use the <strong className="text-[rgba(0,0,0,0.95)]">Import JSON</strong> button in the editor to load your data instantly.
+                  If you already have a resume JSON file, use the{' '}
+                  <strong className="text-[rgba(0,0,0,0.95)]">Import JSON</strong> button in the
+                  editor to load your data instantly.
                 </p>
                 <div className="flex items-center justify-center gap-3 text-caption text-warm-500">
                   <span className="font-semibold">JSON File</span>
@@ -138,7 +142,7 @@ export default function HomePage() {
         </div>
       </section>
     </div>
-  )
+  );
 }
 
 function MiniStep({ number, label }: { number: string; label: string }) {
@@ -149,5 +153,5 @@ function MiniStep({ number, label }: { number: string; label: string }) {
       </div>
       <span className="text-micro text-warm-500">{label}</span>
     </div>
-  )
+  );
 }
