@@ -13,6 +13,7 @@ async function ensureInitialized() {
     TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf'),
     TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Bold.otf'),
     TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf'),
+    TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/Japanese/NotoSansCJKjp-Bold.otf'),
     TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/webfonts/fa-solid-900.ttf'),
     TypstSnippet.preloadFontFromUrl('https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/webfonts/fa-brands-400.ttf'),
     await TypstSnippet.fetchPackageRegistry(),
@@ -40,6 +41,10 @@ async function ensureInitialized() {
   const langResp = await fetch('/templates/awesome-cv/lang.toml')
   const langText = await langResp.text()
   await $typst.addSource('/lang.toml', langText)
+
+  const rirekishoResp = await fetch('/templates/rirekisho/rirekisho.typ')
+  const rirekishoText = await rirekishoResp.text()
+  await $typst.addSource('/rirekisho/rirekisho.typ', rirekishoText)
 
   // Clean up any previously cached template data
   const keys = await localforage.keys()

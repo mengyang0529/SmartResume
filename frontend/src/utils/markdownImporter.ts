@@ -79,6 +79,24 @@ export function parseMarkdownResume(md: string): ResumeData {
       continue
     }
 
+    // 免許・資格 section: each "- **Category**: names" line is its own entry
+    if (currentSection && /免許・資格/.test(currentSection.title)) {
+      const certMatch = trimmed.match(/^-\s+\*\*([^*]+)\*\*:\s*(.+)/)
+      if (certMatch) {
+        flushEntry()
+        currentEntry = { title: certMatch[1].trim(), subtitle: '', startDate: '', endDate: '', description: certMatch[2].trim() }
+        currentEntryLines = []
+        flushEntry() // each line is a separate entry
+      } else if (trimmed) {
+        if (!currentEntry) {
+          currentEntry = { title: '', subtitle: '', startDate: '', endDate: '', description: '' }
+          currentEntryLines = []
+        }
+        currentEntryLines.push(trimmed)
+      }
+      continue
+    }
+
     // H3 = new entry (section entry or education entry)
     const h3Match = trimmed.match(/^###\s+(.+)/)
     if (h3Match) {
@@ -161,19 +179,26 @@ export function parseMarkdownResume(md: string): ResumeData {
     currentSection = null
   }
 
+  // Extract summary from 志望の動機 section (if present)
+  const summary = sections.find(s => /志望の動機|自己PR/i.test(s.title))?.entries?.[0]?.description || ''
+
   return {
     personal: {
       firstName: personal.firstName || '',
       lastName: personal.lastName || '',
+      furiganaFirstName: personal.furiganaFirstName || '',
+      furiganaLastName: personal.furiganaLastName || '',
+      birth: personal.birth || '',
       position: personal.position || '',
       email: personal.email || '',
       mobile: personal.mobile || '',
       address: personal.address || '',
-      homepage: personal.github || '',
+      homepage: personal.homepage || personal.github || '',
     },
     education,
     sections,
     skills: skills.map((s, i) => ({ id: `sk-${i}`, category: s.category, name: s.name })),
+    summary,
   }
 }
 
@@ -195,6 +220,9 @@ export function generateMarkdownResume(data: ResumeData): string {
   lines.push('---')
   if (data.personal.firstName) lines.push(`firstName: ${escapeYaml(data.personal.firstName)}`)
   if (data.personal.lastName) lines.push(`lastName: ${escapeYaml(data.personal.lastName)}`)
+  if (data.personal.furiganaFirstName) lines.push(`furiganaFirstName: ${escapeYaml(data.personal.furiganaFirstName)}`)
+  if (data.personal.furiganaLastName) lines.push(`furiganaLastName: ${escapeYaml(data.personal.furiganaLastName)}`)
+  if (data.personal.birth) lines.push(`birth: ${escapeYaml(data.personal.birth)}`)
   if (data.personal.position) lines.push(`position: ${escapeYaml(data.personal.position)}`)
   if (data.personal.email) lines.push(`email: ${escapeYaml(data.personal.email)}`)
   if (data.personal.mobile) lines.push(`mobile: "${data.personal.mobile}"`)
@@ -220,6 +248,19 @@ export function generateMarkdownResume(data: ResumeData): string {
 
   // Sections
   for (const section of data.sections) {
+    // 免許・資格 uses "- **Category**: names" format
+    if (/免許・資格/.test(section.title)) {
+      lines.push(`## ${section.title}`)
+      lines.push('')
+      for (const entry of section.entries) {
+        if (entry.title) {
+          const desc = entry.description || ''
+          lines.push(`- **${entry.title}**: ${desc}`)
+        }
+      }
+      lines.push('')
+      continue
+    }
     lines.push(`## ${section.title}`)
     lines.push('')
     for (const entry of section.entries) {

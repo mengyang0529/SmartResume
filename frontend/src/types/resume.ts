@@ -3,7 +3,10 @@ import type { RichTextBlock } from './richText'
 export interface PersonalInfo {
   firstName: string
   lastName: string
+  furiganaFirstName?: string
+  furiganaLastName?: string
   position: string
+  birth?: string
   address?: string
   mobile?: string
   email: string
@@ -75,5 +78,5 @@ export interface TemplateSettings {
   headerAlignment: 'C' | 'L' | 'R'
   customColor?: string
   className?: string
-  template?: 'classic' | 'modern' | 'art'
+  template?: 'classic' | 'modern' | 'art' | 'rirekisho'
 }

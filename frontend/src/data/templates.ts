@@ -59,6 +59,22 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
       template: 'art',
     },
   },
+  {
+    id: 4,
+    slug: 'rirekisho',
+    name: 'Rirekisho',
+    category: 'Japanese',
+    description: 'Traditional Japanese-style resume (履歴書) with standard JIS format including photo, education, and work history tables.',
+    previewImage: '/template-previews/rirekisho.webp',
+    settings: {
+      colorScheme: 'awesome-red',
+      fontSize: '10pt',
+      paperSize: 'a4paper',
+      sectionColorHighlight: false,
+      headerAlignment: 'L',
+      template: 'rirekisho',
+    },
+  },
 ]
 
 export const DEFAULT_TEMPLATE = RESUME_TEMPLATES[0]

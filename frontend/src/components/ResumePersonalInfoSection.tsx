@@ -52,6 +52,9 @@ export default function ResumePersonalInfoSection({ resumeData, onFieldChange, o
         <div className="sm:col-span-2">
           <NotionInput label="Address" value={resumeData.personal.address} onChange={(v) => { onFieldChange(prev => ({ ...prev, personal: { ...prev.personal, address: v } })) }} icon={<FaMapMarkerAlt />} />
         </div>
+        <NotionInput label="Birth Date" value={resumeData.personal.birth ?? ''} onChange={(v) => { onFieldChange(prev => ({ ...prev, personal: { ...prev.personal, birth: v } })) }} icon={<FaUser />} />
+        <NotionInput label="Furigana (given)" value={resumeData.personal.furiganaFirstName ?? ''} onChange={(v) => { onFieldChange(prev => ({ ...prev, personal: { ...prev.personal, furiganaFirstName: v } })) }} clean />
+        <NotionInput label="Furigana (family)" value={resumeData.personal.furiganaLastName ?? ''} onChange={(v) => { onFieldChange(prev => ({ ...prev, personal: { ...prev.personal, furiganaLastName: v } })) }} clean />
       </div>
       <div className="w-full sm:w-[130px] flex-shrink-0 flex flex-col items-center justify-start pt-1">
         <div
