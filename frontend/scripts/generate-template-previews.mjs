@@ -362,19 +362,37 @@ function buildShokumuKeirekishoTypst(personal) {
   const body = md.replace(/^---[\s\S]*?---\n*/, '')
   const lines = body.split('\n')
 
-  // Parse work entries under 職務経歴
-  const workEntries = []
-  let current = null
-  let inWork = false
+  const date = new Date()
+  const dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+
+  // Parse all H2 sections
+  const allSections = {}
+  let currentH2 = null
+  let currentLines = []
   for (const line of lines) {
     const h2 = line.match(/^##\s+(.+)/)
+    if (h2) {
+      if (currentH2) allSections[currentH2] = currentLines.join('\n')
+      currentH2 = h2[1].trim()
+      currentLines = []
+    } else if (currentH2) {
+      currentLines.push(line)
+    }
+  }
+  if (currentH2) allSections[currentH2] = currentLines.join('\n')
+
+  // Parse summary (plain text)
+  const summaryText = (allSections['職務要約'] || '').trim()
+
+  // Parse work entries
+  const workSection = allSections['職務経歴'] || ''
+  const workLines = workSection.split('\n')
+  const workEntries = []
+  let current = null
+  for (const line of workLines) {
     const h3 = line.match(/^###\s+(.+)/)
     const bold = line.match(/^\*\*(.+)\*\*\s*\|\s*(.+?)\s*-\s*(.+)/)
     const bullet = line.match(/^-\s+(.+)/)
-
-    if (h2 && h2[1].trim() === 'Skills') break
-    if (h2 && /職務経歴/.test(h2[1])) { inWork = true; continue }
-    if (!inWork) continue
 
     if (h3) {
       if (current) workEntries.push(current)
@@ -392,17 +410,28 @@ function buildShokumuKeirekishoTypst(personal) {
   }
   if (current) workEntries.push(current)
 
-  // Parse skills
-  const skillsByCategory = new Map()
-  const skillsMatch = body.match(/## Skills\n\n([\s\S]*?)$/)
-  if (skillsMatch) {
-    for (const line of skillsMatch[1].split('\n')) {
-      const m = line.match(/^-\s+\*\*(.+)\*\*:\s*(.+)/)
-      if (m) {
-        skillsByCategory.set(m[1], m[2].split(',').map(n => n.trim()).filter(Boolean))
-      }
+  // Parse skills from ## Skills section
+  const skillsItems = []
+  const skillsText = allSections['Skills'] || ''
+  for (const line of skillsText.split('\n')) {
+    const m = line.match(/^-\s+\*\*(.+)\*\*:\s*(.+)/)
+    if (m) {
+      skillsItems.push({ category: m[1], items: m[2].split(',').map(n => n.trim()).filter(Boolean) })
     }
   }
+
+  // Parse certifications from ## 免許・資格 section
+  const certItems = []
+  const certText = allSections['免許・資格'] || ''
+  for (const line of certText.split('\n')) {
+    const m = line.match(/^-\s+\*\*(.+)\*\*:\s*(.*)/)
+    if (m) {
+      certItems.push(`${m[1].trim()}: ${m[2].trim()}`)
+    }
+  }
+
+  // Parse self-pr from ## 自己PR section
+  const selfPrText = (allSections['自己PR'] || '').trim()
 
   let typst = `#import "../public/templates/shokumukeirekisho/shokumukeirekisho.typ": *
 
@@ -410,60 +439,121 @@ function buildShokumuKeirekishoTypst(personal) {
   author: (
     firstname: "${escStr(personal.firstName)}",
     lastname: "${escStr(personal.lastName)}",
-    email: "${escStr(personal.email)}",
-    phone: "${escStr(personal.mobile)}",
   ),
+  date: "${escStr(dateStr)}",
   language: "ja",
   font: ("Noto Sans CJK JP", "Noto Sans CJK SC"),
 )
 
+// Document Header
+#align(center)[#text(size: 15pt, weight: "bold")[職務経歴書]]
+#v(2pt)
+#align(right)[
+  #text(size: 9pt)[${escContent(dateStr)}現在]
+  #linebreak()
+  #text(size: 9pt)[氏名 ${escContent(personal.lastName + ' ' + personal.firstName)}]
+]
+
+#v(10pt)
+
 `
 
-  // ── Basic Info ──
-  typst += `// ── Basic Info ──
-#section-title[基本情報]
-#grid(
-  columns: (auto, 1fr),
-  gutter: 4pt,
-  [#text(size: 9pt, weight: "bold")[氏名]], [#text(size: 9pt)[${escContent(personal.lastName + ' ' + personal.firstName)}]],
-  [#text(size: 9pt, weight: "bold")[連絡先]], [#text(size: 9pt)[TEL: ${escContent(personal.mobile || '')}  Email: ${escContent(personal.email)}]],
-)
+  // ── 職務要約 ──
+  if (summaryText) {
+    typst += `// ── Summary ──
+#section-title[職務要約]
+${escContent(summaryText)}
+
 `
+  }
 
   // ── Work Experience ──
   if (workEntries.length > 0) {
-    typst += `
-// ── Work Experience ──
+    typst += `// ── Work Experience ──
 #section-title[職務経歴]
 `
+    // Group by company
+    const byCompany = {}
     for (const entry of workEntries) {
-      const period = `${entry.startDate} ～ ${entry.endDate || '現在'}`
-      typst += `#exp-header("${escStr(entry.title)}", "${escStr(period)}")\n`
-      if (entry.subtitle) {
-        typst += `#exp-row("役割", "${escStr(entry.subtitle)}")\n`
-      }
-      if (entry.bullets.length > 0) {
-        typst += `#block-separator\n#bullet-items(\n`
+      if (!byCompany[entry.title]) byCompany[entry.title] = []
+      byCompany[entry.title].push(entry)
+    }
+
+    for (const [company, entries] of Object.entries(byCompany)) {
+      const sorted = entries.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''))
+      const oldest = sorted.length > 1 ? sorted[sorted.length - 1].startDate : sorted[0].startDate
+      const newest = sorted[0].endDate || '現在'
+      const overallPeriod = `${oldest} ～ ${newest}`
+
+      typst += `#work-header("${escStr(company)}", "${escStr(overallPeriod)}")\n`
+      typst += `#table(
+  columns: (3cm, 1fr),
+  inset: (x: 5pt, y: 6pt),
+  stroke: 0.5pt + black,
+  table.cell(fill: luma(220))[#align(center)[*期間*]],
+  table.cell(fill: luma(220))[#align(center)[*業務内容*]],
+`
+      for (const entry of sorted) {
+        const period = `${entry.startDate} ～ ${entry.endDate || '現在'}`
+        typst += `  [${escContent(period)}],
+  [#text(size: 9pt)[
+    ${escContent(entry.subtitle)}
+    #linebreak()
+    #list(
+      marker: [・],
+`
         for (const b of entry.bullets) {
-          typst += `  [${escContent(b)}],\n`
+          typst += `      [${escContent(b)}],\n`
         }
-        typst += `)\n`
+        typst += `    )
+  ]],
+`
       }
-      typst += '\n'
+      typst += `)\n\n`
     }
   }
+
+  // ── Divider ──
+  typst += `#section-divider\n\n`
 
   // ── Skills ──
-  if (skillsByCategory.size > 0) {
+  if (skillsItems.length > 0) {
     typst += `// ── Skills ──
 #section-title[活かせるスキル・知識]
+#list(
+  marker: [・],
 `
-    for (const [cat, names] of skillsByCategory) {
-      typst += `#skill-category("${escStr(cat)}", "${escStr(names.join('、'))}")\n`
+    for (const sk of skillsItems) {
+      typst += `  [${escContent(sk.category)} : ${escContent(sk.items.join('、'))}],\n`
     }
-    typst += '\n'
+    typst += `)\n\n`
   }
 
+  // ── Certifications ──
+  if (certItems.length > 0) {
+    typst += `// ── Certifications ──
+#section-title[資格]
+#list(
+  marker: [・],
+`
+    for (const c of certItems) {
+      typst += `  [${escContent(c)}],\n`
+    }
+    typst += `)\n\n`
+  }
+
+  // ── Self PR ──
+  if (selfPrText) {
+    typst += `// ── Self PR ──
+#section-title[自己PR]
+${escContent(selfPrText)}
+
+`
+  }
+
+  // ── End ──
+  typst += `#align(right + bottom)[#text(size: 10pt)[以上]]
+`
   return typst
 }
 

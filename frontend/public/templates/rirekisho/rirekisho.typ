@@ -15,6 +15,9 @@
     paper: paper-size,
     margin: (left: 6mm, right: 6mm, top: 6mm, bottom: 6mm),
   )
+  set table(inset: (x: 4pt, y: 8pt))
+  set par(spacing: 0.3em, leading: 4pt)
+  show table.cell: set par(leading: 8pt)
 
   body
 }

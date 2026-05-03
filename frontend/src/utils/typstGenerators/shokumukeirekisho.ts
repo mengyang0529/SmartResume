@@ -84,21 +84,24 @@ ${authorBlock}
   #text(size: 9pt)[氏名 ${escapeContentBlock(personal.lastName + ' ' + personal.firstName)}]
 ]
 
-#v(6pt)
+#v(10pt)
 
 `;
 
   // ── 職務要約 ──
-  if (data.summary) {
+  const summarySection = sections.find(s => /職務要約/.test(s.title));
+  const summaryFromSection = summarySection?.entries?.[0]?.description || '';
+  const effectiveSummary = data.summary || summaryFromSection;
+  if (effectiveSummary) {
     typst += `// ── Professional Summary ──
 #section-title[職務要約]
-${escapeContentBlock(data.summary)}
+${escapeContentBlock(effectiveSummary)}
 
 `;
   }
 
   // ── 職務経歴 ──
-  const workSections = sections.filter(s => !/免許・資格|education|学歴|educ/i.test(s.title));
+  const workSections = sections.filter(s => !/免許・資格|education|学歴|educ|職務要約/i.test(s.title));
   if (workSections.length > 0) {
     typst += `// ── Work Experience ──
 #section-title[職務経歴]
@@ -131,13 +134,10 @@ ${escapeContentBlock(data.summary)}
         // Table for this company
         typst += `#table(
   columns: (3cm, 1fr),
-  inset: (x: 5pt, y: 3pt),
+  inset: (x: 5pt, y: 6pt),
   stroke: 0.5pt + black,
-  table.header(
-    fill: luma(220),
-    [#align(center)[*期間*]],
-    [#align(center)[*業務内容*]],
-  ),
+  table.cell(fill: luma(220))[#align(center)[*期間*]],
+  table.cell(fill: luma(220))[#align(center)[*業務内容*]],
 `;
 
         for (const entry of sorted) {

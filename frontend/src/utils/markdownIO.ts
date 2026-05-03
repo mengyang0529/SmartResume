@@ -187,8 +187,8 @@ export function parseMarkdownResume(md: string): ResumeData {
     currentSection = null
   }
 
-  // Extract summary from 志望の動機 section (if present)
-  const summary = sections.find(s => /志望の動機|自己PR/i.test(s.title))?.entries?.[0]?.description || ''
+  // Extract summary from 職務要約 or 志望の動機 section (if present)
+  const summary = sections.find(s => /職務要約|志望の動機|自己PR/i.test(s.title))?.entries?.[0]?.description || ''
 
   return {
     personal: {

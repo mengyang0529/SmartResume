@@ -46,6 +46,14 @@ Landing page with create resume and browse templates actions.
 
 Template gallery showing all available resume styles with preview images.
 
+Preview images at `public/template-previews/*.webp` (900×1125) are generated from the actual Typst templates using sample data. To regenerate all previews:
+
+```bash
+# Requires: typst CLI (https://github.com/typst/typst) and ImageMagick
+cd frontend
+node scripts/generate-template-previews.mjs
+```
+
 ### Profile (`/profile`)
 
 Job application tracking dashboard with statistics, application list, and interview timeline.
