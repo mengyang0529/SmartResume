@@ -1,5 +1,4 @@
-import { FaUpload, FaFileDownload, FaHistory, FaThLarge } from 'react-icons/fa'
-import { useNavigate } from 'react-router-dom'
+import { FaUpload, FaFileDownload, FaHistory } from 'react-icons/fa'
 
 interface ResumeEditorToolbarProps {
   openImportFile: () => void
@@ -14,8 +13,6 @@ export default function ResumeEditorToolbar({
   setShowHistory,
   currentTemplate,
 }: ResumeEditorToolbarProps) {
-  const navigate = useNavigate()
-
   return (
     <div className="shrink-0 bg-white border-b border-[rgba(0,0,0,0.1)] px-4 py-2.5">
       <div className="flex items-center justify-between">
@@ -44,16 +41,6 @@ export default function ResumeEditorToolbar({
             >
               <FaHistory className="text-xs" />
               <span className="hidden sm:inline text-xs">History</span>
-            </button>
-
-            <span className="w-px h-5 bg-[rgba(0,0,0,0.1)]" />
-
-            <button
-              onClick={() => navigate('/templates')}
-              className="px-2.5 py-1.5 rounded-md text-sm text-warm-500 hover:bg-[rgba(0,0,0,0.05)] hover:text-[rgba(0,0,0,0.95)] transition-all flex items-center gap-1.5"
-            >
-              <FaThLarge className="text-xs" />
-              <span className="hidden sm:inline text-xs">Change Template</span>
             </button>
           </div>
 
