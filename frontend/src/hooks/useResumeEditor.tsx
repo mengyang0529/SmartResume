@@ -3,14 +3,14 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import localforage from 'localforage'
 import type { ResumeData, TemplateSettings } from '../types/resume'
 import type { RichTextBlock } from '../types/richText'
-import { generateResumeTypst, getAccentColor } from '../utils/typstGenerator'
+import { generateResumeTypst, getAccentColor } from '../utils/typstGenerators'
 import { modulesToBlocks } from '../utils/resumeTransforms'
 import { useTypstCompiler } from './useTypstCompiler'
 import { historyService } from '../services/historyService'
-import { SAMPLE_RESUME_DATA } from '../data/sampleResume'
+import { SAMPLE_RESUME_DATA, RIREKISHO_SAMPLE_DATA } from '../data/sampleResume'
 import { DEFAULT_TEMPLATE, findTemplateBySlug, RESUME_TEMPLATES } from '../data/templates'
 import { parseMarkdownResume, generateMarkdownResume } from '../utils/markdownImporter'
-import { generateId, skillsToBlocks, EMPTY_RESUME_DATA } from '../utils/resumeEditorUtils'
+import { generateId, skillsToBlocks, educationToBlocks, separateRirekiSections, EMPTY_RESUME_DATA } from '../utils/resumeEditorUtils'
 import { FaUser, FaLayerGroup, FaWrench } from 'react-icons/fa'
 
 export function useResumeEditor() {
@@ -120,30 +120,44 @@ export function useResumeEditor() {
   useEffect(() => {
     localforage.getItem<ResumeData>('current_resume_data').then(saved => {
       if (saved) {
-        setResumeData(saved)
-        if (saved.sections.length > 0) {
-          setModuleBlocks(modulesToBlocks(saved.sections))
+        const { regularSections, extraBlocks } = separateRirekiSections(saved.sections)
+        if (regularSections.length > 0) {
+          const blocks = modulesToBlocks(regularSections)
+          const hasEduSection = regularSections.some(s => /education|学歴/i.test(s.title))
+          if (saved.education?.length > 0 && !hasEduSection) {
+            setModuleBlocks([...educationToBlocks(saved.education), ...blocks])
+          } else {
+            setModuleBlocks(blocks)
+          }
         }
         if (saved.skillsBlocks && saved.skillsBlocks.length > 0) {
-          if (saved.skillsBlocks[0].type !== 'h1' || saved.skillsBlocks[0].content !== 'Skills') {
-            setSkillsBlocks(skillsToBlocks(saved.skills))
-          } else {
-            setSkillsBlocks(saved.skillsBlocks)
-          }
+          setSkillsBlocks([...saved.skillsBlocks, ...extraBlocks])
         } else if (saved.skills && saved.skills.length > 0) {
-          setSkillsBlocks(skillsToBlocks(saved.skills))
+          setSkillsBlocks([...skillsToBlocks(saved.skills), ...extraBlocks])
+        } else if (extraBlocks.length > 0) {
+          setSkillsBlocks(extraBlocks)
         }
+        setResumeData({ ...saved, sections: regularSections })
       } else {
-        const data = SAMPLE_RESUME_DATA
-        setResumeData(data)
-        if (data.sections.length > 0) {
-          setModuleBlocks(modulesToBlocks(data.sections))
+        const data = templateSettings.template === 'rirekisho' ? RIREKISHO_SAMPLE_DATA : SAMPLE_RESUME_DATA
+        const { regularSections: regSec, extraBlocks: extBlk } = separateRirekiSections(data.sections)
+        if (regSec.length > 0) {
+          const blocks = modulesToBlocks(regSec)
+          const hasEduSection = regSec.some(s => /education|学歴/i.test(s.title))
+          if (data.education?.length > 0 && !hasEduSection) {
+            setModuleBlocks([...educationToBlocks(data.education), ...blocks])
+          } else {
+            setModuleBlocks(blocks)
+          }
         }
         if (data.skillsBlocks && data.skillsBlocks.length > 0) {
-          setSkillsBlocks(data.skillsBlocks)
+          setSkillsBlocks([...data.skillsBlocks, ...extBlk])
         } else if (data.skills && data.skills.length > 0) {
-          setSkillsBlocks(skillsToBlocks(data.skills))
+          setSkillsBlocks([...skillsToBlocks(data.skills), ...extBlk])
+        } else if (extBlk.length > 0) {
+          setSkillsBlocks(extBlk)
         }
+        setResumeData({ ...data, sections: regSec })
         setIsSample(true)
       }
     })
@@ -159,14 +173,12 @@ export function useResumeEditor() {
     }
   }, [resumeData.personal.photo?.url, setPhoto, removePhoto])
 
-  // Initial auto-compile once on mount
-  const mountedRef = useRef(false)
+  // Auto-compile whenever resume data or template changes
+  // (initial compilation is the first invocation of this effect)
   useEffect(() => {
-    if (!mountedRef.current && (resumeData.personal.firstName || resumeData.sections.length > 0)) {
-      mountedRef.current = true
-      generateTypstNow(resumeData, skillsBlocks)
-    }
-  }, [resumeData, skillsBlocks, generateTypstNow])
+    if (!resumeData.personal.firstName && resumeData.sections.length === 0) return
+    generateTypstNow(resumeData, skillsBlocks)
+  }, [resumeData, skillsBlocks, templateSettings.template, generateTypstNow])
 
   const handleRefreshPreview = useCallback(() => {
     if (resumeData.personal.firstName || resumeData.sections.length > 0) {
@@ -209,9 +221,19 @@ export function useResumeEditor() {
       try {
         const raw = reader.result as string
         const parsed = parseMarkdownResume(raw)
-        setResumeData(parsed)
-        setModuleBlocks(modulesToBlocks(parsed.sections))
-        setSkillsBlocks(parsed.skillsBlocks && parsed.skillsBlocks.length > 0 ? parsed.skillsBlocks : skillsToBlocks(parsed.skills))
+        const { regularSections, extraBlocks } = separateRirekiSections(parsed.sections)
+        if (regularSections.length > 0) {
+          const blocks = modulesToBlocks(regularSections)
+          const hasEduSection = regularSections.some(s => /education|学歴/i.test(s.title))
+          if (parsed.education?.length > 0 && !hasEduSection) {
+            setModuleBlocks([...educationToBlocks(parsed.education), ...blocks])
+          } else {
+            setModuleBlocks(blocks)
+          }
+        }
+        const baseSkills = parsed.skillsBlocks && parsed.skillsBlocks.length > 0 ? parsed.skillsBlocks : skillsToBlocks(parsed.skills)
+        setSkillsBlocks([...baseSkills, ...extraBlocks])
+        setResumeData({ ...parsed, sections: regularSections })
         setIsSample(false)
       } catch (e) { /* ignore parse errors */ }
     }
@@ -284,15 +306,24 @@ export function useResumeEditor() {
   }
 
   const handleHistoryRestore = (data: ResumeData) => {
-    setResumeData(data)
-    if (data.sections.length > 0) {
-      setModuleBlocks(modulesToBlocks(data.sections))
+    const { regularSections, extraBlocks } = separateRirekiSections(data.sections)
+    if (regularSections.length > 0) {
+      const blocks = modulesToBlocks(regularSections)
+      const hasEduSection = regularSections.some(s => /education|学歴/i.test(s.title))
+      if (data.education?.length > 0 && !hasEduSection) {
+        setModuleBlocks([...educationToBlocks(data.education), ...blocks])
+      } else {
+        setModuleBlocks(blocks)
+      }
     }
     if (data.skillsBlocks && data.skillsBlocks.length > 0) {
-      setSkillsBlocks(data.skillsBlocks)
+      setSkillsBlocks([...data.skillsBlocks, ...extraBlocks])
     } else if (data.skills && data.skills.length > 0) {
-      setSkillsBlocks(skillsToBlocks(data.skills))
+      setSkillsBlocks([...skillsToBlocks(data.skills), ...extraBlocks])
+    } else if (extraBlocks.length > 0) {
+      setSkillsBlocks(extraBlocks)
     }
+    setResumeData({ ...data, sections: regularSections })
     setIsSample(false)
   }
 
