@@ -150,34 +150,40 @@ ${escapeContentBlock(effectiveSummary)}
           : sorted[0].startDate;
         const newest = sorted[0].endDate || '現在';
         const overallPeriod = formatPeriod(oldest, newest);
+        const latestRole = sorted[0].subtitle || '';
 
-        typst += `#work-header("${escapeTypstString(company)}", "${escapeTypstString(overallPeriod)}")\n`;
+        const headerRight = latestRole
+          ? `${escapeTypstString(overallPeriod)} ｜ ${escapeTypstString(latestRole)}`
+          : escapeTypstString(overallPeriod);
+
+        typst += `#work-header("${escapeTypstString(company)}", "${headerRight}")\n`;
 
         // Table for this company
         typst += `#table(
-  columns: (3cm, 1fr),
+  columns: (1fr),
   inset: (x: 5pt, y: 6pt),
   stroke: 0.5pt + black,
-  table.cell(fill: luma(220))[#align(center)[*期間*]],
-  table.cell(fill: luma(220))[#align(center)[*業務内容*]],
 `;
 
         for (const entry of sorted) {
-          const period = formatPeriod(entry.startDate, entry.endDate);
           const subtitle = entry.subtitle ? escapeContentBlock(entry.subtitle) : '';
           const projectName = entry.projectName ? escapeContentBlock(entry.projectName) : '';
           const teamSize = entry.teamSize ? escapeContentBlock(entry.teamSize) : '';
           const desc = renderBulletItems(entry.description || '');
           const tech = entry.technologies || '';
 
-          typst += `  [${escapeContentBlock(period)}],
-  [#text(size: 9pt)[`;
+          typst += `  [#text(size: 9pt)[`;
 
-          if (projectName) {
-            typst += `*${projectName}*\n    #linebreak()`;
+          // Use subtitle as fallback heading when projectName is empty
+          const heading = projectName || subtitle;
+          if (heading) {
+            typst += `*${heading}*`;
+            if (teamSize && projectName) typst += `（${teamSize}）`;
+            if (desc || tech || (subtitle && projectName)) typst += `\n    #linebreak()`;
           }
 
-          if (subtitle) {
+          // Show subtitle as sub-line when projectName exists and differs
+          if (projectName && subtitle && subtitle !== projectName) {
             typst += `${subtitle}`;
             if (teamSize) typst += `（${teamSize}）`;
             if (desc || tech) typst += `\n    #linebreak()`;
