@@ -10,8 +10,13 @@ export default function HomePage() {
   const [hasSavedResume, setHasSavedResume] = useState(false)
 
   useEffect(() => {
-    localforage.getItem<ResumeData>('current_resume_data').then(saved => {
-      setHasSavedResume(Boolean(saved?.personal || saved?.sections?.length))
+    // Check template-scoped keys and fallback to the old shared key
+    Promise.all([
+      localforage.getItem<ResumeData>('current_resume_data_default'),
+      localforage.getItem<ResumeData>('current_resume_data'),
+    ]).then(([scoped, legacy]) => {
+      const saved = scoped || legacy
+      setHasSavedResume(Boolean(saved?.personal?.firstName) || Boolean(saved?.sections?.length))
     })
   }, [])
 

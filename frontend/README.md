@@ -1,204 +1,115 @@
-# Frontend README
+# Frontend
 
 ## Overview
 
 `frontend/` contains the React + TypeScript UI for the Web Resume Generator.
 
-This app is designed as a dark, high-contrast dashboard with industrial/terminal styling and a focus on professional resume creation. The UI is built with:
-
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
+Built with:
+- React 18 + TypeScript
+- Vite 5
+- Tailwind CSS 3
 - Framer Motion
 - React Router DOM
-- React Hot Toast
-- React Query
-
-## UI Style
-
-The frontend uses a cinematic, system-console theme:
-
-- Dark background palette (`#050505`, `#0A0A0A`, `#111111`)
-- Red accent color for buttons, highlights, and borders
-- Monospaced/uppercase typography for labels and system text
-- Glassy grid and border panels with subtle hover states
-- Fixed top header and left sidebar for fast navigation
-- Motion transitions for page entry, cards, and button interactions
+- TanStack React Query
+- Typst WebAssembly (client-side PDF compilation)
 
 ## Pages
 
-### Home Page (`/`)
+### Resume Editor (`/editor/:templateId`)
 
-The Home page is the first screen after route load.
+The main workspace for resume creation and editing.
 
-Buttons:
-- `Create Resume`
-  - Navigates to `/editor`
-  - Opens the editor page where the local JSON file import flow can be triggered
-- `Browse Templates`
-  - Navigates to `/gallery`
-
-Content:
-- Large headline and tagline
-- System-style status badge
-- Metrics section showing platform values like latency, output, system, and security
-
-### Gallery Page (`/gallery`)
-
-The Gallery page shows a card grid of template options.
-
-Buttons:
-- `Configure`
-  - Navigates to `/editor/:templateId`
-  - Intended to load a template-specific editor configuration
-- `Preview`
-  - Placeholder for preview behavior (renders a card-level preview button)
-
-Controls:
-- Filter pills for `All`, `Blueprint`, `Module`, and `System`
-- Template cards with category, description, and action buttons
-
-### Resume Editor Page (`/editor` and `/editor/:templateId`)
-
-This is the main workspace for resume creation and editing.
+Supports four templates:
+- **Classic** — Minimal black-and-white elegant style
+- **Modern** — Original Awesome CV style with colored accents
+- **Art** — Dark-themed artistic style with vibrant accents
+- **Rirekisho** — Traditional Japanese-style resume (履歴書)
 
 Layout:
-- Fixed left sidebar with section navigation
-- Main form area on the right
-- Floating save button appears when unsaved changes exist
-- Hidden file input used for JSON import
+- Left: editable form with personal info, modules (rich text sections), and skills/expertise
+- Right: live PDF preview panel, auto-compiles on every change with 400ms debounce
+- Top toolbar: navigation, add section, import/export Markdown, download PDF
 
-Sidebar buttons and controls:
-- `Identity`
-  - Edit personal information fields such as first name, last name, position, email, mobile, address, and GitHub URL
-- `Education`
-  - Add and edit academic records
-  - Each education entry supports institution, degree, honors, start date, end date, and description
-- `Modules`
-  - Dynamically generated resume sections from imported JSON
-  - Each section can be renamed and contain multiple entries
-- `Capabilities`
-  - Manage skills and tool categories
-- `+` (Add Section)
-  - Adds a new dynamic section to the resume
-- `Create Resume`
-  - Opens the local file picker for importing a JSON resume file
-- `Download PDF`
-  - Sends the current resume data to the backend Typst pipeline and opens the generated PDF in a new tab
+Editor features:
+- Rich text editing with H1/H2/H3/bullet/paragraph blocks
+- Photo upload for profile picture
+- History panel for undo/restore snapshots
+- Import from Markdown (`.md`) files
+- Export to Markdown for backup
+- Local persistence via `localforage` (IndexedDB)
 
-Editor page interactions:
-- `openResumeJsonFile()` is triggered by the sidebar button or the top header button
-- JSON import validates the file and normalizes IDs
-- Editor fields update local state immediately
-- `Save Changes` button stores the current resume state to `localStorage`
+### Home (`/`)
 
-Important components on this page:
-- `ResumeEditorPage.tsx` — main editor logic and state management
-- `Layout.tsx` — global header and navigation
+Landing page with create resume and browse templates actions.
 
-### Profile Page (`/profile`)
+### Templates (`/templates`)
 
-The Profile page is a **job application tracking dashboard**. It provides an overview of job applications, interview timelines, and application statistics.
+Template gallery showing all available resume styles with preview images.
 
-**Statistics panel:**
-- Total applications count
-- Active applications count
-- Interview count
-- Offer/rejection rate summary
+### Profile (`/profile`)
 
-**Application list:**
-- Displays all job applications with company, job title, status, and applied date
-- Status badges: `applied`, `interview`, `offer`, `rejected`, etc.
-- Supports filtering and quick actions
-
-**Application timeline:**
-- Visual timeline showing the progression of each application
-- Interview rounds and outcomes
-
-**Data flow:**
-- Fetches applications from `GET /api/v1/applications`
-- Creates new applications via `POST /api/v1/applications`
-- Manages interview records via `/api/v1/applications/:id/interviews`
-
-## Components
-
-### `Layout`
-
-Contains the global app frame:
-- Top header
-- Navigation links
-- `Create Resume` global button
-- Footer
-- `Outlet` for route content
-
-### `NavTab` and `ModuleWrapper`
-
-Used inside the editor page for sidebar tabs and content sections.
-They handle layout, active state, and form structure.
-
-### `FoundryInput`
-
-Custom input field component used across the editor and profile pages.
-It supports plain and clean mode styling for the modular UI.
+Job application tracking dashboard with statistics, application list, and interview timeline.
 
 ## Routing
 
-Routes are defined in `App.tsx`:
+| Path | Component |
+|---|---|
+| `/` | HomePage |
+| `/templates` | TemplatesPage |
+| `/editor/:templateId` | ResumeEditorPage |
+| `/profile` | ProfilePage |
+| `*` | NotFoundPage (redirect to `/404`) |
 
-- `/` → `HomePage`
-- `/editor` → `ResumeEditorPage`
-- `/editor/:templateId` → `ResumeEditorPage`
-- `/gallery` → `GalleryPage`
-- `/profile` → `ProfilePage`
-- `/404` → `NotFoundPage`
-- `*` → redirect to `/404`
+## PDF Generation
 
-## Data Flow and Integration
+PDFs are compiled entirely client-side via a Web Worker:
 
-### Resume import
+```
+Editor → Typst source string → Web Worker → $typst.pdf() → PDF bytes → blob URL → iframe preview
+```
 
-- Local JSON file selection is handled by a hidden `<input type="file" />`
-- The imported JSON is parsed in `handleJsonFileUpload`
-- Parsed data is validated and normalized
-- The editor populates state from the imported resume structure
+The worker preloads fonts (Noto Sans CJK, Font Awesome) and Typst template files at startup. No backend service is required for PDF generation.
 
-### PDF generation
+## Project Structure
 
-- `handleDownloadPdf()` builds Typst source from `resumeData`
-- It calls `pdfApi.generateFromTypst()` from `frontend/src/services/api.ts`
-- On success, it opens the generated PDF download URL
+```
+src/
+├── components/       # UI components
+│   ├── Layout/       # Global header and navigation
+│   ├── RichTextEditor/  # Rich text block editing
+│   └── ...
+├── hooks/            # React hooks (useResumeEditor, useTypstCompiler)
+├── services/         # Data services (localforage-based API)
+├── utils/            # Utility functions
+│   ├── typstGenerators/  # Per-template Typst source generators
+│   └── ...
+├── compiler/         # Web Worker (Typst WebAssembly compilation)
+├── types/            # TypeScript type definitions
+├── data/             # Sample data and template configs
+└── pages/            # Page-level components
+```
 
-## Development Notes
-
-- The app uses a `Toaster` from `react-hot-toast` for success and error feedback
-- `React Query` is configured with application-wide defaults in `App.tsx`
-- The editor page currently uses `localStorage` for temporary save state
-- The top navigation button on the global header triggers the same local JSON import flow as the editor sidebar button
-
-## Run locally
-
-From `frontend/`:
+## Development
 
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
 
-Then open the Vite dev server URL shown in the terminal.
+### Available Scripts
 
-## File structure highlights
+| Script | Description |
+|---|---|
+| `npm run dev` | Start Vite dev server |
+| `npm run build` | TypeScript check + production build |
+| `npm run type-check` | TypeScript type checking only |
+| `npm test` | Run tests with Vitest |
+| `npm run lint` | ESLint check |
+| `npm run format` | Prettier formatting |
 
-- `src/main.tsx` — app bootstrap and router container
-- `src/App.tsx` — route definitions and query provider
-- `src/components/Layout/Layout.tsx` — persistent header/footer/navigation
-- `src/pages/ResumeEditorPage.tsx` — editor page logic and resume form
-- `src/pages/HomePage.tsx` — landing page
-- `src/pages/GalleryPage.tsx` — template gallery
-- `src/pages/ProfilePage.tsx` — profile/dashboard page
-- `src/services/api.ts` — backend API client
-- `src/utils/typstGenerator.ts` — Typst source generator for PDF compilation
+## Environment
 
-## Notes
-
-This README is focused on frontend-specific behavior and user-facing controls. Backend and Typst generation are handled separately in the `backend/` and `typst-service/` folders.
+- Node.js >= 18
+- No backend required for local development — all data is stored in IndexedDB via localforage
+- PDF generation is fully client-side via WebAssembly

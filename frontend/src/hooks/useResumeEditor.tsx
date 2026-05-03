@@ -116,9 +116,11 @@ export function useResumeEditor() {
     }
   }, [])
 
-  // Load saved data on mount, fall back to sample
+  const storageKey = `current_resume_data_${templateId || 'default'}`
+
+  // Load saved data on mount or template switch, fall back to sample
   useEffect(() => {
-    localforage.getItem<ResumeData>('current_resume_data').then(saved => {
+    localforage.getItem<ResumeData>(storageKey).then(saved => {
       if (saved) {
         const { regularSections, extraBlocks } = separateRirekiSections(saved.sections)
         if (regularSections.length > 0) {
@@ -161,7 +163,7 @@ export function useResumeEditor() {
         setIsSample(true)
       }
     })
-  }, [])
+  }, [templateId])
 
   // Sync photo to worker
   useEffect(() => {
@@ -244,7 +246,7 @@ export function useResumeEditor() {
   const openImportFile = () => fileInputRef.current?.click()
 
   const saveToLocal = async (data: ResumeData) => {
-    await localforage.setItem('current_resume_data', data)
+    await localforage.setItem(storageKey, data)
     historyService.saveSnapshot(data)
   }
 
