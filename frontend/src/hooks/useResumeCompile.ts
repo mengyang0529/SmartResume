@@ -62,9 +62,11 @@ export function useResumeCompile(config: {
 
   // Auto-compile whenever resume data or template changes
   useEffect(() => {
-    if (!resumeData.personal.firstName && resumeData.sections.length === 0) return;
-    generateTypstNow(resumeData, skillsBlocks);
-  }, [resumeData, skillsBlocks, templateSettings.template, generateTypstNow]);
+    // Only compile on template change or initial load if we don't have a PDF yet
+    if (!pdfUrl && (resumeData.personal.firstName || resumeData.sections.length > 0)) {
+      generateTypstNow(resumeData, skillsBlocks);
+    }
+  }, [templateSettings.template, generateTypstNow, pdfUrl, resumeData.personal.firstName, resumeData.sections.length, skillsBlocks]);
 
   const handleRefreshPreview = useCallback(() => {
     if (resumeData.personal.firstName || resumeData.sections.length > 0) {

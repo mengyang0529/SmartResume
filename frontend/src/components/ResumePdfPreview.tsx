@@ -20,10 +20,10 @@ export default function ResumePdfPreview({ currentTemplate, isCompiling, pdfUrl,
           <button
             onClick={onRefresh}
             disabled={isCompiling}
-            className="text-xs font-medium px-3 py-1.5 rounded-md border border-[rgba(0,0,0,0.1)] text-warm-500 hover:bg-[rgba(0,0,0,0.04)] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40"
+            className="text-xs font-semibold px-4 py-1.5 rounded-md border border-[#0075de] text-[#0075de] hover:bg-[rgba(0,117,222,0.04)] transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shadow-sm active:scale-95"
           >
             {isCompiling ? <FaSpinner className="animate-spin" /> : <FaSync className="text-[10px]" />}
-            Refresh
+            Refresh Preview
           </button>
           <button
             onClick={onDownload}
