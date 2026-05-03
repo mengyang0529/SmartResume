@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import clsx from 'clsx'
 import { FaBriefcase, FaChartBar, FaClock, FaSearchLocation } from 'react-icons/fa'
-import { applicationApi } from '../services/api'
 
 interface Interview {
   id: string
@@ -78,12 +77,8 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    applicationApi.listApplications()
-      .then((data) => setApplications(data))
-      .catch(() => {
-        console.error('Failed to load applications. Showing local default data.')
-      })
-      .finally(() => setIsLoading(false))
+    setApplications(initialApplications)
+    setIsLoading(false)
   }, [])
 
   const applicationStats = useMemo(() => {

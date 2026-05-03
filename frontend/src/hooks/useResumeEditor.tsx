@@ -4,7 +4,7 @@ import { FaUser, FaLayerGroup, FaWrench } from 'react-icons/fa';
 import type { ResumeData, TemplateSettings } from '../types/resume';
 import type { RichTextBlock } from '../types/richText';
 import { getAccentColor } from '../utils/typstGenerators';
-import { generateMarkdownResume } from '../utils/markdownImporter';
+import { generateMarkdownResume } from '../utils/markdownIO';
 import { generateId, EMPTY_RESUME_DATA } from '../utils/resumeEditorUtils';
 import { DEFAULT_TEMPLATE, findTemplateBySlug, RESUME_TEMPLATES } from '../data/templates';
 import { useResumeCompile } from './useResumeCompile';

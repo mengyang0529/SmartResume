@@ -7,9 +7,9 @@ import { SAMPLE_RESUME_DATA, RIREKISHO_SAMPLE_DATA } from '../data/sampleResume'
 import {
   skillsToBlocks,
   educationToBlocks,
-  separateRirekiSections,
 } from '../utils/resumeEditorUtils';
-import { parseMarkdownResume } from '../utils/markdownImporter';
+import { parseMarkdownResume } from '../utils/markdownIO';
+import { separateRirekiSections } from '../utils/rirekishoUtils';
 
 function applySeparatedData(
   data: {
