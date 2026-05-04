@@ -56,6 +56,13 @@ function renderDescriptionBody(entry: { description?: string; technologies?: str
       continue;
     }
 
+    const boldMatch = line.match(/^\*\*(.+)\*\*$/);
+    if (boldMatch) {
+      content.push(`    #v(0.3em)`);
+      content.push(`    #text(size: 9pt, weight: "bold")[${escapeContentBlock(boldMatch[1])}]`);
+      continue;
+    }
+
     content.push(`    #text(size: 9pt)[${escapeContentBlock(line)}]`);
   }
 
@@ -198,11 +205,11 @@ ${escapeContentBlock(effectiveSummary)}
           return (b.startDate || '').localeCompare(a.startDate || '');
         });
 
-        typst += `#table(
-  columns: (auto, 1fr),
+        typst += `#block(above: 1.2em, below: 0.3em)[#text(size: 10pt, weight: "bold")[${escapeTypstString(company)}]]
+#table(
+  columns: (1fr),
   stroke: 0.5pt + black,
   inset: (x: 8pt, y: 6pt),
-  table.cell(colspan: 2)[#text(size: 10pt, weight: "bold")[${escapeTypstString(company)}]],
 `;
 
         for (const entry of sorted) {
@@ -211,6 +218,9 @@ ${escapeContentBlock(effectiveSummary)}
           const bodyContent = renderDescriptionBody(entry);
 
           let cellLines = '';
+          if (entryPeriod) {
+            cellLines += `    #text(size: 9pt)[${escapeTypstString(entryPeriod)}]\n`;
+          }
           if (projectName) {
             cellLines += `    #text(size: 9pt, weight: "bold")[${projectName}]\n`;
           }
@@ -218,8 +228,7 @@ ${escapeContentBlock(effectiveSummary)}
             cellLines += bodyContent;
           }
 
-          typst += `  table.cell(align: left + top)[${escapeTypstString(entryPeriod)}],
-  [
+          typst += `  [
 ${cellLines}
   ],
 `;
