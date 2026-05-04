@@ -40,8 +40,8 @@ export default function ImportPage() {
   const template = RESUME_TEMPLATES.find(t => t.slug === templateId) || RESUME_TEMPLATES[0];
 
   const getSchemaPath = () => {
-    const { template: type } = template.settings;
-    if (['classic', 'modern', 'art'].includes(type)) {
+    const type = template.settings.template;
+    if (type && ['classic', 'modern', 'art'].includes(type)) {
       return `/templates/awesome-cv/awesome-cv-${type}.md`;
     }
     if (type === 'rirekisho') {
@@ -50,7 +50,7 @@ export default function ImportPage() {
     if (type === 'shokumukeirekisho') {
       return `/templates/shokumukeirekisho/shokumukeirekisho.md`;
     }
-    return '/RESUME_SCHEMA_EN.md'; // Fallback
+    return `/templates/awesome-cv/awesome-cv-classic.md`;
   };
 
   const downloadSchema = () => {
@@ -96,7 +96,8 @@ export default function ImportPage() {
 
         await page.render({
           canvasContext: tempCtx,
-          viewport: viewport
+          viewport: viewport,
+          canvas: tempCanvas
         }).promise;
 
         pageImages.push(tempCanvas);

@@ -143,47 +143,51 @@ ${escapeContentBlock(effectiveSummary)}
           return (b.startDate || '').localeCompare(a.startDate || '');
         });
 
-        // Overall period range for this company
+        // 1. Overall period and Main Title for this company
         const allDates = sorted.map(e => e.startDate).filter(Boolean);
         const oldest = allDates.length > 1
           ? sorted[sorted.length - 1].startDate
-          : sorted[0].startDate;
-        const newest = sorted[0].endDate || '現在';
+          : sorted[0]?.startDate || '';
+        const newest = sorted[0]?.endDate || '現在';
         const overallPeriod = formatPeriod(oldest, newest);
+        const mainTitle = sorted[0]?.subtitle || '';
 
-        typst += `#work-header("${escapeTypstString(company)}", "${escapeTypstString(overallPeriod)}")\n`;
+        // 2. Render Company Summary Block
+        typst += `#company-summary-block(
+  date: "${escapeTypstString(overallPeriod)}",
+  company: "${escapeTypstString(company)}",
+  title: "${escapeTypstString(mainTitle)}",
+)\n\n`;
 
-        // Table for this company
-        typst += `#table(
-  columns: (1fr),
-  inset: (x: 5pt, y: 6pt),
-  stroke: 0.5pt + black,
-`;
-
+        // 3. Render Detailed Project Blocks
         for (const entry of sorted) {
+          // If the entry is just the title entry we already showed in summary, 
+          // but has no specific project subtitle or description, skip individual block
+          // Or if it's the main entry, we still show its project details if any
           const projectName = entry.subtitle ? escapeContentBlock(entry.subtitle) : '';
           const desc = renderBulletItems(entry.description || '');
           const tech = entry.technologies || '';
 
-          typst += `  [#text(size: 9pt)[`;
+          // Skip if absolutely empty (unlikely with our parser)
+          if (!desc && !tech && projectName === mainTitle) continue;
 
-          if (projectName) {
-            typst += `*${projectName}*`;
-            if (desc || tech) typst += `\n    #linebreak()`;
-          }
+          typst += `#project-block(
+  company: "${escapeTypstString(company)}",
+  role: "${projectName}",
+  body: [
+`;
 
           if (desc) {
-            typst += `\n    #list(\n      marker: [・],\n${desc}    )`;
+            typst += `    #list(\n      marker: [・],\n${desc}    )`;
           }
 
           if (tech) {
-            typst += `\n    #linebreak()\n    #text(size: 8.5pt, fill: luma(100))[使用技術: ${escapeContentBlock(tech)}]`;
+            if (desc) typst += `\n    #v(0.5em)`;
+            typst += `\n    #text(size: 8.5pt, fill: luma(100))[*使用技術:* ${escapeContentBlock(tech)}]`;
           }
 
-          typst += `\n  ]],\n`;
+          typst += `\n  ]\n)\n\n`;
         }
-
-        typst += `)\n\n`;
       }
     }
   }

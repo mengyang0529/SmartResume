@@ -97,7 +97,7 @@ export function parseMarkdownResume(md: string): ResumeData {
       continue
     }
 
-    // H4 = project entry (maps to Editor H3 / Project name)
+    // H4 = sub-role or project name (maps to Editor H3)
     const h4Match = trimmed.match(/^####\s+(.+)/)
     if (h4Match && currentSection) {
       const content = h4Match[1].trim()
@@ -110,13 +110,13 @@ export function parseMarkdownResume(md: string): ResumeData {
         rightContent = content.slice(pipeIdx + 1).trim()
       }
 
-      // H4 always creates a new project entry under the current company
-      if (currentEntry) {
-        const savedTitle = currentEntry.title
+      // If we are already in an entry but it's "empty" (just company), use this H4 as subtitle
+      if (currentEntry && !currentEntry.subtitle && !currentEntry.description) {
+        currentEntry.subtitle = subtitle
+      } else {
+        const savedTitle = currentEntry ? currentEntry.title : ''
         flushEntry()
         currentEntry = { title: savedTitle, subtitle, startDate: '', endDate: '', description: '' }
-      } else {
-        currentEntry = { title: '', subtitle, startDate: '', endDate: '', description: '' }
       }
 
       if (rightContent) {
@@ -134,24 +134,28 @@ export function parseMarkdownResume(md: string): ResumeData {
       continue
     }
 
-    // Bold line: **Project Name** | Dates — creates a project entry
-    const boldMatch = trimmed.match(/^\*\*(.+?)\*\*(\s*\|\s*(.+))?/)
-    if (boldMatch && currentEntry && currentSection) {
-      const subtitle = boldMatch[1].trim()
-      const rightContent = boldMatch[3] ? boldMatch[3].trim() : ''
+    // Bold line: **Subtitle/Position** | Dates
+    // We only treat this as an entry header if it matches the pattern EXACTLY: **text** | date
+    const boldHeaderMatch = trimmed.match(/^\*\*(.+?)\*\*\s*\|\s*(.+)$/)
+    if (boldHeaderMatch && currentEntry && currentSection) {
+      const subtitle = boldHeaderMatch[1].trim()
+      const rightContent = boldHeaderMatch[2].trim()
 
-      const savedTitle = currentEntry.title
-      flushEntry()
-      currentEntry = { title: savedTitle, subtitle, startDate: '', endDate: '', description: '' }
+      // If current entry is just started (has title but no subtitle/desc), update it
+      if (!currentEntry.subtitle && !currentEntry.description) {
+        currentEntry.subtitle = subtitle
+      } else {
+        const savedTitle = currentEntry.title
+        flushEntry()
+        currentEntry = { title: savedTitle, subtitle, startDate: '', endDate: '', description: '' }
+      }
 
-      if (rightContent) {
-        const dateSep = rightContent.indexOf(' - ')
-        if (dateSep > 0) {
-          currentEntry.startDate = rightContent.slice(0, dateSep).trim()
-          currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
-        } else {
-          currentEntry.startDate = rightContent
-        }
+      const dateSep = rightContent.indexOf(' - ')
+      if (dateSep > 0) {
+        currentEntry.startDate = rightContent.slice(0, dateSep).trim()
+        currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
+      } else {
+        currentEntry.startDate = rightContent
       }
 
       const dateStr = [currentEntry.startDate, currentEntry.endDate].filter(Boolean).join(' -- ')
@@ -166,18 +170,19 @@ export function parseMarkdownResume(md: string): ResumeData {
       }
       currentEntryLines.push(trimmed)
       
-      const type = trimmed.startsWith('- ') ? 'bullet' : 'paragraph'
-      const content = trimmed.startsWith('- ') ? trimmed.slice(2).trim() : trimmed
+      const isBullet = trimmed.startsWith('- ')
+      const content = isBullet ? trimmed.slice(2).trim() : trimmed
       
       let finalContent = content
       let bold = false
+      // Whole line bold (but not a header with pipe)
       const bMatch = content.match(/^\*\*(.+)\*\*$/)
       if (bMatch) {
         finalContent = bMatch[1]
         bold = true
       }
       
-      currentSection.blocks!.push({ id: genId('blk'), type, content: finalContent, bold })
+      currentSection.blocks!.push({ id: genId('blk'), type: isBullet ? 'bullet' : 'paragraph', content: finalContent, bold })
     }
   }
 

@@ -46,7 +46,7 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
     blocks.push({
       id: `ent-h3-${entry.id}`,
       type: 'h3',
-      content: entry.subtitle,
+      content: entry.projectName || entry.subtitle,
       rightContent: dateStr,
     })
 

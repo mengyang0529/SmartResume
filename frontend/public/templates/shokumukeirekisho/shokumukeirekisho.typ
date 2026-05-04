@@ -40,3 +40,85 @@
     #line(length: 100%, stroke: 0.5pt + black)
   ]
 }
+
+#let company-summary-block(
+  date: "",
+  company: "",
+  title: "",
+) = {
+  block(
+    width: 100%,
+    stroke: 0.5pt + black,
+    radius: 0pt,
+    clip: true,
+    above: 1em,
+    below: 0.5em,
+  )[
+    #stack(
+      dir: ttb,
+      // Row 1: Date and Company
+      rect(
+        width: 100%,
+        fill: white,
+        stroke: (bottom: 0.5pt + black),
+        inset: (x: 8pt, y: 6pt),
+      )[
+        #set text(size: 9pt)
+        #date #h(2em) #text(size: 10pt, weight: "bold")[#company]
+      ],
+      // Row 2: Main Job Title
+      rect(
+        width: 100%,
+        stroke: (bottom: (dash: "dotted", paint: black, thickness: 0.5pt)),
+        inset: (x: 8pt, y: 6pt),
+      )[
+        #set text(size: 9.5pt)
+        #title
+      ]
+    )
+  ]
+}
+
+#let project-block(
+  company: "",
+  role: "",
+  body: [],
+) = {
+  block(
+    width: 100%,
+    stroke: 0.5pt + black,
+    radius: 0pt,
+    clip: true,
+    above: 0.5em,
+    below: 1em,
+  )[
+    #stack(
+      dir: ttb,
+      // Row 1: Company (Gray header)
+      rect(
+        width: 100%,
+        fill: luma(245),
+        stroke: (bottom: 0.5pt + black),
+        inset: (x: 8pt, y: 6pt),
+      )[
+        #set text(size: 10pt, weight: "bold")
+        #company
+      ],
+      // Row 2: Project Role / Subtitle
+      rect(
+        width: 100%,
+        stroke: (bottom: (dash: "dotted", paint: black, thickness: 0.5pt)),
+        inset: (x: 8pt, y: 6pt),
+      )[
+        #set text(size: 9.5pt)
+        #role
+      ],
+      // Row 3: Content Body
+      pad(x: 8pt, y: 8pt)[
+        #set text(size: 9pt)
+        #set par(spacing: 0.6em)
+        #body
+      ]
+    )
+  ]
+}

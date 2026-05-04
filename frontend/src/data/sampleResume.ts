@@ -205,8 +205,7 @@ export const SHOKUMU_SAMPLE_DATA: ResumeData = {
         {
           id: 'entry-work-1',
           title: '綜合印刷株式会社',
-          subtitle: '営業',
-          projectName: 'SF事業部 販促ツール開発',
+          subtitle: 'SF事業部 販促ツール開発',
           teamSize: '5名',
           technologies: 'Excel, Access, Illustrator',
           startDate: '2018年4月',
@@ -216,8 +215,7 @@ export const SHOKUMU_SAMPLE_DATA: ResumeData = {
         {
           id: 'entry-work-2',
           title: '綜合印刷株式会社',
-          subtitle: '営業マネージャー',
-          projectName: '首都圏エリア 営業力强化プロジェクト',
+          subtitle: '首都圏エリア 営業力强化プロジェクト',
           teamSize: '12名',
           technologies: 'Salesforce, Slack',
           startDate: '2021年4月',
@@ -227,8 +225,7 @@ export const SHOKUMU_SAMPLE_DATA: ResumeData = {
         {
           id: 'entry-work-3',
           title: 'キャリアデザイン株式会社',
-          subtitle: '人材紹介コンサルタント',
-          projectName: '外食産業 採用支援',
+          subtitle: '外食産業 採用支援',
           teamSize: '3名',
           technologies: 'LinkedIn, Eight',
           startDate: '2023年4月',
@@ -238,8 +235,7 @@ export const SHOKUMU_SAMPLE_DATA: ResumeData = {
         {
           id: 'entry-work-4',
           title: 'キャリアデザイン株式会社',
-          subtitle: 'マネージャー',
-          projectName: '首都圏第2営業部 拡大プロジェクト',
+          subtitle: '首都圏第2営業部 拡大プロジェクト',
           teamSize: '7名',
           technologies: 'Salesforce, Zoom',
           startDate: '2024年4月',
