@@ -57,7 +57,7 @@ describe('typstGenerators', () => {
     expect(output).toContain('職務経歴')
     // Check for structured metadata
     expect(output).toContain('SF事業部 販促ツール開発')
-    expect(output).toContain('使用技術: Excel, Access, Illustrator')
+    expect(output).toContain('使用技術：Excel, Access, Illustrator')
   })
 
   it('should fall back to Classic if template is unknown', () => {

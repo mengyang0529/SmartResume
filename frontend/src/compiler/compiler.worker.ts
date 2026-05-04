@@ -26,15 +26,16 @@ async function ensureInitialized() {
   await $typst.getCompiler()
 
   // Always fetch fresh template files to pick up edits
-  const classicResp = await fetch('/templates/awesome-cv/awesome-cv-classic.typ')
+  const cacheBuster = `?t=${Date.now()}`
+  const classicResp = await fetch(`/templates/awesome-cv/awesome-cv-classic.typ${cacheBuster}`)
   const classicText = await classicResp.text()
   await $typst.addSource('/awesome-cv-classic.typ', classicText)
 
-  const modernResp = await fetch('/templates/awesome-cv/awesome-cv-modern.typ')
+  const modernResp = await fetch(`/templates/awesome-cv/awesome-cv-modern.typ${cacheBuster}`)
   const modernText = await modernResp.text()
   await $typst.addSource('/awesome-cv-modern.typ', modernText)
 
-  const artResp = await fetch('/templates/awesome-cv/awesome-cv-art.typ')
+  const artResp = await fetch(`/templates/awesome-cv/awesome-cv-art.typ${cacheBuster}`)
   const artText = await artResp.text()
   await $typst.addSource('/awesome-cv-art.typ', artText)
 
@@ -42,11 +43,11 @@ async function ensureInitialized() {
   const langText = await langResp.text()
   await $typst.addSource('/lang.toml', langText)
 
-  const rirekishoResp = await fetch('/templates/rirekisho/rirekisho.typ')
+  const rirekishoResp = await fetch(`/templates/rirekisho/rirekisho.typ${cacheBuster}`)
   const rirekishoText = await rirekishoResp.text()
   await $typst.addSource('/rirekisho/rirekisho.typ', rirekishoText)
 
-  const skResp = await fetch('/templates/shokumukeirekisho/shokumukeirekisho.typ')
+  const skResp = await fetch(`/templates/shokumukeirekisho/shokumukeirekisho.typ${cacheBuster}`)
   const skText = await skResp.text()
   await $typst.addSource('/shokumukeirekisho/shokumukeirekisho.typ', skText)
 

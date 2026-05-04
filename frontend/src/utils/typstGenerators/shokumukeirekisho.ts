@@ -30,20 +30,43 @@ function todayJapanese(): string {
 }
 
 function escapeContentBlock(value: string): string {
-  return String(value ?? '').replace(/\\/g, '\\\\').replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/#/g, '\\#').replace(/@/g, '\\@');
+  return String(value ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/#/g, '\\#')
+    .replace(/@/g, '\\@')
+    .replace(/\*/g, '\\*')
+    .replace(/_/g, '\\_');
 }
 
-function renderBulletItems(description: string, indent: number = 6): string {
-  if (!description) return '';
-  const lines = description.split('\n');
-  const otherLines = lines.filter(l => !/使用技術[:：]/.test(l));
-  let result = '';
-  for (const line of otherLines) {
-    if (line.trim()) {
-      result += `${' '.repeat(indent)}[${escapeContentBlock(line.trim())}],\n`;
+function renderDescriptionBody(entry: { description?: string; technologies?: string; teamSize?: string; }): string {
+  const lines = String(entry.description || '').split('\n').map(line => line.trim()).filter(Boolean);
+  const content: string[] = [];
+
+  for (const line of lines) {
+    if (/^[-・]\s*/.test(line)) {
+      const itemText = line.replace(/^[-・]\s*/, '');
+      content.push(`    #text(size: 9pt)[${escapeContentBlock('・ ' + itemText)}]`);
+      continue;
     }
+
+    if (/^【.*】/.test(line)) {
+      content.push(`    #text(size: 9pt, weight: "bold")[${escapeContentBlock(line)}]`);
+      continue;
+    }
+
+    content.push(`    #text(size: 9pt)[${escapeContentBlock(line)}]`);
   }
-  return result;
+
+  if (entry.teamSize) {
+    content.push(`    #text(size: 9pt)[チーム規模：${escapeContentBlock(entry.teamSize)}]`);
+  }
+  if (entry.technologies) {
+    content.push(`    #text(size: 9pt)[使用技術：${escapeContentBlock(entry.technologies)}]`);
+  }
+
+  return content.join('\n');
 }
 
 export function generateShokumuKeirekishoTypst(
@@ -122,8 +145,40 @@ ${escapeContentBlock(effectiveSummary)}
 `;
   }
 
+  const skillSections = sections.filter(s => /スキル|経験|技術|知識/.test(s.title));
+
+  for (const sec of skillSections) {
+    typst += `#section-title[${escapeTypstString(sec.title)}]
+#list(
+  marker: [・],
+`;
+    for (const entry of sec.entries) {
+      const content = [entry.title, entry.description].filter(Boolean).join(' : ');
+      if (content) {
+        typst += `  [${escapeContentBlock(content)}],\n`;
+      }
+    }
+    typst += `)\n\n`;
+  }
+
+  if (skills && skills.length > 0) {
+    typst += `#section-title[テクニカルスキル]
+#list(
+  marker: [・],
+`;
+    const byCategory: Record<string, string[]> = {};
+    for (const s of skills) {
+      if (!byCategory[s.category]) byCategory[s.category] = [];
+      byCategory[s.category].push(s.name);
+    }
+    for (const [cat, names] of Object.entries(byCategory)) {
+      typst += `  [${escapeContentBlock(cat)} : ${escapeContentBlock(names.join('、'))}],\n`;
+    }
+    typst += `)\n\n`;
+  }
+
   // ── 職務経歴 ──
-  const workSections = sections.filter(s => !/免許・資格|education|学歴|educ|職務要約|スキル|経験|技術/i.test(s.title));
+  const workSections = sections.filter(s => !/免許・資格|education|学歴|educ|職務要約|スキル|経験|技術|知識/i.test(s.title));
   if (workSections.length > 0) {
     typst += `// ── Work Experience ──
 #section-title[職務経歴]
@@ -143,95 +198,39 @@ ${escapeContentBlock(effectiveSummary)}
           return (b.startDate || '').localeCompare(a.startDate || '');
         });
 
-        // 1. Overall period and Main Title for this company
-        const allDates = sorted.map(e => e.startDate).filter(Boolean);
-        const oldest = allDates.length > 1
-          ? sorted[sorted.length - 1].startDate
-          : sorted[0]?.startDate || '';
-        const newest = sorted[0]?.endDate || '現在';
-        const overallPeriod = formatPeriod(oldest, newest);
-        const mainTitle = sorted[0]?.subtitle || '';
+        typst += `#table(
+  columns: (auto, 1fr),
+  stroke: 0.5pt + black,
+  inset: (x: 8pt, y: 6pt),
+  table.cell(colspan: 2)[#text(size: 10pt, weight: "bold")[${escapeTypstString(company)}]],
+`;
 
-        // 2. Render Company Summary Block
-        typst += `#company-summary-block(
-  date: "${escapeTypstString(overallPeriod)}",
-  company: "${escapeTypstString(company)}",
-  title: "${escapeTypstString(mainTitle)}",
-)\n\n`;
-
-        // 3. Render Detailed Project Blocks
         for (const entry of sorted) {
-          // If the entry is just the title entry we already showed in summary, 
-          // but has no specific project subtitle or description, skip individual block
-          // Or if it's the main entry, we still show its project details if any
-          const projectName = entry.subtitle ? escapeContentBlock(entry.subtitle) : '';
-          const desc = renderBulletItems(entry.description || '');
-          const tech = entry.technologies || '';
+          const projectName = entry.subtitle ? escapeTypstString(entry.subtitle) : '';
+          const entryPeriod = entry.startDate ? formatPeriod(entry.startDate, entry.endDate) : '';
+          const bodyContent = renderDescriptionBody(entry);
 
-          // Skip if absolutely empty (unlikely with our parser)
-          if (!desc && !tech && projectName === mainTitle) continue;
+          let cellLines = '';
+          if (projectName) {
+            cellLines += `    #text(size: 9pt, weight: "bold")[${projectName}]\n`;
+          }
+          if (bodyContent) {
+            cellLines += bodyContent;
+          }
 
-          typst += `#project-block(
-  company: "${escapeTypstString(company)}",
-  role: "${projectName}",
-  body: [
+          typst += `  table.cell(align: left + top)[${escapeTypstString(entryPeriod)}],
+  [
+${cellLines}
+  ],
 `;
-
-          if (desc) {
-            typst += `    #list(\n      marker: [・],\n${desc}    )`;
-          }
-
-          if (tech) {
-            if (desc) typst += `\n    #v(0.5em)`;
-            typst += `\n    #text(size: 8.5pt, fill: luma(100))[*使用技術:* ${escapeContentBlock(tech)}]`;
-          }
-
-          typst += `\n  ]\n)\n\n`;
         }
+
+        typst += `)
+
+`;
       }
     }
   }
-
-  // ── Section divider ──
-  typst += `#section-divider\n\n`;
-
-  // ── 活かせるスキル・知識 / 経験 / 技術 ──
-  const skillSections = sections.filter(s => /スキル|経験|技術/.test(s.title));
-  
-  // Also include the legacy skills array if not already represented
-  if (skills && skills.length > 0) {
-    typst += `// ── Skills (Data) ──
-#section-title[活かせるスキル・知識]
-#list(
-  marker: [・],
-`;
-    const byCategory: Record<string, string[]> = {};
-    for (const s of skills) {
-      if (!byCategory[s.category]) byCategory[s.category] = [];
-      byCategory[s.category].push(s.name);
-    }
-    for (const [cat, names] of Object.entries(byCategory)) {
-      typst += `  [${escapeContentBlock(cat)} : ${escapeContentBlock(names.join('、'))}],\n`;
-    }
-    typst += `)\n\n`;
-  }
-
-  // Render sections that matched skill keywords
-  for (const sec of skillSections) {
-    typst += `// ── Skill Section: ${sec.title} ──
-#section-title[${escapeTypstString(sec.title)}]
-#list(
-  marker: [・],
-`;
-    for (const entry of sec.entries) {
-      const content = [entry.title, entry.description].filter(Boolean).join(' : ');
-      if (content) {
-        typst += `  [${escapeContentBlock(content)}],\n`;
-      }
-    }
-    typst += `)\n\n`;
-  }
-
 
   // ── 資格 ──
   const certSection = sections.find(s => /免許・資格/.test(s.title));
@@ -256,7 +255,7 @@ ${escapeContentBlock(effectiveSummary)}
   if (skillsBlocks) {
     for (let i = 0; i < skillsBlocks.length; i++) {
       const bk = skillsBlocks[i];
-      if (bk.type === 'h1' && /志望の動機|自己PR/i.test(bk.content)) {
+      if (bk.type === 'h1' && /志望の动机|自己PR/i.test(bk.content)) {
         const contents: string[] = [];
         for (let j = i + 1; j < skillsBlocks.length; j++) {
           if (skillsBlocks[j].type === 'h1') break;
