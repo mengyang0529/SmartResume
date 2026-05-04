@@ -1,4 +1,5 @@
 import type { ResumeData, ResumeSection } from '../types/resume'
+import { generateId } from './id'
 
 function parseYaml(lines: string[]): Record<string, string> {
   const result: Record<string, string> = {}
@@ -81,8 +82,8 @@ export function parseMarkdownResume(md: string): ResumeData {
         rightContent = content.slice(pipeIdx + 1).trim()
       }
 
-      currentSection = { id: genId('sec'), title, rightContent, entries: [], blocks: [] }
-      currentSection.blocks!.push({ id: genId('blk'), type: 'h1', content: title, rightContent })
+      currentSection = { id: generateId('sec'), title, rightContent, entries: [], blocks: [] }
+      currentSection.blocks!.push({ id: generateId('blk'), type: 'h1', content: title, rightContent })
       continue
     }
 
@@ -101,7 +102,7 @@ export function parseMarkdownResume(md: string): ResumeData {
 
       currentEntry = { title, subtitle: '', rightContent, startDate: '', endDate: '', description: '' }
       currentEntryLines = []
-      currentSection.blocks!.push({ id: genId('blk'), type: 'h2', content: title, rightContent })
+      currentSection.blocks!.push({ id: generateId('blk'), type: 'h2', content: title, rightContent })
       continue
     }
 
@@ -126,7 +127,7 @@ export function parseMarkdownResume(md: string): ResumeData {
         currentEntry = { title: savedTitle, subtitle, rightContent, startDate: '', endDate: '', description: '' }
       }
 
-      currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent })
+      currentSection.blocks!.push({ id: generateId('blk'), type: 'h3', content: subtitle, rightContent })
       continue
     }
 
@@ -145,7 +146,7 @@ export function parseMarkdownResume(md: string): ResumeData {
         currentEntry = { title: savedTitle, subtitle, rightContent, startDate: '', endDate: '', description: '' }
       }
 
-      currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent })
+      currentSection.blocks!.push({ id: generateId('blk'), type: 'h3', content: subtitle, rightContent })
       continue
     }
 
@@ -168,7 +169,7 @@ export function parseMarkdownResume(md: string): ResumeData {
         bold = true
       }
       
-      currentSection.blocks!.push({ id: genId('blk'), type: isBullet ? 'bullet' : 'paragraph', content: finalContent, bold })
+      currentSection.blocks!.push({ id: generateId('blk'), type: isBullet ? 'bullet' : 'paragraph', content: finalContent, bold })
     }
   }
 
@@ -185,7 +186,7 @@ export function parseMarkdownResume(md: string): ResumeData {
     }
     if (currentSection.title === 'Education') {
       education.push({
-        id: genId('edu'),
+        id: generateId('edu'),
         school: currentEntry.title,
         degree: currentEntry.subtitle,
         startDate: currentEntry.startDate,
@@ -195,7 +196,7 @@ export function parseMarkdownResume(md: string): ResumeData {
       })
     } else if (currentEntry.subtitle || currentEntry.description) {
       currentSection.entries.push({
-        id: genId('entry'),
+        id: generateId('entry'),
         title: currentEntry.title,
         subtitle: currentEntry.subtitle,
         startDate: currentEntry.startDate,
@@ -234,13 +235,6 @@ export function parseMarkdownResume(md: string): ResumeData {
     skills: skills.map((s, i) => ({ id: `sk-${i}`, category: s.category, name: s.name })),
     summary,
   }
-}
-
-function genId(prefix: string) {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return `${prefix}-${crypto.randomUUID()}`
-  }
-  return `${prefix}-${Math.random().toString(36).slice(2, 11)}`
 }
 
 function escapeYaml(val: string): string {

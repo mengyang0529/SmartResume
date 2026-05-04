@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { RichTextBlock, BlockType } from '../../types/richText'
+import { generateId } from '../../utils/id'
 import EditableBlock from './EditableBlock'
 import RichTextToolbar from './RichTextToolbar'
 import BlockSideMenu from './BlockSideMenu'
@@ -70,7 +71,7 @@ export default function RichTextEditor({
   const addBlock = useCallback(
     (afterId?: string, type: BlockType = 'paragraph') => {
       const newBlock: RichTextBlock = {
-        id: `block-${crypto.randomUUID()}`,
+        id: generateId('block'),
         type,
         content: '',
       }
@@ -180,7 +181,7 @@ export default function RichTextEditor({
   useEffect(() => {
     if (blocks.length === 0) {
       const newBlock: RichTextBlock = {
-        id: `block-${crypto.randomUUID()}`,
+        id: generateId('block'),
         type: 'h1',
         content: '',
       }

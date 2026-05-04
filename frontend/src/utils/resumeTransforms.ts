@@ -1,5 +1,6 @@
 import type { RichTextBlock } from '../types/richText'
 import type { ResumeSection, Entry } from '../types/resume'
+import { generateId } from './id'
 
 /* ------------------------------------------------------------------ */
 /*  Generic Section  <=>  RichTextBlock[]                               */
@@ -79,7 +80,7 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
     blocks: [...blocks]
   }
 
-  let current: Partial<Entry> & { id: string } = { id: crypto.randomUUID() }
+  let current: Partial<Entry> & { id: string } = { id: generateId() }
   let inEntry = false
   let h2Title = ''
 
@@ -94,7 +95,7 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
       }
       h2Title = block.content
       current = { 
-        id: crypto.randomUUID(), 
+        id: generateId(), 
         title: h2Title, 
         subtitle: '', 
         rightContent: block.rightContent,
@@ -108,7 +109,7 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
         section.entries.push(current as Entry)
       }
       current = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         title: h2Title,
         subtitle: block.content,
         rightContent: block.rightContent,
@@ -129,7 +130,7 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
     } else if (block.type === 'bullet' || block.type === 'paragraph') {
       if (!inEntry) {
         inEntry = true
-        current = { id: crypto.randomUUID(), title: h2Title, subtitle: '', startDate: '', endDate: '' }
+        current = { id: generateId(), title: h2Title, subtitle: '', startDate: '', endDate: '' }
       }
 
       const content = block.bold ? `**${block.content}**` : block.content
@@ -164,7 +165,7 @@ export function blocksToModules(blocks: RichTextBlock[]): ResumeSection[] {
 
   blocks.forEach(block => {
     if (block.type === 'h1') {
-      const newSecId = block.id.startsWith('sec-h1-') ? block.id.replace('sec-h1-', '') : `sec-${crypto.randomUUID()}`
+      const newSecId = block.id.startsWith('sec-h1-') ? block.id.replace('sec-h1-', '') : `sec-${generateId()}`
       const newGroup: RichTextBlock[] = []
       sectionGroups.push({ id: newSecId, blocks: newGroup })
       currentGroup = newGroup
@@ -173,7 +174,7 @@ export function blocksToModules(blocks: RichTextBlock[]): ResumeSection[] {
       currentGroup.push(block)
     } else if (blocks.indexOf(block) === 0) {
       const newGroup: RichTextBlock[] = []
-      sectionGroups.push({ id: `sec-${crypto.randomUUID()}`, blocks: newGroup })
+      sectionGroups.push({ id: `sec-${generateId()}`, blocks: newGroup })
       currentGroup = newGroup
       currentGroup.push(block)
     }
