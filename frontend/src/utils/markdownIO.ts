@@ -72,13 +72,21 @@ export function parseMarkdownResume(md: string): ResumeData {
     if (h2Match) {
       flushEntry()
       flushSection()
-      const title = h2Match[1].trim()
-      currentSection = { id: genId('sec'), title, entries: [], blocks: [] }
-      currentSection.blocks!.push({ id: genId('blk'), type: 'h1', content: title })
+      const content = h2Match[1].trim()
+      let title = content
+      let rightContent = ''
+      const pipeIdx = content.indexOf('|')
+      if (pipeIdx !== -1) {
+        title = content.slice(0, pipeIdx).trim()
+        rightContent = content.slice(pipeIdx + 1).trim()
+      }
+
+      currentSection = { id: genId('sec'), title, rightContent, entries: [], blocks: [] }
+      currentSection.blocks!.push({ id: genId('blk'), type: 'h1', content: title, rightContent })
       continue
     }
 
-    // H3 = new entry (maps to Editor H2 / Company)
+    // H3 = Company (maps to Editor H2)
     const h3Match = trimmed.match(/^###\s+(.+)/)
     if (h3Match && currentSection) {
       flushEntry()
@@ -91,75 +99,53 @@ export function parseMarkdownResume(md: string): ResumeData {
         rightContent = content.slice(pipeIdx + 1).trim()
       }
 
-      currentEntry = { title, subtitle: '', startDate: '', endDate: '', description: '' }
+      currentEntry = { title, subtitle: '', rightContent, startDate: '', endDate: '', description: '' }
       currentEntryLines = []
       currentSection.blocks!.push({ id: genId('blk'), type: 'h2', content: title, rightContent })
       continue
     }
 
-    // H4 = sub-role or project name (maps to Editor H3)
+    // H4 = Position/Project (maps to Editor H3)
     const h4Match = trimmed.match(/^####\s+(.+)/)
     if (h4Match && currentSection) {
       const content = h4Match[1].trim()
       let subtitle = content
       let rightContent = ''
-
       const pipeIdx = content.indexOf('|')
       if (pipeIdx !== -1) {
         subtitle = content.slice(0, pipeIdx).trim()
         rightContent = content.slice(pipeIdx + 1).trim()
       }
 
-      // If we are already in an entry but it's "empty" (just company), use this H4 as subtitle
       if (currentEntry && !currentEntry.subtitle && !currentEntry.description) {
         currentEntry.subtitle = subtitle
+        currentEntry.rightContent = rightContent
       } else {
         const savedTitle = currentEntry ? currentEntry.title : ''
         flushEntry()
-        currentEntry = { title: savedTitle, subtitle, startDate: '', endDate: '', description: '' }
+        currentEntry = { title: savedTitle, subtitle, rightContent, startDate: '', endDate: '', description: '' }
       }
 
-      if (rightContent) {
-        const dateSep = rightContent.indexOf(' - ')
-        if (dateSep > 0) {
-          currentEntry.startDate = rightContent.slice(0, dateSep).trim()
-          currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
-        } else {
-          currentEntry.startDate = rightContent
-        }
-      }
-
-      const dateStr = [currentEntry.startDate, currentEntry.endDate].filter(Boolean).join(' -- ')
-      currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent: dateStr })
+      currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent })
       continue
     }
 
-    // Bold line: **Subtitle/Position** | Dates
-    // We only treat this as an entry header if it matches the pattern EXACTLY: **text** | date
+    // Bold line: **Position** | RightContent
     const boldHeaderMatch = trimmed.match(/^\*\*(.+?)\*\*\s*\|\s*(.+)$/)
     if (boldHeaderMatch && currentEntry && currentSection) {
       const subtitle = boldHeaderMatch[1].trim()
       const rightContent = boldHeaderMatch[2].trim()
 
-      // If current entry is just started (has title but no subtitle/desc), update it
       if (!currentEntry.subtitle && !currentEntry.description) {
         currentEntry.subtitle = subtitle
+        currentEntry.rightContent = rightContent
       } else {
         const savedTitle = currentEntry.title
         flushEntry()
-        currentEntry = { title: savedTitle, subtitle, startDate: '', endDate: '', description: '' }
+        currentEntry = { title: savedTitle, subtitle, rightContent, startDate: '', endDate: '', description: '' }
       }
 
-      const dateSep = rightContent.indexOf(' - ')
-      if (dateSep > 0) {
-        currentEntry.startDate = rightContent.slice(0, dateSep).trim()
-        currentEntry.endDate = rightContent.slice(dateSep + 3).trim()
-      } else {
-        currentEntry.startDate = rightContent
-      }
-
-      const dateStr = [currentEntry.startDate, currentEntry.endDate].filter(Boolean).join(' -- ')
-      currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent: dateStr })
+      currentSection.blocks!.push({ id: genId('blk'), type: 'h3', content: subtitle, rightContent })
       continue
     }
 
@@ -306,20 +292,20 @@ export function generateMarkdownResume(data: ResumeData): string {
       lines.push('')
       continue
     }
-    lines.push(`## ${section.title}`)
+    lines.push(`## ${section.title}${section.rightContent ? ` | ${section.rightContent}` : ''}`)
     lines.push('')
     let lastCompany = ''
     for (const entry of section.entries) {
       if (entry.title && entry.title !== lastCompany) {
         lastCompany = entry.title
-        lines.push(`### ${entry.title}`)
+        lines.push(`### ${entry.title}${entry.rightContent && !entry.subtitle ? ` | ${entry.rightContent}` : ''}`)
       } else if (!entry.title && !lastCompany) {
         lastCompany = entry.subtitle
-        lines.push(`### ${entry.subtitle}`)
+        lines.push(`### ${entry.subtitle}${entry.rightContent ? ` | ${entry.rightContent}` : ''}`)
       }
-      const dateStr = [entry.startDate, entry.endDate].filter(Boolean).join(' - ')
-      if (entry.subtitle || dateStr) {
-        lines.push(`#### ${[entry.subtitle, dateStr].filter(Boolean).join(' | ')}`)
+      
+      if (entry.subtitle || entry.rightContent) {
+        lines.push(`#### ${entry.subtitle}${entry.rightContent ? ` | ${entry.rightContent}` : ''}`)
       }
       if (entry.description) {
         for (const descLine of entry.description.split('\n')) {

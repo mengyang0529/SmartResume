@@ -16,7 +16,7 @@ describe('resumeTransforms', () => {
             subtitle: 'Software Engineer',
             startDate: '2022',
             endDate: '2024',
-            location: 'Mountain View',
+            rightContent: 'Mountain View',
             description: 'Built cool stuff\nWorked on big projects',
           },
         ],
@@ -26,7 +26,7 @@ describe('resumeTransforms', () => {
       expect(blocks).toHaveLength(5)
       expect(blocks[0]).toMatchObject({ type: 'h1', content: 'Work Experience' })
       expect(blocks[1]).toMatchObject({ type: 'h2', content: 'Google', rightContent: 'Mountain View' })
-      expect(blocks[2]).toMatchObject({ type: 'h3', content: 'Software Engineer', rightContent: '2022 -- 2024' })
+      expect(blocks[2]).toMatchObject({ type: 'h3', content: 'Software Engineer', rightContent: 'Mountain View' })
       expect(blocks[3]).toMatchObject({ type: 'bullet', content: 'Built cool stuff' })
       expect(blocks[4]).toMatchObject({ type: 'bullet', content: 'Worked on big projects' })
     })

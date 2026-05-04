@@ -27,13 +27,11 @@ export interface PersonalInfo {
 export interface Education {
   id: string
   school: string
-  degree: string
-  field?: string
+  rightContent?: string // Replacing specific fields for the right-side editor slot
   startDate: string
   endDate?: string
   description?: string
   gpa?: string
-  location?: string
   blocks?: RichTextBlock[]
 }
 
@@ -41,12 +39,12 @@ export interface Entry {
   id: string
   title: string
   subtitle: string
-  location?: string
+  rightContent?: string // Universal slot for dates, locations, or any metadata
   startDate: string
   endDate?: string
   description?: string
   highlights?: string[]
-  // --- 職務経歴書 fields (all optional) ---
+  // --- 職務経歴书 fields (all optional) ---
   projectName?: string   // プロジェクト名
   teamSize?: string      // チーム規模
   technologies?: string  // 使用技術（comma-separated）
@@ -55,9 +53,11 @@ export interface Entry {
 export interface ResumeSection {
   id: string
   title: string
+  rightContent?: string
   entries: Entry[]
   blocks?: RichTextBlock[]
 }
+
 
 export interface Skill {
   id: string

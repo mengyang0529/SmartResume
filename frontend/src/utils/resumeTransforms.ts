@@ -16,38 +16,29 @@ export function sectionToBlocks(section: ResumeSection): RichTextBlock[] {
     id: `sec-h1-${section.id}`,
     type: 'h1',
     content: section.title,
+    rightContent: section.rightContent || '',
   })
 
-  let lastCompany = ''
+  let lastH2Title = ''
 
   section.entries.forEach((entry) => {
-    // H2 for company (only emit when company changes)
-    if (entry.title && entry.title !== lastCompany) {
-      lastCompany = entry.title
+    // H2 for company
+    if (entry.title && entry.title !== lastH2Title) {
+      lastH2Title = entry.title
       blocks.push({
         id: `ent-h2-${entry.id}`,
         type: 'h2',
         content: entry.title,
-        rightContent: entry.location || '',
-      })
-    } else if (!entry.title && entry.subtitle && !lastCompany) {
-      // Fallback: entry without company title, but with a project name
-      lastCompany = entry.subtitle
-      blocks.push({
-        id: `ent-h2-${entry.id}`,
-        type: 'h2',
-        content: entry.subtitle,
-        rightContent: '',
+        rightContent: entry.rightContent || '',
       })
     }
 
-    // H3 for project name
-    const dateStr = `${entry.startDate}${entry.endDate ? ' -- ' + entry.endDate : ''}`
+    // H3 for position/project
     blocks.push({
       id: `ent-h3-${entry.id}`,
       type: 'h3',
       content: entry.projectName || entry.subtitle,
-      rightContent: dateStr,
+      rightContent: entry.rightContent || '',
     })
 
     // Paragraphs/Bullets for description
@@ -90,39 +81,47 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
 
   let current: Partial<Entry> & { id: string } = { id: crypto.randomUUID() }
   let inEntry = false
-  let companyName = ''
+  let h2Title = ''
 
   blocks.forEach((block) => {
     if (block.type === 'h1') {
       section.title = block.content
+      section.rightContent = block.rightContent
     } else if (block.type === 'h2') {
-      // h2 = company, sets context but does NOT create an entry
+      // h2 = company
       if (inEntry && (current.title || current.description)) {
         section.entries.push(current as Entry)
       }
-      companyName = block.content
-      current = { id: crypto.randomUUID(), title: '', subtitle: '', startDate: '', endDate: '' }
-      inEntry = false  // wait for h3 to start the first project
+      h2Title = block.content
+      current = { 
+        id: crypto.randomUUID(), 
+        title: h2Title, 
+        subtitle: '', 
+        rightContent: block.rightContent,
+        startDate: '', 
+        endDate: '' 
+      }
+      inEntry = false
     } else if (block.type === 'h3') {
-      // h3 = project name, creates a new entry under the current company
+      // h3 = project
       if (inEntry && (current.subtitle || current.description)) {
         section.entries.push(current as Entry)
       }
       current = {
         id: crypto.randomUUID(),
-        title: companyName,
+        title: h2Title,
         subtitle: block.content,
+        rightContent: block.rightContent,
         projectName: block.projectName,
         teamSize: block.teamSize,
         technologies: block.technologies,
       }
-      // Parse dates from rightContent
+      // Parse dates for backward compatibility/sorting, but we prefer rightContent now
       const rc = block.rightContent || ''
       const m = rc.match(/^(.+?)\s*--\s*(.*)$/)
       if (m) {
         current.startDate = m[1].trim()
-        const end = m[2].trim()
-        if (end) current.endDate = end
+        current.endDate = m[2].trim()
       } else {
         current.startDate = rc.trim()
       }
@@ -130,7 +129,7 @@ export function blocksToSection(blocks: RichTextBlock[], sectionId: string): Res
     } else if (block.type === 'bullet' || block.type === 'paragraph') {
       if (!inEntry) {
         inEntry = true
-        current = { id: crypto.randomUUID(), title: companyName, subtitle: '', startDate: '', endDate: '' }
+        current = { id: crypto.randomUUID(), title: h2Title, subtitle: '', startDate: '', endDate: '' }
       }
 
       const content = block.bold ? `**${block.content}**` : block.content
