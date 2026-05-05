@@ -1,7 +1,7 @@
 import { PersonalInfo } from '@app-types/resume';
 import { RichTextBlock } from '@app-types/richText';
-import { generateId } from './id';
-import { parseBoldLine } from './text';
+import { generateId } from '@shared/utils/id';
+import { parseBoldLine } from '@shared/utils/text';
 
 function parseYaml(lines: string[]): Record<string, any> {
   const result: Record<string, any> = {};

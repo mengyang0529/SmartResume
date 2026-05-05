@@ -26,9 +26,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@utils/*": ["src/utils/*"],
-      "@hooks/*": ["src/hooks/*"],
+      "@features/*": ["src/features/*"],
+      "@shared/*": ["src/shared/*"],
+      "@utils/*": ["src/shared/utils/*"],
+      "@hooks/*": ["src/features/*"],
       "@app-types/*": ["src/types/*"],
       "@data/sampleResume": ["src/data/sampleResume.ts"],
       "@data/*": ["src/data/*"],

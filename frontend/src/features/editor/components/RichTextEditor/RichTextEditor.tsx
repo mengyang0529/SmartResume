@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { RichTextBlock, BlockType } from '@app-types/richText';
 import { BLOCK_TYPES } from '@constants/editor';
-import { generateId } from '@utils/id';
+import { generateId } from '@shared/utils/id';
 import EditableBlock from './EditableBlock';
 import RichTextToolbar from './RichTextToolbar';
 import BlockSideMenu from './BlockSideMenu';

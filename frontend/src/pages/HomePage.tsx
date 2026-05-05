@@ -12,7 +12,7 @@ import {
   FaFileImport,
   FaImage,
 } from 'react-icons/fa';
-import { storage } from '@utils/storage';
+import { storage } from '@shared/utils/storage';
 import { RESUME_TEMPLATES } from '@data/templates';
 import type { TemplateDefinition } from '@app-types/template';
 

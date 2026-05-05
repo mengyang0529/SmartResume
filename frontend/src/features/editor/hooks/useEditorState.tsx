@@ -3,14 +3,14 @@ import { useParams } from 'react-router-dom';
 import type { PersonalInfo } from '@app-types/resume';
 import type { EditorState } from '@app-types/editorState';
 import type { RichTextBlock } from '@app-types/richText';
-import { getAccentColor } from '@utils/typstGenerators';
-import { generateMarkdownResume } from '@utils/markdownGenerator';
-import { parseMarkdownResume } from '@utils/markdownParser';
-import { generateId } from '@utils/id';
+import { getAccentColor } from '../../template-renderer/generators';
+import { generateMarkdownResume } from '../services/markdownGenerator';
+import { parseMarkdownResume } from '../services/markdownParser';
+import { generateId } from '@shared/utils/id';
 import { findTemplateBySlug, RESUME_TEMPLATES } from '@data/templates';
-import { usePdfCompiler } from './usePdfCompiler';
+import { usePdfCompiler } from '../../template-renderer/hooks/usePdfCompiler';
 import { useEditorPersistence } from './useEditorPersistence';
-import { downloadBlob } from '@utils/download';
+import { downloadBlob } from '@shared/utils/download';
 
 const INITIAL_PERSONAL: PersonalInfo = {
   firstName: '',

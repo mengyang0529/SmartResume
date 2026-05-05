@@ -2,7 +2,7 @@ import { PersonalInfo } from '@app-types/resume';
 import { TemplateSettings } from '@app-types/template';
 import { RichTextBlock } from '@app-types/richText';
 import { escapeTypstContent, escapeTypstString, formatDateJapanese } from './shared';
-import { dataUrlToTypstBytes } from '@utils/photo';
+import { dataUrlToTypstBytes } from '@shared/utils/photo';
 import { groupBlocksByH1 } from './helpers';
 
 export function generateRirekishoTypst(

@@ -2,7 +2,7 @@ import { PersonalInfo } from '@app-types/resume';
 import { TemplateSettings } from '@app-types/template';
 import { RichTextBlock } from '@app-types/richText';
 import { escapeTypstContent, escapeTypstString, getAccentColor } from './shared';
-import { dataUrlToTypstBytes } from '@utils/photo';
+import { dataUrlToTypstBytes } from '@shared/utils/photo';
 import { groupUnderHeader } from './helpers';
 
 function renderFormattedText(content: string, bold?: boolean, color?: string): string {

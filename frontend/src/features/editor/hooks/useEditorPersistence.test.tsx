@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useEditorPersistence } from './useEditorPersistence';
-import { storage } from '@utils/storage';
+import { storage } from '@shared/utils/storage';
 import { EditorState } from '@app-types/editorState';
 
-vi.mock('@utils/storage', () => ({
+vi.mock('@shared/utils/storage', () => ({
   storage: {
     saveState: vi.fn(),
     getState: vi.fn(),

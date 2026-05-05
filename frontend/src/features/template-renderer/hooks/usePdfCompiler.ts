@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { EditorState } from '@app-types/editorState';
 import { findTemplateBySlug, RESUME_TEMPLATES } from '@data/templates';
 import { useTypstCompiler } from './useTypstCompiler';
-import { generateResumeTypst } from '@utils/typstGenerators';
+import { generateResumeTypst } from '../generators';
 
 export function usePdfCompiler(config: { state: EditorState }) {
   const { state } = config;

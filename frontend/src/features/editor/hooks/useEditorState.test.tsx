@@ -4,7 +4,7 @@ import { useEditorState } from './useEditorState';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 // Mock dependencies
-vi.mock('./usePdfCompiler', () => ({
+vi.mock('../../template-renderer/hooks/usePdfCompiler', () => ({
   usePdfCompiler: () => ({
     pdfUrl: null,
     compileError: null,
@@ -21,7 +21,7 @@ vi.mock('./useEditorPersistence', () => ({
   }),
 }));
 
-vi.mock('@utils/storage', () => ({
+vi.mock('@shared/utils/storage', () => ({
   storage: {
     saveState: vi.fn(),
     getState: vi.fn(),

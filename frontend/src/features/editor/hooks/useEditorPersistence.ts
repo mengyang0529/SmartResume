@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { ResumeData } from '@app-types/resume';
 import type { EditorState } from '@app-types/editorState';
-import { migrateResumeDataToEditorState, extractTemplateSlug } from '@utils/migration';
+import { migrateResumeDataToEditorState, extractTemplateSlug } from '../services/migration';
 import {
   SAMPLE_CLASSIC_CONTENT,
   SAMPLE_RIREKISHO_CONTENT,
@@ -11,7 +11,7 @@ import {
   SAMPLE_SKILLS_SUPPLEMENTARY,
 } from '@data/sampleBlocks';
 import { SAMPLE_RESUME_DATA } from '@data/sampleResume';
-import { storage } from '@utils/storage';
+import { storage } from '@shared/utils/storage';
 
 export function useEditorPersistence(config: {
   templateId: string | undefined;

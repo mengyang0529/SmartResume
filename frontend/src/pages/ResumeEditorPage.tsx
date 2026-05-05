@@ -2,12 +2,12 @@ import { useCallback, useEffect } from 'react';
 import clsx from 'clsx';
 import { useOutletContext } from 'react-router-dom';
 
-import { RichTextEditor } from '@components/RichTextEditor';
-import ResumeEditorToolbar from '@components/ResumeEditorToolbar';
-import ResumePdfPreview from '@components/ResumePdfPreview';
-import ResumePersonalInfoSection from '@components/ResumePersonalInfoSection';
-import SectionCard from '@components/SectionCard';
-import { useEditorState } from '@hooks/useEditorState';
+import { RichTextEditor } from '@features/editor/components/RichTextEditor';
+import ResumeEditorToolbar from '@features/editor/components/ResumeEditorToolbar';
+import ResumePdfPreview from '@features/editor/components/ResumePdfPreview';
+import ResumePersonalInfoSection from '@features/editor/components/ResumePersonalInfoSection';
+import SectionCard from '@features/editor/components/SectionCard';
+import { useEditorState } from '@features/editor/hooks/useEditorState';
 
 export default function ResumeEditorPage() {
   const editor = useEditorState();

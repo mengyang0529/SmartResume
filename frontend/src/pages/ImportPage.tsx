@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import { RESUME_TEMPLATES } from '@data/templates';
-import { parseMarkdownResume } from '@utils/markdownParser';
-import { convertPdfToImage } from '@utils/pdfToImage';
-import { storage } from '@utils/storage';
-import { ChoiceModal } from '@components/import/ChoiceModal';
-import { OnboardingContent } from '@components/import/OnboardingContent';
+import { parseMarkdownResume } from '@features/editor/services/markdownParser';
+import { convertPdfToImage } from '@shared/utils/pdfToImage';
+import { storage } from '@shared/utils/storage';
+import { ChoiceModal } from '@features/import-wizard/components/ChoiceModal';
+import { OnboardingContent } from '@features/import-wizard/components/OnboardingContent';
 
 export default function ImportPage() {
   const { templateId } = useParams<{ templateId: string }>();

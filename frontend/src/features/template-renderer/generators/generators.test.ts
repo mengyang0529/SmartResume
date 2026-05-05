@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { generateResumeTypst } from './index';
 import { SAMPLE_RESUME_DATA, RIREKISHO_SAMPLE_DATA, SHOKUMU_SAMPLE_DATA } from '@data/sampleResume';
 import type { TemplateSettings } from '@app-types/template';
-import { migrateResumeDataToEditorState } from '@utils/migration';
+import { migrateResumeDataToEditorState } from '@features/editor/services/migration';
 
 describe('typstGenerators', () => {
   const defaultSettings: TemplateSettings = {

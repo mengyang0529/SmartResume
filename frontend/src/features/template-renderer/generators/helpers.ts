@@ -57,7 +57,7 @@ export function groupBlocksByH2(blocks: RichTextBlock[]): RichTextBlock[][] {
  */
 export function groupUnderHeader(
   blocks: RichTextBlock[],
-  headerType: 'h1' | 'h2'
+  headerType: 'h1' | 'h2' | 'h3'
 ): { header: RichTextBlock | null; children: RichTextBlock[] }[] {
   const result: { header: RichTextBlock | null; children: RichTextBlock[] }[] = [];
   let current: { header: RichTextBlock | null; children: RichTextBlock[] } = {

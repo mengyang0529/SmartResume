@@ -1,7 +1,7 @@
 import { ResumeData } from '@app-types/resume';
 import { RichTextBlock } from '@app-types/richText';
 import { EditorState } from '@app-types/editorState';
-import { generateId } from './id';
+import { generateId } from '@shared/utils/id';
 
 export function migrateResumeDataToEditorState(
   data: ResumeData,

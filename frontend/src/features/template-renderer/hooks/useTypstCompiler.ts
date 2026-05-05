@@ -36,7 +36,7 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
   const [workerReady, setWorkerReady] = useState(false);
 
   useEffect(() => {
-    const worker = new Worker(new URL('../compiler/typst.worker.ts', import.meta.url), {
+    const worker = new Worker(new URL('../worker/typst.worker.ts', import.meta.url), {
       type: 'module',
     });
     workerRef.current = worker;
