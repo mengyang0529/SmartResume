@@ -11,8 +11,8 @@ import { MD_HEADER_TO_BLOCK_TYPE, SUPPLEMENTARY_HEADER } from '@constants/editor
 function parseFlatFrontmatter(lines: string[]): Record<string, any> {
   const result: Record<string, any> = {};
   for (const line of lines) {
-    // P0-2: 优化正则，允许 value 中包含冒号（如 URL）
-    const match = line.match(/^(\w+):\s*(.*)/);
+    // P0-2: 优化正则，允许 key 前有空格，且允许 value 中包含冒号（如 URL）
+    const match = line.match(/^\s*([\w.-]+)\s*:\s*(.*)/);
     if (match) {
       const key = match[1];
       let val = match[2].replace(/^["']|["']$/g, '').trim();
@@ -84,7 +84,10 @@ export function parseMarkdownResume(md: string): {
     const trimmed = line.trim();
 
     // YAML Frontmatter 处理
-    if (i === 0 && trimmed === '---') {
+    // 修改：放宽对第一行的要求，允许在文件开头有空行或空格的情况下找到第一个 ---
+    if (!inYaml && yamlLines.length === 0 && trimmed === '---') {
+      // 只有在还没开始解析 YAML 且还没遇到过第一个 --- 时才生效
+      // 这能有效处理文件开头的空行或 BOM
       inYaml = true;
       continue;
     }
