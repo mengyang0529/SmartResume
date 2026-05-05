@@ -52,25 +52,25 @@ export const SAMPLE_SKILLS_SUPPLEMENTARY: RichTextBlock[] = [
 
 // --- Rirekisho (JIS) ---
 export const SAMPLE_RIREKISHO_CONTENT: RichTextBlock[] = [
-  { id: 'r1', type: 'h1', content: '学歴・職歴' },
-  { id: 'r2', type: 'h2', content: '東京理科大学', rightContent: '2014-04' },
-  { id: 'r3', type: 'paragraph', content: '工学部情報工学科 入学' },
-  { id: 'r4', type: 'h2', content: '東京理科大学', rightContent: '2018-03' },
-  { id: 'r5', type: 'paragraph', content: '工学部情報工学科 卒業' },
+  { id: 'r1', type: 'h1', content: '学歴・職歴', role: 'custom' },
+  { id: 'r2', type: 'h2', content: '东京理科大学', rightContent: '2014-04' },
+  { id: 'r3', type: 'paragraph', content: '工学部情报工学科 入学' },
+  { id: 'r4', type: 'h2', content: '东京理科大学', rightContent: '2018-03' },
+  { id: 'r5', type: 'paragraph', content: '工学部情报工学科 毕业' },
 ];
 
 export const SAMPLE_RIREKISHO_SUPPLEMENTARY: RichTextBlock[] = [
-  { id: 'r6', type: 'h1', content: '免許・資格' },
-  { id: 'r7', type: 'paragraph', content: '基本情報技術者試験', rightContent: '2018-04' },
-  { id: 'r8', type: 'h1', content: '志望の動機、自己PR、趣味など' },
+  { id: 'r6', type: 'h1', content: '免許・资格', role: 'license' },
+  { id: 'r7', type: 'paragraph', content: '基本情报技术者试验', rightContent: '2018-04' },
+  { id: 'r8', type: 'h1', content: '志望の動機、自己PR、趣味など', role: 'motivation' },
   {
     id: 'r9',
     type: 'paragraph',
     content:
-      '学生時代からものづくりに興味を持ち、大学では情報セキュリティを専攻。持続可能な解決策を提案できる点が強みです。',
+      '学生时代からものづくりに興味を持ち、大学では情报セキュリティを専攻。持続可能な解決策を提案できる点が強みです。',
   },
-  { id: 'r10', type: 'h1', content: '本人希望記入欄' },
-  { id: 'r11', type: 'paragraph', content: '通勤時間は1時間以内を希望します。' },
+  { id: 'r10', type: 'h1', content: '本人希望記入欄', role: 'hopes' },
+  { id: 'r11', type: 'paragraph', content: '通勤时间は1时间以内を希望します。' },
 ];
 
 // --- Shokumu Keirekisho ---

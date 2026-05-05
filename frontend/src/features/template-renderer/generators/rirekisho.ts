@@ -64,7 +64,7 @@ ${dataUrlToTypstBytes(photoUrl)}
       .join('\n');
   };
 
-  // Helper to render a single H1 group based on its content and type
+  // Helper to render a single H1 group based on its structural content
   const renderGroup = (group: RichTextBlock[]) => {
     const header = group[0];
     const items = group.slice(1);
@@ -74,29 +74,16 @@ ${dataUrlToTypstBytes(photoUrl)}
     const escapedTitle = escapeTypstContent(title);
     const hasDates = items.some(b => b.rightContent && b.rightContent.trim() !== '');
 
-    // 1. Specialized "slots" with adaptive layout
-    if (/免許|資格|License/i.test(title)) {
-      if (hasDates) {
-        return `#license-table(\n${renderBlocksAsTableRows(items)}\n)\n\n`;
-      }
-      // If no dates, render as a clean block instead of an empty-column table
-      return `#section-title[${escapedTitle}]\n#block(width: 100%, stroke: 0.4pt, inset: 10pt)[\n${renderBlocksAsContent(items)}\n]\n\n`;
-    }
-
-    if (/志望動機|理由|Motivation|自己PR/i.test(title)) {
-      return `#motivation-block[\n${renderBlocksAsContent(items)}\n]\n\n`;
-    }
-
-    if (/本人希望|Hopes|要望/i.test(title)) {
-      return `#hopes-block[\n${renderBlocksAsContent(items)}\n]\n\n`;
-    }
-
-    // 2. Generic rendering (Adaptive based on presence of dates)
+    // Purely structural rendering: 
+    // If it has dates, it's a table. Otherwise, it's a generic block.
+    // This removes all "license", "motivation", etc. hardcoding.
+    let out = `#section-title[${escapedTitle}]\n`;
     if (hasDates) {
-      return `#section-title[${escapedTitle}]\n#rireki-table(\n${renderBlocksAsTableRows(items)}\n)\n\n`;
+      out += `#rireki-table(\n${renderBlocksAsTableRows(items)}\n)\n\n`;
     } else {
-      return `#section-title[${escapedTitle}]\n#block(width: 100%, stroke: 0.4pt, inset: 10pt)[\n${renderBlocksAsContent(items)}\n]\n\n`;
+      out += `#content-block[\n${renderBlocksAsContent(items)}\n]\n\n`;
     }
+    return out;
   };
 
   // --- Step 1: Render Resume Content (Education, Work History, etc.) ---

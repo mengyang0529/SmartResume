@@ -28,7 +28,7 @@
         #text(size: 9pt)[#datetime.today().display("[year]年[month]月[day]日") 现在]
       ]
       #v(1pt)
-
+      
       #table(
         columns: (1fr),
         rows: (0.7cm, 2.1cm),
@@ -43,7 +43,7 @@
           #text(size: 20pt, weight: "bold", tracking: 0.2em)[#personal.name]
         ]
       )
-
+      
       #v(-line-thickness)
       #table(
         columns: (1fr, 80pt),
@@ -61,11 +61,11 @@
       )
     ],
     [
-      #v(0.5cm)
+      #v(1.2cm)
       #if photo != none {
-        rect(width: 3.4cm, height: 4cm, stroke: line-thickness, padding: 0pt)[#photo]
+        rect(width: 3.4cm, height: 4.5cm, stroke: line-thickness, padding: 0pt)[#photo]
       } else {
-        rect(width: 3.4cm, height: 4cm, stroke: line-thickness + gray, fill: gray.lighten(90%))[
+        rect(width: 3.4cm, height: 4.5cm, stroke: line-thickness + gray, fill: gray.lighten(90%))[
           #set align(center + horizon)
           #text(size: 8pt, fill: gray)[
             写真を贴る位置 \
@@ -109,8 +109,8 @@
   body
 }
 
-// Section Header logic remains the same but spacing uses the same variable
-#let section-header(title) = {
+// Section Header logic
+#let section-title(title) = {
   table(
     columns: (1fr),
     inset: (y: 6pt),
@@ -132,33 +132,15 @@
     align: (center + horizon, left + horizon),
     ..items
   )
-  v(1.0em) // Matching section-gap
+  v(1.0em)
 }
 
-#let section-title(title) = {
-  section-header(title)
-}
-
-#let license-table(title: "免 許 ・ 資 格", ..items) = {
-  section-header(title)
-  rireki-table(..items)
-}
-
-#let motivation-block(content, title: "志望動機・特技・好きな学科・アピールポイントなど") = {
-  section-header(title)
-  block(width: 100%, stroke: 0.4pt, inset: 10pt, height: 4.5cm)[
+// Generic content block for non-date sections (like Motivation, Hopes, etc.)
+#let content-block(content) = {
+  block(width: 100%, stroke: 0.4pt, inset: 10pt, breakable: true)[
     #set text(size: 9.5pt)
     #set par(leading: 6pt)
     #content
   ]
   v(1.0em)
-}
-
-#let hopes-block(content, title: "本人希望記入欄") = {
-  section-header(title)
-  block(width: 100%, stroke: 0.4pt, inset: 10pt, height: 2.5cm)[
-    #set text(size: 9.5pt)
-    #set par(leading: 6pt)
-    #content
-  ]
 }

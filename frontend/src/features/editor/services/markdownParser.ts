@@ -74,12 +74,18 @@ export function parseMarkdownResume(md: string): {
     hasEncounteredContent = true;
     let title = rawContent;
     let rightContent = '';
-    const pipeIdx = rawContent.indexOf('|');
+
+    const pipeIdx = title.indexOf('|');
     if (pipeIdx !== -1) {
-      title = rawContent.slice(0, pipeIdx).trim();
-      rightContent = rawContent.slice(pipeIdx + 1).trim();
+      rightContent = title.slice(pipeIdx + 1).trim();
+      title = title.slice(0, pipeIdx).trim();
     }
-    currentTarget.push({ id: generateId('blk'), type, content: title, rightContent });
+    currentTarget.push({
+      id: generateId('blk'),
+      type,
+      content: title,
+      rightContent,
+    });
   };
 
   for (let i = 0; i < lines.length; i++) {
