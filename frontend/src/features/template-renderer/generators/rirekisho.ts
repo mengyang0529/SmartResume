@@ -29,7 +29,9 @@ ${dataUrlToTypstBytes(photoUrl)}
     name: "${escapeTypstString(personal.lastName)} ${escapeTypstString(personal.firstName)}",
     furigana: "${escapeTypstString(personal.furiganaLastName || '')} ${escapeTypstString(personal.furiganaFirstName || '')}",
     birth: "${escapeTypstString(personal.birth || '')}",
+    zipcode: "",
     address: "${escapeTypstString(personal.address || '')}",
+    "address-kana": "",
     phone: "${escapeTypstString(personal.mobile || '')}",
     email: "${escapeTypstString(personal.email || '')}",
   ),
@@ -71,8 +73,11 @@ ${dataUrlToTypstBytes(photoUrl)}
   const renderGroupContent = (group: RichTextBlock[]) => {
     return group
       .slice(1)
-      .map(b => escapeTypstContent(b.content))
-      .join('\\n');
+      .map(b => {
+        const content = escapeTypstContent(b.content);
+        return b.type === 'bullet' ? `- ${content}` : content;
+      })
+      .join(' \\n ');
   };
 
   // 1. 资格/证书 (License)
