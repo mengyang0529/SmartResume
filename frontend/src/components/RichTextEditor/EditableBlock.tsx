@@ -9,7 +9,6 @@ interface EditableBlockProps {
   onFocus: (id: string) => void;
   onBlur: () => void;
   onKeyDown: (e: React.KeyboardEvent, id: string) => void;
-  headingColor?: string;
 }
 
 const typeStyles: Record<BlockType, string> = {
@@ -28,7 +27,6 @@ export default function EditableBlock({
   onFocus,
   onBlur,
   onKeyDown,
-  headingColor,
 }: EditableBlockProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
@@ -128,7 +126,6 @@ export default function EditableBlock({
             data-placeholder={getPlaceholder(block.type)}
             style={{
               color: block.color || undefined,
-              borderLeftColor: block.type === 'h1' && headingColor ? headingColor : undefined,
             }}
           />
         </div>

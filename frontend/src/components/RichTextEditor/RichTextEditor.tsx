@@ -11,14 +11,12 @@ interface RichTextEditorProps {
   blocks: RichTextBlock[];
   onChange: (blocks: RichTextBlock[]) => void;
   placeholder?: string;
-  headingColor?: string;
 }
 
 export default function RichTextEditor({
   blocks,
   onChange,
   placeholder,
-  headingColor,
 }: RichTextEditorProps) {
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState<{ id: string; type: 'type' | 'color' | null }>({
@@ -241,7 +239,6 @@ export default function RichTextEditor({
               onFocus={handleFocus}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
-              headingColor={headingColor}
             />
           </div>
         ))}

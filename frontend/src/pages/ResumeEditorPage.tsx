@@ -86,7 +86,6 @@ export default function ResumeEditorPage() {
                 <RichTextEditor
                   blocks={editor.contentBlocks}
                   onChange={handleContentChange}
-                  headingColor={editor.accentColor}
                 />
               </SectionCard>
             </section>
@@ -99,7 +98,6 @@ export default function ResumeEditorPage() {
                 <RichTextEditor
                   blocks={editor.supplementaryBlocks}
                   onChange={handleSupplementaryChange}
-                  headingColor={editor.accentColor}
                 />
               </SectionCard>
             </section>
