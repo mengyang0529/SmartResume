@@ -67,8 +67,11 @@ export function parseMarkdownResume(md: string): {
   let inYaml = false;
   let yamlLines: string[] = [];
   let currentTarget = contentBlocks;
+  let hasEncounteredContent = false;
+  let hasEncounteredExplicitYaml = false;
 
   const pushHeaderBlock = (rawContent: string, type: BlockType) => {
+    hasEncounteredContent = true;
     let title = rawContent;
     let rightContent = '';
     const pipeIdx = rawContent.indexOf('|');
@@ -83,17 +86,22 @@ export function parseMarkdownResume(md: string): {
     const line = lines[i];
     const trimmed = line.trim();
 
+    // Skip leading empty lines if we haven't found any YAML or content
+    if (!trimmed && !inYaml && !hasEncounteredContent) {
+      continue;
+    }
+
     // YAML Frontmatter 处理
     // 修改：放宽对第一行的要求，允许在文件开头有空行或空格的情况下找到第一个 ---
-    if (!inYaml && yamlLines.length === 0 && trimmed === '---') {
-      // 只有在还没开始解析 YAML 且还没遇到过第一个 --- 时才生效
-      // 这能有效处理文件开头的空行或 BOM
+    if (!inYaml && yamlLines.length === 0 && trimmed === '---' && !hasEncounteredContent) {
       inYaml = true;
+      hasEncounteredExplicitYaml = true;
       continue;
     }
     if (inYaml && trimmed === '---') {
       inYaml = false;
       Object.assign(personalRaw, parseFlatFrontmatter(yamlLines));
+      yamlLines = []; // 清空，防止干扰
       continue;
     }
     if (inYaml) {
@@ -101,8 +109,19 @@ export function parseMarkdownResume(md: string): {
       continue;
     }
 
+    // 隐式 YAML 支持：如果还没有遇到显式 YAML 且还没开始解析正文内容，
+    // 且当前行符合 key: value 格式，则视为个人信息。
+    if (!hasEncounteredExplicitYaml && !hasEncounteredContent) {
+      const match = line.match(/^\s*([\w.-]+)\s*:\s*(.*)/);
+      if (match) {
+        Object.assign(personalRaw, parseFlatFrontmatter([line]));
+        continue;
+      }
+    }
+
     // P1-2: 使用共享常量作为补充区标识
     if (trimmed === SUPPLEMENTARY_HEADER) {
+      hasEncounteredContent = true;
       currentTarget = supplementaryBlocks;
       continue;
     }
@@ -122,6 +141,7 @@ export function parseMarkdownResume(md: string): {
     // Bold header: **Title** | Right
     const boldHeaderMatch = trimmed.match(/^\*\*(.+?)\*\*\s*\|\s*(.+)$/);
     if (boldHeaderMatch) {
+      hasEncounteredContent = true;
       currentTarget.push({
         id: generateId('blk'),
         type: 'h3',
@@ -132,6 +152,7 @@ export function parseMarkdownResume(md: string): {
     }
 
     if (trimmed) {
+      hasEncounteredContent = true;
       const isBullet = trimmed.startsWith('- ');
       const content = isBullet ? trimmed.slice(2).trim() : trimmed;
       const { content: finalContent, bold } = parseBoldLine(content);

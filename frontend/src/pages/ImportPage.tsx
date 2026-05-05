@@ -69,7 +69,8 @@ export default function ImportPage() {
       const content = event.target?.result as string;
       if (content) {
         setMarkdown(content);
-        if (content.includes('---')) await processImport(content);
+        // 移除了对 '---' 的强依赖检查，支持隐式 Frontmatter
+        await processImport(content);
       }
     };
     reader.readAsText(file);
