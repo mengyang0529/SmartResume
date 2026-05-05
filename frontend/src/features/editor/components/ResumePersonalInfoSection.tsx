@@ -148,21 +148,28 @@ export default function ResumePersonalInfoSection({
         <label className="text-[10px] font-bold text-warm-400 uppercase tracking-widest mb-3 self-start pl-1">
           Profile Photo
         </label>
-        <div className="relative group/photo w-full max-w-[180px] aspect-square rounded-2xl border-2 border-dashed border-[rgba(0,0,0,0.1)] bg-[#fcfcfb] flex flex-col items-center justify-center gap-3 overflow-hidden hover:border-[#0075de] hover:bg-[#0075de]/[0.02] transition-all cursor-pointer">
+        <div 
+          onClick={() => !personal.photo?.url && onPhotoClick()}
+          className={clsx(
+            "relative group/photo w-44 h-44 rounded-2xl border-2 border-dashed border-[rgba(0,0,0,0.1)] bg-[#fcfcfb] flex flex-col items-center justify-center overflow-hidden transition-all",
+            !personal.photo?.url ? "hover:border-[#0075de] hover:bg-[#0075de]/[0.02] cursor-pointer" : "border-none shadow-whisper"
+          )}
+        >
           {personal.photo?.url ? (
-            <div className="absolute inset-0 p-1">
+            <div className="relative w-full h-full group">
               <img
                 src={personal.photo.url}
                 alt="Profile"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover bg-warm-50"
               />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button
                   onClick={e => {
                     e.stopPropagation();
                     onPhotoClick();
                   }}
-                  className="p-2 bg-white rounded-full text-[#0075de] shadow-xl hover:scale-110 transition-transform"
+                  className="p-2.5 bg-white rounded-full text-[#0075de] shadow-xl hover:scale-110 transition-transform"
+                  title="Change Photo"
                 >
                   <FaPlus />
                 </button>
@@ -171,14 +178,15 @@ export default function ResumePersonalInfoSection({
                     e.stopPropagation();
                     onPhotoRemove();
                   }}
-                  className="p-2 bg-[#dc3522] rounded-full text-white shadow-xl hover:scale-110 transition-transform"
+                  className="p-2.5 bg-[#dc3522] rounded-full text-white shadow-xl hover:scale-110 transition-transform"
+                  title="Remove Photo"
                 >
                   <FaTrash />
                 </button>
               </div>
             </div>
           ) : (
-            <div onClick={onPhotoClick} className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-[rgba(0,0,0,0.03)] text-warm-300 flex items-center justify-center text-xl group-hover/photo:scale-110 transition-transform">
                 <FaUser />
               </div>
