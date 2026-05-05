@@ -114,19 +114,22 @@ self.onmessage = async (e: MessageEvent) => {
         self.postMessage({ type: 'photo_error', error: 'Invalid image data URL' });
         break;
       }
-      const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
       const base64 = match[2];
-      const binaryStr = atob(base64);
-      const bytes = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
+      try {
+        const binaryStr = atob(base64);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        if (currentPhotoPath) {
+          $typst.unmapShadow(currentPhotoPath);
+        }
+        currentPhotoPath = '/photo.raw';
+        $typst.mapShadow(currentPhotoPath, bytes);
+        self.postMessage({ type: 'photo_set' });
+      } catch (err: any) {
+        self.postMessage({ type: 'photo_error', error: 'Failed to decode base64: ' + err.message });
       }
-      if (currentPhotoPath) {
-        $typst.unmapShadow(currentPhotoPath);
-      }
-      currentPhotoPath = `/photo.${ext}`;
-      $typst.mapShadow(currentPhotoPath, bytes);
-      self.postMessage({ type: 'photo_set' });
       break;
     }
 

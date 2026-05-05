@@ -81,7 +81,7 @@
     [
       #v(0.9cm) // Align photo box top with the Name Box top
       #if photo != none {
-        rect(width: 3.4cm, height: 4.5cm, stroke: line-thickness, padding: 0pt)[#photo]
+        rect(width: 3.4cm, height: 4.5cm, stroke: line-thickness, inset: 0pt)[#photo]
       } else {
         rect(width: 3.4cm, height: 4.5cm, stroke: line-thickness + gray, fill: gray.lighten(90%))[
           #set align(center + horizon)

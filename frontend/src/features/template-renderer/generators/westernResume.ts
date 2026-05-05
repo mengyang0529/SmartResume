@@ -2,7 +2,6 @@ import { PersonalInfo } from '@app-types/resume';
 import { TemplateSettings } from '@app-types/template';
 import { RichTextBlock } from '@app-types/richText';
 import { escapeTypstContent, escapeTypstString, getAccentColor } from './shared';
-import { dataUrlToTypstBytes } from '@shared/utils/photo';
 import { groupUnderHeader } from './helpers';
 
 function renderFormattedText(content: string, bold?: boolean, color?: string): string {
@@ -108,9 +107,8 @@ export function generateWesternResumeTypst(
   const photoUrl = personal.photo?.url;
   let photoEntry: string;
   if (photoUrl) {
-    photoEntry = `profile-picture: image(bytes((
-${dataUrlToTypstBytes(photoUrl)}
-)), height: 4cm, fit: "cover"),`;
+    // P0-5: Use shadow-mapped path instead of embedding huge bytes
+    photoEntry = 'profile-picture: image("photo.raw", height: 4cm, fit: "cover"),';
   } else {
     photoEntry = 'profile-picture: none,';
   }

@@ -2,7 +2,6 @@ import { PersonalInfo } from '@app-types/resume';
 import { TemplateSettings } from '@app-types/template';
 import { RichTextBlock } from '@app-types/richText';
 import { escapeTypstContent, escapeTypstString, formatDateJapanese } from './shared';
-import { dataUrlToTypstBytes } from '@shared/utils/photo';
 import { groupBlocksByH1 } from './helpers';
 
 export function generateRirekishoTypst(
@@ -15,9 +14,9 @@ export function generateRirekishoTypst(
   const photoUrl = personal.photo?.url;
   let photoEntry: string;
   if (photoUrl) {
-    photoEntry = `photo: image(bytes((
-${dataUrlToTypstBytes(photoUrl)}
-)), height: 4cm, fit: "cover"),`;
+    // P0-5: Use shadow-mapped path instead of embedding huge bytes
+    // Use relative path to be safer with Typst's virtual file system
+    photoEntry = 'photo: image("photo.raw", height: 4.5cm, fit: "cover"),';
   } else {
     photoEntry = 'photo: none,';
   }
