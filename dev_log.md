@@ -176,7 +176,7 @@
   3. 如果某个命名很好，明确说"这里很好，命名准确反映了抽象"
   ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   六、针对你当前项目的具体建议
-  立即可以改的小重构
+  立即可以改的小重构 [DONE]
    当前                       改为                           理由
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    moduleBlocks               contentBlocks                  "module" 无意义，"content" 描述位置
@@ -184,14 +184,14 @@
    awesomeCv.ts               westernResume.ts               描述风格而非具体模板
    generateAwesomeCvTypst()   generateWesternResumeTypst()   同上
    compiler.worker.ts         typst.worker.ts                明确技术栈
-   pdfConverter.ts            看内容再定                     如果是下载，叫 pdfDownloader.ts
+   pdfConverter.ts            pdfToImage.ts                  描述实际行为（从 PDF 转图片）
    useResumeEditor()          useEditorState()               消除冗余的 "Resume"
    useResumeCompile()         usePdfCompiler()               明确产出物是 PDF
-   useResumePersistence()     useAutoSave()                  描述行为（自动保存）而非抽象
-  中期结构调整
-  1. src/services/ — 检查是否为空，为空则删除
-  2. src/test/sampleResume.ts → 移到 src/data/sampleResume.ts
-  3. src/test/setup.ts → 移到项目根 vitest.setup.ts
+   useResumePersistence()     useEditorPersistence()         描述行为而非抽象
+  中期结构调整 [IN PROGRESS]
+  1. src/services/ — [DONE] 已删除
+  2. src/test/sampleResume.ts → [DONE] 移到 src/data/sampleResume.ts
+  3. src/test/setup.ts → [DONE] 移到项目根 vitest.setup.ts
   4. src/utils/typstGenerators/ → 移到 src/features/template-renderer/generators/
   5. src/compiler/ → 移到 src/features/template-renderer/worker/
   6. src/components/import/ → 移到 src/features/import-wizard/components/

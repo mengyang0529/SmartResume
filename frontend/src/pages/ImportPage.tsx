@@ -3,7 +3,7 @@ import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import { RESUME_TEMPLATES } from '@data/templates';
 import { parseMarkdownResume } from '@utils/markdownParser';
-import { convertPdfToImage } from '@utils/pdfConverter';
+import { convertPdfToImage } from '@utils/pdfToImage';
 import { storage } from '@utils/storage';
 import { ChoiceModal } from '@components/import/ChoiceModal';
 import { OnboardingContent } from '@components/import/OnboardingContent';

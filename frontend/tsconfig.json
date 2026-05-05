@@ -27,14 +27,12 @@
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
-      "@services/*": ["src/services/*"],
       "@utils/*": ["src/utils/*"],
       "@hooks/*": ["src/hooks/*"],
       "@app-types/*": ["src/types/*"],
-      "@data/sampleResume": ["src/test/sampleResume.ts"],
+      "@data/sampleResume": ["src/data/sampleResume.ts"],
       "@data/*": ["src/data/*"],
-      "@constants/*": ["src/constants/*"],
-      "@test/*": ["src/test/*"]
+      "@constants/*": ["src/constants/*"]
     }
   },
   "include": ["src"],

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useResumeEditor } from './useResumeEditor';
+import { useEditorState } from './useEditorState';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 // Mock dependencies
-vi.mock('./useResumeCompile', () => ({
-  useResumeCompile: () => ({
+vi.mock('./usePdfCompiler', () => ({
+  usePdfCompiler: () => ({
     pdfUrl: null,
     compileError: null,
     isCompiling: false,
@@ -14,8 +14,8 @@ vi.mock('./useResumeCompile', () => ({
   }),
 }));
 
-vi.mock('./useResumePersistence', () => ({
-  useResumePersistence: () => ({
+vi.mock('./useEditorPersistence', () => ({
+  useEditorPersistence: () => ({
     openImportFile: vi.fn(),
     fileInputRef: { current: null },
   }),
@@ -39,20 +39,20 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   </MemoryRouter>
 );
 
-describe('useResumeEditor', () => {
+describe('useEditorState', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should initialize with templateId from params', () => {
-    const { result } = renderHook(() => useResumeEditor(), { wrapper });
+    const { result } = renderHook(() => useEditorState(), { wrapper });
 
     expect(result.current.state.templateSlug).toBe('modern');
     expect(result.current.personal.firstName).toBe('');
   });
 
   it('should update personal info', () => {
-    const { result } = renderHook(() => useResumeEditor(), { wrapper });
+    const { result } = renderHook(() => useEditorState(), { wrapper });
 
     act(() => {
       result.current.setPersonal({
@@ -67,7 +67,7 @@ describe('useResumeEditor', () => {
   });
 
   it('should add a section', () => {
-    const { result } = renderHook(() => useResumeEditor(), { wrapper });
+    const { result } = renderHook(() => useEditorState(), { wrapper });
 
     act(() => {
       result.current.addSection();
@@ -79,7 +79,7 @@ describe('useResumeEditor', () => {
   });
 
   it('should handle photo remove', () => {
-    const { result } = renderHook(() => useResumeEditor(), { wrapper });
+    const { result } = renderHook(() => useEditorState(), { wrapper });
 
     act(() => {
       result.current.setPersonal({

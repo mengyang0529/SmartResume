@@ -8,8 +8,8 @@ import { generateMarkdownResume } from '@utils/markdownGenerator';
 import { parseMarkdownResume } from '@utils/markdownParser';
 import { generateId } from '@utils/id';
 import { findTemplateBySlug, RESUME_TEMPLATES } from '@data/templates';
-import { useResumeCompile } from './useResumeCompile';
-import { useResumePersistence } from './useResumePersistence';
+import { usePdfCompiler } from './usePdfCompiler';
+import { useEditorPersistence } from './useEditorPersistence';
 import { downloadBlob } from '@utils/download';
 
 const INITIAL_PERSONAL: PersonalInfo = {
@@ -22,7 +22,7 @@ const INITIAL_PERSONAL: PersonalInfo = {
   homepage: '',
 };
 
-export function useResumeEditor() {
+export function useEditorState() {
   const { templateId } = useParams();
 
   // ── Core state ──────────────────────────────────────────────
@@ -36,10 +36,10 @@ export function useResumeEditor() {
   const [isSample, setIsSample] = useState(false);
 
   // ── Compile ──────────────────────────────────────────────────
-  const compile = useResumeCompile({ state });
+  const compile = usePdfCompiler({ state });
 
   // ── Persistence ─────────────────────────────────────────────
-  const persist = useResumePersistence({
+  const persist = useEditorPersistence({
     templateId,
     state,
     setState,

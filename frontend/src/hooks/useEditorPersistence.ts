@@ -13,7 +13,7 @@ import {
 import { SAMPLE_RESUME_DATA } from '@data/sampleResume';
 import { storage } from '@utils/storage';
 
-export function useResumePersistence(config: {
+export function useEditorPersistence(config: {
   templateId: string | undefined;
   state: EditorState;
   setState: (s: EditorState) => void;

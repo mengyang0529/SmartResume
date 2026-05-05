@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useResumePersistence } from './useResumePersistence';
+import { useEditorPersistence } from './useEditorPersistence';
 import { storage } from '@utils/storage';
 import { EditorState } from '@app-types/editorState';
 
@@ -30,7 +30,7 @@ const mockState: EditorState = {
   templateSlug: 'classic',
 };
 
-describe('useResumePersistence', () => {
+describe('useEditorPersistence', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -42,7 +42,7 @@ describe('useResumePersistence', () => {
     vi.mocked(storage.getPhoto).mockResolvedValue('photo-data');
 
     renderHook(() =>
-      useResumePersistence({
+      useEditorPersistence({
         templateId: 'classic',
         state: mockState,
         setState,
@@ -67,7 +67,7 @@ describe('useResumePersistence', () => {
 
     const { rerender } = renderHook(
       ({ state }) =>
-        useResumePersistence({
+        useEditorPersistence({
           templateId: 'classic',
           state,
           setState,
@@ -103,7 +103,7 @@ describe('useResumePersistence', () => {
 
     const { rerender } = renderHook(
       ({ state }) =>
-        useResumePersistence({
+        useEditorPersistence({
           templateId: 'classic',
           state,
           setState,

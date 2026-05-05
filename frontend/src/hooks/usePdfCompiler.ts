@@ -4,7 +4,7 @@ import { findTemplateBySlug, RESUME_TEMPLATES } from '@data/templates';
 import { useTypstCompiler } from './useTypstCompiler';
 import { generateResumeTypst } from '@utils/typstGenerators';
 
-export function useResumeCompile(config: { state: EditorState }) {
+export function usePdfCompiler(config: { state: EditorState }) {
   const { state } = config;
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);

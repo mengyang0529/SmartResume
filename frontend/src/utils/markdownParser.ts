@@ -51,7 +51,7 @@ export function parseMarkdownResume(md: string): {
       continue;
     }
 
-    if (trimmed === '## Skills') {
+    if (trimmed === '## Supplementary') {
       currentTarget = supplementaryBlocks;
       continue;
     }

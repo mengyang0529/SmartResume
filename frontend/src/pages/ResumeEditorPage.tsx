@@ -7,10 +7,10 @@ import ResumeEditorToolbar from '@components/ResumeEditorToolbar';
 import ResumePdfPreview from '@components/ResumePdfPreview';
 import ResumePersonalInfoSection from '@components/ResumePersonalInfoSection';
 import SectionCard from '@components/SectionCard';
-import { useResumeEditor } from '@hooks/useResumeEditor';
+import { useEditorState } from '@hooks/useEditorState';
 
 export default function ResumeEditorPage() {
-  const editor = useResumeEditor();
+  const editor = useEditorState();
   const { setActiveTemplateId } = useOutletContext<{ setActiveTemplateId: (id: string) => void }>();
 
   useEffect(() => {
@@ -93,7 +93,7 @@ export default function ResumeEditorPage() {
             <section id="section-supplementary">
               <SectionCard
                 title="Supplementary Info"
-                subtitle="Use H2 for category names and H3/bullet for details"
+                subtitle="Use H1 for section headings; all other block types can be used freely."
               >
                 <RichTextEditor
                   blocks={editor.supplementaryBlocks}

@@ -8,11 +8,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@components': path.resolve(__dirname, './src/components'),
-      '@services': path.resolve(__dirname, './src/services'),
       "@utils": path.resolve(__dirname, './src/utils'),
       "@hooks": path.resolve(__dirname, './src/hooks'),
       "@app-types": path.resolve(__dirname, './src/types'),
-      "@data/sampleResume": path.resolve(__dirname, './src/test/sampleResume.ts'),
+      "@data/sampleResume": path.resolve(__dirname, './src/data/sampleResume.ts'),
       "@data": path.resolve(__dirname, './src/data'),
       "@constants": path.resolve(__dirname, './src/constants'),
       },  },
@@ -40,13 +39,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
-        'src/test/',
         '**/*.d.ts',
         '**/*.config.*',
         '**/index.ts',

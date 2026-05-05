@@ -31,7 +31,7 @@ export function generateMarkdownResume(data: {
   if (personal.linkedin) lines.push(`linkedin: ${escapeYaml(personal.linkedin)}`);
   if (personal.twitter) lines.push(`twitter: ${escapeYaml(personal.twitter)}`);
   if (personal.quote) lines.push(`quote: ${escapeYaml(personal.quote)}`);
-  if (personal.photo?.url) lines.push(`photoUrl: ${escapeYaml(personal.photo.url)}`);
+  if (personal.photo?.url && !personal.photo.url.startsWith('data:')) lines.push(`photoUrl: ${escapeYaml(personal.photo.url)}`);
   lines.push('---');
   lines.push('');
 
@@ -55,9 +55,9 @@ export function generateMarkdownResume(data: {
   renderBlocks(contentBlocks);
 
   if (supplementaryBlocks.length > 0) {
-    lines.push('## Skills');
+    lines.push('## Supplementary');
     lines.push('');
-    renderBlocks(supplementaryBlocks.filter(b => b.type !== 'h1'));
+    renderBlocks(supplementaryBlocks);
   }
 
   return lines.join('\n');
