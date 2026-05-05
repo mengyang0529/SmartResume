@@ -13,6 +13,8 @@ import {
 import { SAMPLE_RESUME_DATA } from '@data/sampleResume';
 import { storage } from '@shared/utils/storage';
 
+import { getSampleStateForTemplate } from '../services/sampleData';
+
 export function useEditorPersistence(config: {
   templateId: string | undefined;
   state: EditorState;
@@ -40,6 +42,7 @@ export function useEditorPersistence(config: {
       }
 
       // 2. Auto-migrate legacy keys
+      // ... (rest of legacy migration logic)
       const legacyKeys = [
         'current_resume_data_classic',
         'current_resume_data_modern',
@@ -62,30 +65,7 @@ export function useEditorPersistence(config: {
 
       // 3. Fallback to sample if nothing found
       const slug = templateId || 'classic';
-      
-      const SAMPLE_MAP: Record<string, { content: any; supplementary: any }> = {
-        rirekisho: {
-          content: SAMPLE_RIREKISHO_CONTENT,
-          supplementary: SAMPLE_RIREKISHO_SUPPLEMENTARY,
-        },
-        shokumukeirekisho: {
-          content: SAMPLE_SHOKUMU_CONTENT,
-          supplementary: SAMPLE_SHOKUMU_SUPPLEMENTARY,
-        },
-      };
-
-      const sampleConfig = SAMPLE_MAP[slug] || {
-        content: SAMPLE_CLASSIC_CONTENT,
-        supplementary: SAMPLE_SKILLS_SUPPLEMENTARY,
-      };
-
-      const sampleState: EditorState = {
-        version: 2,
-        personal: SAMPLE_RESUME_DATA.personal,
-        contentBlocks: sampleConfig.content,
-        supplementaryBlocks: sampleConfig.supplementary,
-        templateSlug: slug,
-      };
+      const sampleState = getSampleStateForTemplate(slug);
       setState(sampleState);
       setIsSample(true);
     }

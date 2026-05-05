@@ -8,6 +8,8 @@ import { storage } from '@shared/utils/storage';
 import { ChoiceModal } from '@features/import-wizard/components/ChoiceModal';
 import { OnboardingContent } from '@features/import-wizard/components/OnboardingContent';
 
+import { getSampleStateForTemplate } from '@features/editor/services/sampleData';
+
 export default function ImportPage() {
   const { templateId } = useParams<{ templateId: string }>();
   const navigate = useNavigate();
@@ -89,13 +91,19 @@ export default function ImportPage() {
     }
   };
 
+  const handleStartFromScratch = async () => {
+    const sampleState = getSampleStateForTemplate(template.slug);
+    await storage.saveState(sampleState);
+    navigate(`/editor/${template.slug}`);
+  };
+
   return (
     <div className="bg-[#fcfcfb] min-h-[calc(100vh-55px)] flex flex-col relative">
       <ChoiceModal
         show={showChoiceModal}
         onClose={() => setShowChoiceModal(false)}
         onSelectImport={() => setShowChoiceModal(false)}
-        onSelectScratch={() => navigate(`/editor/${template.slug}`)}
+        onSelectScratch={handleStartFromScratch}
         onGoBack={() => navigate('/templates')}
       />
 
