@@ -8,11 +8,11 @@ export const EDITOR_COLORS = [
 ] as const;
 
 export const BLOCK_TYPES = [
-  { type: 'h1' as const, label: 'H1' },
-  { type: 'h2' as const, label: 'H2' },
-  { type: 'h3' as const, label: 'H3' },
-  { type: 'bullet' as const, label: '•' },
-  { type: 'paragraph' as const, label: '¶' },
+  { type: 'h1' as const, label: 'H1', hasRightContent: false },
+  { type: 'h2' as const, label: 'H2', hasRightContent: true },
+  { type: 'h3' as const, label: 'H3', hasRightContent: true },
+  { type: 'bullet' as const, label: '•', hasRightContent: false },
+  { type: 'paragraph' as const, label: '¶', hasRightContent: false },
 ] as const;
 
 export const SUPPLEMENTARY_HEADER = '## Supplementary';

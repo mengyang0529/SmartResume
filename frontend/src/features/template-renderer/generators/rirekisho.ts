@@ -65,7 +65,7 @@ ${dataUrlToTypstBytes(photoUrl)}
   if (inTable) typst += `)\n\n`;
 
   // Process supplementaryBlocks (License, Motivation, Hopes)
-  // Mapping the first 3 H1 blocks to the specific slots in rirekisho if they exist
+  // P1-4: 消除了对下标位置的耦合，改为通过 H1 标题内容进行语义匹配
   const h1Groups = groupBlocksByH1(supplementaryBlocks);
 
   const renderGroupContent = (group: RichTextBlock[]) => {
@@ -75,9 +75,11 @@ ${dataUrlToTypstBytes(photoUrl)}
       .join('\\n');
   };
 
-  if (h1Groups.length > 0) {
+  // 1. 资格/证书 (License)
+  const licenseGroup = h1Groups.find(g => /免許|資格|License/i.test(g[0].content));
+  if (licenseGroup) {
     typst += `#license-table(\n`;
-    h1Groups[0].slice(1).forEach(block => {
+    licenseGroup.slice(1).forEach(block => {
       const date = block.rightContent
         ? escapeTypstContent(formatDateJapanese(block.rightContent))
         : '';
@@ -86,13 +88,31 @@ ${dataUrlToTypstBytes(photoUrl)}
     typst += `)\n\n`;
   }
 
-  if (h1Groups.length > 1) {
-    typst += `#motivation-block[${renderGroupContent(h1Groups[1])}]\n\n`;
+  // 2. 志望动机 (Motivation)
+  const motivationGroup = h1Groups.find(g => /志望動機|理由|Motivation/i.test(g[0].content));
+  if (motivationGroup) {
+    typst += `#motivation-block[${renderGroupContent(motivationGroup)}]\n\n`;
   }
 
-  if (h1Groups.length > 2) {
-    typst += `#hopes-block[${renderGroupContent(h1Groups[2])}]\n\n`;
+  // 3. 本人希望栏 (Hopes)
+  const hopesGroup = h1Groups.find(g => /本人希望|Hopes/i.test(g[0].content));
+  if (hopesGroup) {
+    typst += `#hopes-block[${renderGroupContent(hopesGroup)}]\n\n`;
   }
+
+  // 兜底渲染：如果还有其他 H1 块没被上述特定槽位捕获，按通用格式渲染
+  const processedIds = new Set([
+    ...(licenseGroup?.[0] ? [licenseGroup[0].id] : []),
+    ...(motivationGroup?.[0] ? [motivationGroup[0].id] : []),
+    ...(hopesGroup?.[0] ? [hopesGroup[0].id] : []),
+  ]);
+
+  h1Groups
+    .filter(g => !processedIds.has(g[0].id))
+    .forEach(g => {
+      typst += `#section-title[${escapeTypstContent(g[0].content)}]\n`;
+      typst += `${renderGroupContent(g)}\n\n`;
+    });
 
   return typst;
 }

@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import type { RichTextBlock, BlockType } from '@app-types/richText';
+import { BLOCK_TYPES } from '@constants/editor';
 import clsx from 'clsx';
 
 interface EditableBlockProps {
@@ -31,20 +32,23 @@ export default function EditableBlock({
   const contentRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
 
+  // P0-4: 改进 DOM 同步逻辑，确保外部状态变化能反映到编辑器，同时避免正在输入时的闪烁
   useEffect(() => {
     if (contentRef.current && contentRef.current.textContent !== block.content) {
+      // 仅在非激活状态或内容确实不一致时同步，避免输入过程中的光标跳变
       contentRef.current.textContent = block.content;
     }
-  }, [block.id]); // only sync on mount / id change
+  }, [block.content, block.id]); // 监听 content 和 id
 
   useEffect(() => {
-    if (rightRef.current && rightRef.current.textContent !== (block.rightContent || '')) {
-      rightRef.current.textContent = block.rightContent || '';
+    const rightVal = block.rightContent || '';
+    if (rightRef.current && rightRef.current.textContent !== rightVal) {
+      rightRef.current.textContent = rightVal;
     }
-  }, [block.id]);
+  }, [block.rightContent, block.id]);
 
   const handleContentInput = useCallback(() => {
-    let text = contentRef.current?.textContent || '';
+    const text = contentRef.current?.textContent || '';
 
     // 1. Detect whole-line bold shortcut: **text**
     if (!block.bold && text.startsWith('**') && text.endsWith('**') && text.length > 4) {
@@ -54,7 +58,7 @@ export default function EditableBlock({
       return;
     }
 
-    // 2. Detect header shortcuts at the start of a paragraph/bullet
+    // 2. Detect header shortcuts
     if (block.type === 'paragraph' || block.type === 'bullet') {
       if (text.startsWith('# ')) {
         const newContent = text.slice(2);
@@ -88,10 +92,22 @@ export default function EditableBlock({
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
-    document.execCommand('insertText', false, text);
-  }, []);
+    
+    // P0-2: 使用现代 Selection API 替代已废弃的 execCommand
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    selection.deleteFromDocument();
+    selection.getRangeAt(0).insertNode(document.createTextNode(text));
+    selection.collapseToEnd();
+    
+    // 粘贴后手动触发更新
+    if (e.currentTarget === contentRef.current) handleContentInput();
+    else handleRightInput();
+  }, [handleContentInput, handleRightInput]);
 
-  const showRight = block.type === 'h2' || block.type === 'h3';
+  // P2-1: 使用配置驱动的逻辑显示右侧内容
+  const blockConfig = BLOCK_TYPES.find(t => t.type === block.type);
+  const showRight = blockConfig?.hasRightContent ?? false;
 
   return (
     <div

@@ -4,6 +4,17 @@ import { RichTextBlock } from '@app-types/richText';
 import { escapeTypstContent, escapeTypstString, formatDateRangeJapanese } from './shared';
 import { groupUnderHeader } from './helpers';
 
+// P1-5: 使用明确的 Layout 类型而非正则匹配
+type SectionLayout = 'summary' | 'skills' | 'experience' | 'default';
+
+function getSectionLayout(title: string): SectionLayout {
+  const t = title.toLowerCase();
+  if (/職務要約|summary/i.test(t)) return 'summary';
+  if (/経験|知識|技術|スキル|skill/i.test(t)) return 'skills';
+  if (/職務経歴|experience/i.test(t)) return 'experience';
+  return 'default';
+}
+
 function renderDescriptionLine(content: string): string {
   const boldMatch = content.match(/^\*\*(.+)\*\*$/);
   if (boldMatch) {
@@ -44,7 +55,7 @@ export function generateShokumuKeirekishoTypst(
 )
 
 // ── Document Header ──
-#align(center)[#text(size: 15pt, weight: "bold")[職務経歴書]]
+#align(center)[#text(size: 15pt, weight: "bold")[職務経歴书]]
 #v(2pt)
 #align(right)[
   #text(size: 9pt)[氏名 ${escapeTypstString(personal.lastName)} ${escapeTypstString(personal.firstName)}]
@@ -62,8 +73,10 @@ export function generateShokumuKeirekishoTypst(
 
     typst += `#section-title[${escapeTypstContent(sectionTitle)}]\n`;
 
-    // 職務要約 → plain text
-    if (/職務要約|summary/i.test(sectionTitle)) {
+    const layout = getSectionLayout(sectionTitle);
+
+    if (layout === 'summary') {
+      // 職務要約 → plain text
       for (const block of section.children) {
         if (block.type === 'h2') {
           typst += `#text(size: 10pt, weight: "bold")[${escapeTypstContent(block.content)}]\n`;
@@ -74,11 +87,8 @@ export function generateShokumuKeirekishoTypst(
         }
       }
       typst += '\n';
-      continue;
-    }
-
-    // 活かせる経験・知識・技術 → list layout (H2 as category, items in #list)
-    if (/経験|知識|技術|スキル|skill/i.test(sectionTitle)) {
+    } else if (layout === 'skills') {
+      // 活かせる経験・知识・技术 → list layout
       const categories = groupUnderHeader(section.children, 'h2');
       for (const cat of categories) {
         const catName = cat.header?.content || '';
@@ -95,68 +105,66 @@ export function generateShokumuKeirekishoTypst(
         }
       }
       typst += '\n';
-      continue;
-    }
-
-    // Default: table layout
-    const companies = groupUnderHeader(section.children, 'h2');
-    const merged: typeof companies = [];
-    for (const c of companies) {
-      const prev = merged[merged.length - 1];
-      if (prev && prev.header?.content === c.header?.content) {
-        prev.children.push(...c.children);
-      } else {
-        merged.push(c);
+    } else {
+      // Default / experience: table layout
+      const companies = groupUnderHeader(section.children, 'h2');
+      const merged: typeof companies = [];
+      for (const c of companies) {
+        const prev = merged[merged.length - 1];
+        if (prev && prev.header?.content === c.header?.content) {
+          prev.children.push(...c.children);
+        } else {
+          merged.push(c);
+        }
       }
-    }
 
-    for (const company of merged) {
-      const companyName = company.header?.content || '';
-      if (!companyName) continue;
+      for (const company of merged) {
+        const companyName = company.header?.content || '';
+        if (!companyName) continue;
 
-      typst += `#block(above: 1.2em, below: 0.3em)[#text(size: 10pt, weight: "bold")[${escapeTypstString(companyName)}]]\n`;
+        typst += `#block(above: 1.2em, below: 0.3em)[#text(size: 10pt, weight: "bold")[${escapeTypstString(companyName)}]]\n`;
 
-      const roles = groupUnderHeader(company.children, 'h3');
+        const roles = groupUnderHeader(company.children, 'h3');
 
-      typst += `#table(
+        typst += `#table(
   columns: (1fr),
   stroke: 0.5pt + black,
   inset: (x: 8pt, y: 6pt),
 `;
 
-      for (const role of roles) {
-        const period = role.header?.rightContent
-          ? formatDateRangeJapanese(role.header.rightContent)
-          : '';
-        const projectName = role.header?.content || '';
+        for (const role of roles) {
+          const period = role.header?.rightContent
+            ? formatDateRangeJapanese(role.header.rightContent)
+            : '';
+          const projectName = role.header?.content || '';
 
-        let cell = '';
-        if (period) {
-          cell += `  #text(size: 9pt)[${escapeTypstContent(period)}] \\\n`;
-        }
-        if (projectName) {
-          cell += `  #text(size: 9pt, weight: "bold")[${escapeTypstContent(projectName)}] \\\n`;
-        }
-        for (const block of role.children) {
-          if (block.type === 'bullet') {
-            cell += `  #text(size: 9pt)[・ ${escapeTypstContent(block.content)}] \\\n`;
-          } else {
-            cell += renderDescriptionLine(block.content);
+          let cell = '';
+          if (period) {
+            cell += `  #text(size: 9pt)[${escapeTypstContent(period)}] \\\n`;
           }
+          if (projectName) {
+            cell += `  #text(size: 9pt, weight: "bold")[${escapeTypstContent(projectName)}] \\\n`;
+          }
+          for (const block of role.children) {
+            if (block.type === 'bullet') {
+              cell += `  #text(size: 9pt)[・ ${escapeTypstContent(block.content)}] \\\n`;
+            } else {
+              cell += renderDescriptionLine(block.content);
+            }
+          }
+
+          typst += `  [\n${cell}  ],\n`;
         }
 
-        typst += `  [\n${cell}  ],\n`;
+        typst += `)\n\n`;
       }
-
-      typst += `)\n\n`;
     }
   }
 
-  // Process supplementaryBlocks — H1 for sections, all other block types freely mixed
+  // Process supplementaryBlocks
   if (supplementaryBlocks.length > 0) {
     const suppSections = groupUnderHeader(supplementaryBlocks, 'h1');
 
-    // If no H1 found, render all blocks as one flat section
     if (suppSections.length === 0 || (suppSections.length === 1 && !suppSections[0].header)) {
       for (const block of supplementaryBlocks) {
         typst += renderBlock(block);

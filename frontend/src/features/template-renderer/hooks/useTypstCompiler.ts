@@ -24,6 +24,9 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
   const pendingTemplateIdRef = useRef<number | undefined>(undefined);
   const pendingCompileIdRef = useRef<number | undefined>(undefined);
   const onCompileResultRef = useRef(options.onCompileResult);
+  
+  // P0-5: 使用 Ref 追踪当前的 PDF Blob URL 以确保在组件卸载时正确释放内存
+  const currentPdfUrlRef = useRef<string | null>(null);
 
   // Update ref when callback changes
   useEffect(() => {
@@ -34,6 +37,28 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
   const [isCompiling, setIsCompiling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [workerReady, setWorkerReady] = useState(false);
+
+  // 同步 ref 和 state，确保 cleanup 能拿到最新的 URL
+  useEffect(() => {
+    currentPdfUrlRef.current = pdfBlobUrl;
+  }, [pdfBlobUrl]);
+
+  const triggerDelayedCompile = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      if (workerRef.current && sourceRef.current) {
+        const templateId = pendingTemplateIdRef.current;
+        const compileId = pendingCompileIdRef.current;
+        pendingTemplateIdRef.current = undefined;
+        pendingCompileIdRef.current = undefined;
+        setIsCompiling(true);
+        workerRef.current.postMessage({
+          type: 'compile',
+          payload: { templateId, compileId },
+        });
+      }
+    }, debounceMs);
+  }, [debounceMs]);
 
   useEffect(() => {
     const worker = new Worker(new URL('../worker/typst.worker.ts', import.meta.url), {
@@ -57,10 +82,13 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
         case 'compile_done':
           setIsCompiling(false);
           if (pdfBytes) {
-            if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+            // P0-5: 显式释放旧的 URL 内存
+            if (currentPdfUrlRef.current) {
+              URL.revokeObjectURL(currentPdfUrlRef.current);
+            }
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-            setPdfBlobUrl(URL.createObjectURL(blob));
-            // Use the ref to call the LATEST callback
+            const newUrl = URL.createObjectURL(blob);
+            setPdfBlobUrl(newUrl);
             onCompileResultRef.current?.(pdfBytes, compileId);
           }
           setError(null);
@@ -73,6 +101,9 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
           triggerDelayedCompile();
           break;
         case 'reset_done':
+          if (currentPdfUrlRef.current) {
+            URL.revokeObjectURL(currentPdfUrlRef.current);
+          }
           setPdfBlobUrl(null);
           setError(null);
           setWorkerReady(false);
@@ -85,27 +116,14 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
-      worker.terminate();
-    };
-  }, []);
-
-  const triggerDelayedCompile = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      if (workerRef.current && sourceRef.current) {
-        const templateId = pendingTemplateIdRef.current;
-        const compileId = pendingCompileIdRef.current;
-        pendingTemplateIdRef.current = undefined;
-        pendingCompileIdRef.current = undefined;
-        setIsCompiling(true);
-        workerRef.current.postMessage({
-          type: 'compile',
-          payload: { templateId, compileId },
-        });
+      // P0-5: 修正原有的 stale closure 问题，使用 ref 释放最新的 URL
+      if (currentPdfUrlRef.current) {
+        URL.revokeObjectURL(currentPdfUrlRef.current);
       }
-    }, debounceMs);
-  }, [debounceMs]);
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, [triggerDelayedCompile]); // triggerDelayedCompile 依赖已稳定
 
   const compile = useCallback(
     (source: string, templateId?: number, compileId?: number) => {
@@ -150,13 +168,15 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
   const reset = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     sourceRef.current = '';
-    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    if (currentPdfUrlRef.current) {
+      URL.revokeObjectURL(currentPdfUrlRef.current);
+    }
     setPdfBlobUrl(null);
     setError(null);
     if (workerRef.current) {
       workerRef.current.postMessage({ type: 'reset' });
     }
-  }, [pdfBlobUrl]);
+  }, []);
 
   return { pdfBlobUrl, isCompiling, error, compile, setPhoto, removePhoto, reset };
 }

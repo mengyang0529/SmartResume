@@ -1,16 +1,15 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import type { PersonalInfo } from '@app-types/resume';
 import type { EditorState } from '@app-types/editorState';
 import type { RichTextBlock } from '@app-types/richText';
 import { getAccentColor } from '../../template-renderer/generators';
-import { generateMarkdownResume } from '../services/markdownGenerator';
-import { parseMarkdownResume } from '../services/markdownParser';
 import { generateId } from '@shared/utils/id';
 import { findTemplateBySlug, RESUME_TEMPLATES } from '@data/templates';
 import { usePdfCompiler } from '../../template-renderer/hooks/usePdfCompiler';
 import { useEditorPersistence } from './useEditorPersistence';
-import { downloadBlob } from '@shared/utils/download';
+import { usePhotoManager } from './usePhotoManager';
+import { useEditorIO } from './useEditorIO';
 
 const INITIAL_PERSONAL: PersonalInfo = {
   firstName: '',
@@ -46,13 +45,6 @@ export function useEditorState() {
     setIsSample,
   });
 
-  // ── Template switching ───────────────────────────────────────
-  useEffect(() => {
-    if (templateId && templateId !== state.templateSlug) {
-      setState(prev => ({ ...prev, templateSlug: templateId }));
-    }
-  }, [templateId, state.templateSlug]);
-
   // ── Handlers ────────────────────────────────────────────────
   const setPersonal = useCallback((personal: PersonalInfo) => {
     setState(prev => ({ ...prev, personal }));
@@ -68,60 +60,36 @@ export function useEditorState() {
 
   const handleChange = useCallback(() => setIsSample(false), []);
 
+  // ── Feature Hooks (P1-1: 职责拆分) ──────────────────────────
+  const { 
+    photoInputRef, 
+    handlePhotoClick, 
+    handlePhotoUpload, 
+    handlePhotoRemove 
+  } = usePhotoManager(state.personal, setPersonal, handleChange);
+
+  const {
+    handleFileUpload,
+    handleExportMarkdown
+  } = useEditorIO({
+    state,
+    onImport: (parsed) => {
+      setState({ ...parsed, version: 2, templateSlug: state.templateSlug });
+      setIsSample(false);
+    }
+  });
+
+  // ── Template switching ───────────────────────────────────────
+  useEffect(() => {
+    if (templateId && templateId !== state.templateSlug) {
+      setState(prev => ({ ...prev, templateSlug: templateId }));
+    }
+  }, [templateId, state.templateSlug]);
+
   const addSection = () => {
     handleChange();
     const newId = generateId('block');
     setContentBlocks([...state.contentBlocks, { id: newId, type: 'h1', content: 'New Section' }]);
-  };
-
-  const handleFileUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const raw = reader.result as string;
-          const parsed = parseMarkdownResume(raw);
-          setState({ ...parsed, version: 2, templateSlug: state.templateSlug });
-          setIsSample(false);
-        } catch (_) {
-          /* ignore */
-        }
-      };
-      reader.readAsText(file);
-      event.target.value = '';
-    },
-    [state.templateSlug]
-  );
-
-  const handleExportMarkdown = () => {
-    const md = generateMarkdownResume({
-      personal: state.personal,
-      contentBlocks: state.contentBlocks,
-      supplementaryBlocks: state.supplementaryBlocks,
-    });
-    const blob = new Blob([md], { type: 'text/markdown' });
-    downloadBlob(blob, `${state.personal.firstName || 'resume'}-backup.md`);
-  };
-
-  // ── Photo ────────────────────────────────────────────────────
-  const photoInputRef = useRef<HTMLInputElement | null>(null);
-  const handlePhotoClick = () => photoInputRef.current?.click();
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    handleChange();
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setPersonal({ ...state.personal, photo: { url: dataUrl, shape: 'circle' } });
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-  const handlePhotoRemove = () => {
-    setPersonal({ ...state.personal, photo: undefined });
   };
 
   // ── Derived values ───────────────────────────────────────────
