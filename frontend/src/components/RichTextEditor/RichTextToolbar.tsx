@@ -1,46 +1,23 @@
-import { useState } from 'react'
-import type { BlockType } from '../../types/richText'
-import {
-  FaBold,
-  FaPlus,
-  FaTrash,
-  FaArrowUp,
-  FaArrowDown,
-  FaPalette,
-} from 'react-icons/fa'
-import clsx from 'clsx'
+import { useState } from 'react';
+import type { BlockType } from '@app-types/richText';
+import { BLOCK_TYPES, EDITOR_COLORS } from '@constants/editor';
+import { FaBold, FaPlus, FaTrash, FaArrowUp, FaArrowDown, FaPalette } from 'react-icons/fa';
+import clsx from 'clsx';
 
 interface RichTextToolbarProps {
-  activeBlockType: BlockType | null
-  activeBlockBold: boolean
-  activeBlockColor: string | undefined
-  onChangeType: (type: BlockType) => void
-  onToggleBold: () => void
-  onChangeColor: (color: string) => void
-  onAddBlock: () => void
-  onDeleteBlock: () => void
-  onMoveBlock: (dir: 'up' | 'down') => void
-  canDelete: boolean
-  canMoveUp: boolean
-  canMoveDown: boolean
+  activeBlockType: BlockType | null;
+  activeBlockBold: boolean;
+  activeBlockColor: string | undefined;
+  onChangeType: (type: BlockType) => void;
+  onToggleBold: () => void;
+  onChangeColor: (color: string) => void;
+  onAddBlock: () => void;
+  onDeleteBlock: () => void;
+  onMoveBlock: (dir: 'up' | 'down') => void;
+  canDelete: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 }
-
-const blockTypes: { type: BlockType; label: string }[] = [
-  { type: 'h1', label: 'H1' },
-  { type: 'h2', label: 'H2' },
-  { type: 'h3', label: 'H3' },
-  { type: 'bullet', label: '•' },
-  { type: 'paragraph', label: '¶' },
-]
-
-const colors = [
-  { label: 'Default', value: undefined },
-  { label: 'Red', value: '#DC3522' },
-  { label: 'Sky', value: '#0395DE' },
-  { label: 'Emerald', value: '#00A388' },
-  { label: 'Orange', value: '#FF6138' },
-  { label: 'White', value: '#ffffff' },
-]
 
 export default function RichTextToolbar({
   activeBlockType,
@@ -56,13 +33,13 @@ export default function RichTextToolbar({
   canMoveUp,
   canMoveDown,
 }: RichTextToolbarProps) {
-  const [showColorPicker, setShowColorPicker] = useState(false)
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   return (
     <div className="bg-[#f6f5f4] border-b border-[rgba(0,0,0,0.1)] px-4 py-2.5 flex flex-wrap items-center gap-2">
       {/* Block type selector */}
       <div className="flex items-center gap-0.5 bg-white border border-[rgba(0,0,0,0.1)] rounded-md p-0.5">
-        {blockTypes.map(({ type, label }) => (
+        {BLOCK_TYPES.map(({ type, label }) => (
           <button
             key={type}
             onClick={() => onChangeType(type)}
@@ -114,16 +91,16 @@ export default function RichTextToolbar({
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
             <div className="absolute top-8 left-0 z-50 flex items-center gap-1.5 bg-white border border-[rgba(0,0,0,0.1)] rounded-lg shadow-deep p-2">
-              {colors.map((c) => (
+              {EDITOR_COLORS.map(c => (
                 <button
                   key={c.label}
                   onClick={() => {
-                    onChangeColor(c.value || '')
-                    setShowColorPicker(false)
+                    onChangeColor(c.value || '');
+                    setShowColorPicker(false);
                   }}
                   className={clsx(
                     'w-5 h-5 rounded-full border-2 transition-all',
-                    activeBlockColor === c.value
+                    activeBlockColor === (c.value || undefined)
                       ? 'border-[#0075de] scale-110'
                       : 'border-transparent hover:border-[rgba(0,0,0,0.2)]'
                   )}
@@ -171,5 +148,5 @@ export default function RichTextToolbar({
         <FaTrash className="text-xs" />
       </button>
     </div>
-  )
+  );
 }

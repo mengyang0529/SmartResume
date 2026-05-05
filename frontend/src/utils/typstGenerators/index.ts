@@ -1,36 +1,35 @@
-import { ResumeData, TemplateSettings } from '../../types/resume';
-import { RichTextBlock } from '../../types/richText';
-import { generateAwesomeCvTypst } from './awesomeCv';
+import { PersonalInfo } from '@app-types/resume';
+import { TemplateSettings } from '@app-types/template';
+import { RichTextBlock } from '@app-types/richText';
+import { generateWesternResumeTypst } from './westernResume';
 import { generateRirekishoTypst } from './rirekisho';
 import { generateShokumuKeirekishoTypst } from './shokumukeirekisho';
-import { getAccentColor } from './shared';
 
-export { getAccentColor };
-
-type TypstGenerator = (
-  data: ResumeData,
+export type TypstGenerator = (
+  personal: PersonalInfo,
+  contentBlocks: RichTextBlock[],
+  supplementaryBlocks: RichTextBlock[],
   settings: TemplateSettings,
-  skillsBlocks?: RichTextBlock[]
+  templateSlug: string
 ) => string;
 
 const generators: Record<string, TypstGenerator> = {
-  classic: generateAwesomeCvTypst,
-  modern: generateAwesomeCvTypst,
-  art: generateAwesomeCvTypst,
+  classic: generateWesternResumeTypst,
+  modern: generateWesternResumeTypst,
+  art: generateWesternResumeTypst,
   rirekisho: generateRirekishoTypst,
   shokumukeirekisho: generateShokumuKeirekishoTypst,
 };
 
 export function generateResumeTypst(
-  data: ResumeData,
+  personal: PersonalInfo,
+  contentBlocks: RichTextBlock[],
+  supplementaryBlocks: RichTextBlock[],
   settings: TemplateSettings,
-  skillsBlocks?: RichTextBlock[]
+  templateSlug: string
 ): string {
-  const slug = settings.template ?? 'classic';
-  const generator = generators[slug];
-  if (!generator) {
-    console.warn(`Unknown template slug "${slug}", falling back to Classic`);
-    return generateAwesomeCvTypst(data, settings, skillsBlocks);
-  }
-  return generator(data, settings, skillsBlocks);
+  const gen = generators[templateSlug] || generateWesternResumeTypst;
+  return gen(personal, contentBlocks, supplementaryBlocks, settings, templateSlug);
 }
+
+export { getAccentColor } from './shared';

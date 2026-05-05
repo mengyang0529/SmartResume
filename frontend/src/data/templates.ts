@@ -1,16 +1,6 @@
-import type { TemplateSettings } from '../types/resume'
+import type { TemplateDefinition } from '@app-types/template';
 
-export type ResumeTemplate = {
-  id: number
-  slug: string
-  name: string
-  category: string
-  description: string
-  previewImage: string
-  settings: TemplateSettings
-}
-
-export const RESUME_TEMPLATES: ResumeTemplate[] = [
+export const RESUME_TEMPLATES: TemplateDefinition[] = [
   {
     id: 1,
     slug: 'classic',
@@ -24,8 +14,11 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
       paperSize: 'a4paper',
       sectionColorHighlight: true,
       headerAlignment: 'C',
-      template: 'classic',
     },
+    basePath: '/templates/awesome-cv/',
+    typstFiles: ['awesome-cv-classic.typ'],
+    extraAssets: ['lang.toml'],
+    schemaFile: 'awesome-cv-classic.md',
   },
   {
     id: 2,
@@ -40,8 +33,11 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
       paperSize: 'a4paper',
       sectionColorHighlight: true,
       headerAlignment: 'C',
-      template: 'modern',
     },
+    basePath: '/templates/awesome-cv/',
+    typstFiles: ['awesome-cv-modern.typ'],
+    extraAssets: ['lang.toml'],
+    schemaFile: 'awesome-cv-modern.md',
   },
   {
     id: 3,
@@ -56,15 +52,18 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
       paperSize: 'a4paper',
       sectionColorHighlight: true,
       headerAlignment: 'C',
-      template: 'art',
     },
+    basePath: '/templates/awesome-cv/',
+    typstFiles: ['awesome-cv-art.typ'],
+    extraAssets: ['lang.toml'],
+    schemaFile: 'awesome-cv-art.md',
   },
   {
     id: 4,
     slug: 'rirekisho',
     name: 'Rirekisho',
     category: 'Japanese',
-    description: 'Traditional Japanese-style resume (履歴書) with standard JIS format including photo, education, and work history tables.',
+    description: 'Traditional Japanese-style resume (履歴書) with standard JIS format.',
     previewImage: '/template-previews/rirekisho.webp',
     settings: {
       colorScheme: 'awesome-red',
@@ -72,15 +71,17 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
       paperSize: 'a4paper',
       sectionColorHighlight: false,
       headerAlignment: 'L',
-      template: 'rirekisho',
     },
+    basePath: '/templates/rirekisho/',
+    typstFiles: ['rirekisho.typ'],
+    schemaFile: 'rirekisho.md',
   },
   {
     id: 5,
     slug: 'shokumukeirekisho',
     name: 'Shokumu Keirekisho',
     category: 'Japanese',
-    description: 'Japanese career history document (職務経歴書) with detailed project experience, tech stacks, and achievements.',
+    description: 'Japanese career history document (職務経歴書).',
     previewImage: '/template-previews/shokumukeirekisho.webp',
     settings: {
       colorScheme: 'awesome-red',
@@ -88,14 +89,16 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
       paperSize: 'a4paper',
       sectionColorHighlight: false,
       headerAlignment: 'L',
-      template: 'shokumukeirekisho',
     },
+    basePath: '/templates/shokumukeirekisho/',
+    typstFiles: ['shokumukeirekisho.typ'],
+    schemaFile: 'shokumukeirekisho.md',
   },
-]
+];
 
-export const DEFAULT_TEMPLATE = RESUME_TEMPLATES[0]
+export const DEFAULT_TEMPLATE = RESUME_TEMPLATES[0];
 
 export function findTemplateBySlug(slug?: string) {
-  if (!slug) return DEFAULT_TEMPLATE
-  return RESUME_TEMPLATES.find(template => template.slug === slug || String(template.id) === slug)
+  if (!slug) return DEFAULT_TEMPLATE;
+  return RESUME_TEMPLATES.find(template => template.slug === slug || String(template.id) === slug);
 }

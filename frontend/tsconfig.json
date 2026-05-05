@@ -30,7 +30,10 @@
       "@services/*": ["src/services/*"],
       "@utils/*": ["src/utils/*"],
       "@hooks/*": ["src/hooks/*"],
-      "@types/*": ["src/types/*"],
+      "@app-types/*": ["src/types/*"],
+      "@data/sampleResume": ["src/test/sampleResume.ts"],
+      "@data/*": ["src/data/*"],
+      "@constants/*": ["src/constants/*"],
       "@test/*": ["src/test/*"]
     }
   },

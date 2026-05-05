@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { FaHome, FaEdit } from 'react-icons/fa'
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { FaHome, FaEdit } from 'react-icons/fa';
 
 const quickLinks = [
   { to: '/editor', icon: FaEdit, label: 'Resume Editor', desc: 'Create or edit your resume' },
-]
+];
 
 export default function NotFoundPage() {
   return (
@@ -21,15 +21,22 @@ export default function NotFoundPage() {
 
         <h1 className="text-subheading text-[rgba(0,0,0,0.95)] mb-2">Page Not Found</h1>
         <p className="text-body text-warm-500 mb-8 leading-relaxed">
-          The page you are looking for does not exist or has been moved. Let us get you back on track.
+          The page you are looking for does not exist or has been moved. Let us get you back on
+          track.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
-          <Link to="/" className="btn-primary text-caption px-5 py-[8px] flex items-center justify-center gap-2">
+          <Link
+            to="/"
+            className="btn-primary text-caption px-5 py-[8px] flex items-center justify-center gap-2"
+          >
             <FaHome className="text-xs" />
             Back to Home
           </Link>
-          <Link to="/editor" className="btn-secondary text-caption px-5 py-[8px] flex items-center justify-center gap-2">
+          <Link
+            to="/editor"
+            className="btn-secondary text-caption px-5 py-[8px] flex items-center justify-center gap-2"
+          >
             <FaEdit className="text-xs" />
             Create Resume
           </Link>
@@ -37,9 +44,11 @@ export default function NotFoundPage() {
 
         {/* Quick Links */}
         <div className="text-left card p-6">
-          <h3 className="text-caption font-semibold text-warm-500 uppercase tracking-wider mb-4">Quick Links</h3>
+          <h3 className="text-caption font-semibold text-warm-500 uppercase tracking-wider mb-4">
+            Quick Links
+          </h3>
           <div className="space-y-2">
-            {quickLinks.map((link) => (
+            {quickLinks.map(link => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -58,5 +67,5 @@ export default function NotFoundPage() {
         </div>
       </motion.div>
     </div>
-  )
+  );
 }

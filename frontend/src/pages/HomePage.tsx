@@ -1,33 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  FaArrowRight, 
-  FaShieldAlt, 
-  FaLanguage, 
-  FaRocket, 
+import {
+  FaArrowRight,
+  FaShieldAlt,
+  FaLanguage,
+  FaRocket,
   FaMagic,
   FaDownload,
   FaRobot,
   FaFileImport,
-  FaImage
+  FaImage,
 } from 'react-icons/fa';
-import localforage from 'localforage';
-import type { ResumeData } from '../types/resume';
-import { RESUME_TEMPLATES } from '../data/templates';
+import { storage } from '@utils/storage';
+import { RESUME_TEMPLATES } from '@data/templates';
+import type { TemplateDefinition } from '@app-types/template';
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [hasSavedResume, setHasSavedResume] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      localforage.getItem<ResumeData>('current_resume_data_default'),
-      localforage.getItem<ResumeData>('current_resume_data_modern'),
-      localforage.getItem<ResumeData>('current_resume_data_rirekisho'),
-      localforage.getItem<ResumeData>('current_resume_data_shokumukeirekisho'),
-    ]).then((results) => {
-      const saved = results.find(r => Boolean(r?.personal?.firstName) || Boolean(r?.sections?.length));
+    storage.getState().then(saved => {
       setHasSavedResume(Boolean(saved));
     });
   }, []);
@@ -40,7 +34,13 @@ export default function HomePage() {
       <section className="relative pt-16 pb-20 md:pt-28 md:pb-32 overflow-hidden">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
-          <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+          <div
+            className="absolute top-0 left-0 w-full h-full"
+            style={{
+              backgroundImage: 'radial-gradient(#000 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+            }}
+          />
         </div>
 
         <div className="container-narrow relative z-10">
@@ -61,7 +61,8 @@ export default function HomePage() {
               </h1>
 
               <p className="mt-8 text-lg md:text-xl text-warm-500 max-w-2xl mx-auto leading-relaxed">
-                Transform your existing resume into a perfectly formatted PDF using LLMs. Select a style, follow the guide, and get hired.
+                Transform your existing resume into a perfectly formatted PDF using LLMs. Select a
+                style, follow the guide, and get hired.
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -108,7 +109,9 @@ export default function HomePage() {
         <div className="container-narrow">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-[rgba(0,0,0,0.95)]">How it Works</h2>
-            <p className="mt-4 text-warm-500 max-w-xl mx-auto">Follow these 4 simple steps to regenerate your resume with professional formatting.</p>
+            <p className="mt-4 text-warm-500 max-w-xl mx-auto">
+              Follow these 4 simple steps to regenerate your resume with professional formatting.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8 relative">
@@ -137,7 +140,9 @@ export default function HomePage() {
                   <div className="flex items-center gap-1 font-bold mb-1 text-left">
                     <FaImage /> Pro Tip
                   </div>
-                  <p className="text-left">Images (PNG/JPG) work better than raw PDF text for complex layouts.</p>
+                  <p className="text-left">
+                    Images (PNG/JPG) work better than raw PDF text for complex layouts.
+                  </p>
                 </div>
               }
             />
@@ -157,8 +162,13 @@ export default function HomePage() {
         <div className="container-narrow">
           <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-4">
             <div className="max-w-xl">
-              <h2 className="text-3xl font-bold text-[rgba(0,0,0,0.95)]">Ready-to-use Templates.</h2>
-              <p className="mt-3 text-warm-500">Pick a style and start filling in your details. Switch templates anytime without losing your data.</p>
+              <h2 className="text-3xl font-bold text-[rgba(0,0,0,0.95)]">
+                Ready-to-use Templates.
+              </h2>
+              <p className="mt-3 text-warm-500">
+                Pick a style and start filling in your details. Switch templates anytime without
+                losing your data.
+              </p>
             </div>
             <button
               onClick={() => navigate('/templates')}
@@ -169,7 +179,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredTemplates.map((tpl, i) => (
+            {featuredTemplates.map((tpl: TemplateDefinition, i: number) => (
               <motion.div
                 key={tpl.slug}
                 initial={{ opacity: 0, y: 20 }}
@@ -180,14 +190,22 @@ export default function HomePage() {
                 onClick={() => navigate(`/editor/${tpl.slug}`)}
               >
                 <div className="aspect-[4/5] rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.08)] bg-white shadow-sm group-hover:shadow-xl group-hover:border-[rgba(0,117,222,0.2)] transition-all relative">
-                  <img src={tpl.previewImage} alt={tpl.name} className="w-full h-full object-cover object-top p-1" />
+                  <img
+                    src={tpl.previewImage}
+                    alt={tpl.name}
+                    className="w-full h-full object-cover object-top p-1"
+                  />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="px-6 py-2.5 bg-white rounded-full text-sm font-bold shadow-xl translate-y-4 group-hover:translate-y-0 transition-transform">Use this Template</span>
+                    <span className="px-6 py-2.5 bg-white rounded-full text-sm font-bold shadow-xl translate-y-4 group-hover:translate-y-0 transition-transform">
+                      Use this Template
+                    </span>
                   </div>
                 </div>
                 <div className="mt-4">
                   <h3 className="font-bold text-[rgba(0,0,0,0.95)]">{tpl.name}</h3>
-                  <p className="text-xs text-warm-400 mt-1 uppercase tracking-wider">{tpl.category}</p>
+                  <p className="text-xs text-warm-400 mt-1 uppercase tracking-wider">
+                    {tpl.category}
+                  </p>
                 </div>
               </motion.div>
             ))}
@@ -205,7 +223,9 @@ export default function HomePage() {
 
             <div className="relative z-10">
               <h2 className="text-3xl md:text-5xl font-bold mb-6">Build your future today.</h2>
-              <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto">No account needed. No hidden fees. Just you and your professional resume.</p>
+              <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto">
+                No account needed. No hidden fees. Just you and your professional resume.
+              </p>
               <button
                 onClick={() => navigate('/templates')}
                 className="px-10 py-4 bg-white text-[#0075de] rounded-xl font-bold hover:bg-white/90 hover:scale-105 active:scale-95 transition-all"

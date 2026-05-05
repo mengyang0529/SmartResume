@@ -1,249 +1,98 @@
-import { ResumeData, TemplateSettings } from '../../types/resume';
-import { RichTextBlock } from '../../types/richText';
-import { escapeTypstContent, escapeTypstString, dataUrlToTypstBytes } from './shared';
-
-function formatDateJapanese(dateStr: string): string {
-  if (!dateStr) return '';
-  const monthMap: Record<string, string> = {
-    jan: '1',
-    feb: '2',
-    mar: '3',
-    apr: '4',
-    may: '5',
-    jun: '6',
-    jul: '7',
-    aug: '8',
-    sep: '9',
-    oct: '10',
-    nov: '11',
-    dec: '12',
-  };
-  const m = dateStr.trim().match(/^([a-zA-Z]+)\s+(\d{4})$/);
-  if (m) {
-    const monthNum = monthMap[m[1].toLowerCase().slice(0, 3)];
-    if (monthNum) return `${m[2]}年${monthNum}月`;
-  }
-  const m2 = dateStr.trim().match(/^(\d{4})[-/](\d{1,2})$/);
-  if (m2) return `${m2[1]}年${parseInt(m2[2])}月`;
-  return dateStr;
-}
+import { PersonalInfo } from '@app-types/resume';
+import { TemplateSettings } from '@app-types/template';
+import { RichTextBlock } from '@app-types/richText';
+import { escapeTypstContent, escapeTypstString, formatDateJapanese } from './shared';
+import { dataUrlToTypstBytes } from '@utils/photo';
+import { groupBlocksByH1 } from './helpers';
 
 export function generateRirekishoTypst(
-  data: ResumeData,
+  personal: PersonalInfo,
+  contentBlocks: RichTextBlock[],
+  supplementaryBlocks: RichTextBlock[],
   _settings: TemplateSettings,
-  skillsBlocks?: RichTextBlock[]
+  _templateSlug: string
 ): string {
-  const { personal, education, sections, skills, summary } = data;
-
-  const authorEntries: string[] = [];
-  authorEntries.push(`    firstname: "${escapeTypstString(personal.firstName)}",`);
-  authorEntries.push(`    lastname: "${escapeTypstString(personal.lastName)}",`);
-  if (personal.furiganaFirstName)
-    authorEntries.push(`    furigana-first: "${escapeTypstString(personal.furiganaFirstName)}",`);
-  if (personal.furiganaLastName)
-    authorEntries.push(`    furigana-last: "${escapeTypstString(personal.furiganaLastName)}",`);
-  if (personal.birth) authorEntries.push(`    birth: "${escapeTypstString(personal.birth)}",`);
-  if (personal.address)
-    authorEntries.push(`    address: "${escapeTypstString(personal.address)}",`);
-  if (personal.mobile) authorEntries.push(`    phone: "${escapeTypstString(personal.mobile)}",`);
-  authorEntries.push(`    email: "${escapeTypstString(personal.email)}",`);
-
-  const authorBlock = authorEntries.join('\n');
-
   const photoUrl = personal.photo?.url;
-  const photoTypst = photoUrl
-    ? `#box(height: 3.5cm, image(bytes((
+  let photoEntry: string;
+  if (photoUrl) {
+    photoEntry = `photo: image(bytes((
 ${dataUrlToTypstBytes(photoUrl)}
-    )), height: 3.5cm, fit: "cover"))`
-    : `#text(fill: luma(160), size: 8pt)[写真]
-        #linebreak()
-        #text(size: 7pt)[4cm×3cm]`;
+)), height: 4cm, fit: "cover"),`;
+  } else {
+    photoEntry = 'photo: none,';
+  }
 
-  let typst = `#import "rirekisho/rirekisho.typ": *
+  let typst = `#import "rirekisho.typ": *
 
 #show: resume.with(
-  author: (
-${authorBlock}
+  personal: (
+    name: "${escapeTypstString(personal.lastName)} ${escapeTypstString(personal.firstName)}",
+    furigana: "${escapeTypstString(personal.furiganaLastName || '')} ${escapeTypstString(personal.furiganaFirstName || '')}",
+    birth: "${escapeTypstString(personal.birth || '')}",
+    address: "${escapeTypstString(personal.address || '')}",
+    phone: "${escapeTypstString(personal.mobile || '')}",
+    email: "${escapeTypstString(personal.email || '')}",
   ),
-  language: "ja",
-  font: ("Noto Sans CJK JP", "Noto Sans CJK SC"),
+  ${photoEntry}
 )
 
 `;
-  typst += `// Header section
-#table(
-  columns: (2cm, 1fr, 4cm),
-  stroke: 0.5pt + black,
-  rows: (auto, auto, auto, auto),
-  [#align(center)[*氏名*]],
-  ${
-    personal.furiganaLastName || personal.furiganaFirstName
-      ? `[#align(left)[
-    #grid(
-      columns: (auto, auto),
-      row-gutter: 2pt,
-      text(size: 9pt, weight: "regular")[${escapeTypstContent(personal.furiganaLastName || '')}],
-      text(size: 9pt, weight: "regular")[${escapeTypstContent(personal.furiganaFirstName || '')}],
-      text(size: 14pt, weight: "bold")[${escapeTypstContent(personal.lastName)}],
-      text(size: 14pt, weight: "bold")[${escapeTypstContent(personal.firstName)}],
-    )
-  ]],`
-      : `[#align(left)[
-    #text(size: 14pt, weight: "bold")[${escapeTypstContent(personal.lastName + ' ' + personal.firstName)}]
-  ]],`
-  }
-  table.cell(rowspan: 4)[#align(center + horizon)[
-    #block(height: 4.5cm, stroke: 0.5pt + black, width: 100%, inset: 4pt)[
-        ${photoTypst}
-      ]
-    ]
-  ],
-  [#align(center)[*生年月日*]],
-  [#text(size: 9pt)[${personal.birth ? escapeTypstContent(personal.birth) : ''}]],
-  [#align(center)[*現住所*]],
-  [
-    #text(size: 9pt)[
-      ${personal.address ? escapeTypstContent(personal.address) : '（現住所）'}
-      #linebreak()
-      TEL: ${personal.mobile ? escapeTypstContent(personal.mobile) : ''}
-      #linebreak()
-      Email: ${escapeTypstContent(personal.email)}
-    ]
-  ],
-  table.cell(colspan: 2)[#text(size: 8pt)[連絡先に○をつけてください（　　現住所　　・　　連絡先　　）]],
-)
-`;
 
-  // Education & Work History
-  const eduSection = sections.find(s => /education|学歴|学业|educ/i.test(s.title));
-  const eduEntries = eduSection?.entries?.length
-    ? eduSection.entries.map(e => ({
-        date: formatDateJapanese(e.startDate || ''),
-        content: `${e.title || ''}${e.subtitle ? ' ' + e.subtitle : ''}`,
-        note: formatDateJapanese(e.endDate || ''),
-      }))
-    : education.map(e => ({
-        date: formatDateJapanese(e.startDate || ''),
-        content: `${e.school || ''}${e.degree ? ' ' + e.degree : ''}${e.field ? ' ' + e.field : ''}`,
-        note: formatDateJapanese(e.endDate || ''),
-      }));
-  const workSections = eduSection
-    ? sections.filter(s => s.id !== eduSection.id && !/免許・資格/.test(s.title))
-    : sections.filter(s => !/免許・資格/.test(s.title));
-
-  typst += `// Education & Work History
-#table(
-  columns: (2.5cm, 1fr),
-  stroke: 0.5pt + black,
-  [#align(center)[*年　月*]], [#align(center)[*学歴・職歴*]],
-`;
-
-  for (const e of eduEntries) {
-    typst += `  [${escapeTypstContent(e.date)}], [${escapeTypstContent(e.content)}],\n`;
-  }
-
-  if (eduEntries.length > 0 && workSections.some(s => s.entries?.length)) {
-    typst += `  [], [],\n`;
-  }
-
-  for (const sec of workSections) {
-    if (sec.entries) {
-      for (const entry of sec.entries) {
-        const date = entry.startDate ? escapeTypstContent(formatDateJapanese(entry.startDate)) : '';
-        const content = `${entry.title ? escapeTypstContent(entry.title) : ''}${entry.subtitle ? ' ' + escapeTypstContent(entry.subtitle) : ''}`;
-        typst += `  [${date}], [${content}],\n`;
-        if (entry.endDate) {
-          typst += `  [${escapeTypstContent(formatDateJapanese(entry.endDate))}], [`;
-          if (entry.description) typst += `${escapeTypstContent(entry.description)}`;
-          typst += `],\n`;
-        }
+  // Process contentBlocks (Education & Work)
+  let inTable = false;
+  contentBlocks.forEach(block => {
+    if (block.type === 'h1') {
+      if (inTable) typst += `)\n\n`;
+      typst += `#section-title[${escapeTypstContent(block.content)}]\n#rireki-table(\n`;
+      inTable = true;
+    } else if (
+      block.type === 'h2' ||
+      block.type === 'h3' ||
+      block.type === 'bullet' ||
+      block.type === 'paragraph'
+    ) {
+      if (!inTable) {
+        typst += `#rireki-table(\n`;
+        inTable = true;
       }
+      const date = block.rightContent
+        ? escapeTypstContent(formatDateJapanese(block.rightContent))
+        : '';
+      const content = escapeTypstContent(block.content);
+      typst += `  [${date}], [${content}],\n`;
     }
-  }
+  });
+  if (inTable) typst += `)\n\n`;
 
-  typst += `)\n\n`;
+  // Process supplementaryBlocks (License, Motivation, Hopes)
+  // Mapping the first 3 H1 blocks to the specific slots in rirekisho if they exist
+  const h1Groups = groupBlocksByH1(supplementaryBlocks);
 
-  // Certifications (免許・資格)
-  const certSection = sections.find(s => /免許・資格/.test(s.title));
-  if (certSection && certSection.entries.length > 0) {
-    typst += `// Certifications
-#table(
-  columns: (2.5cm, 1fr),
-  stroke: 0.5pt + black,
-  [#align(center)[*年　月*]], [#align(center)[*免許・資格*]],
-`;
-    for (const entry of certSection.entries) {
-      if (entry.title) {
-        typst += `  [], [${escapeTypstContent(entry.title)}: ${escapeTypstContent(entry.description || '')}],\n`;
-      }
-    }
-    typst += `)\n\n`;
-  } else if (skills && skills.length > 0) {
-    typst += `// Certifications
-#table(
-  columns: (2.5cm, 1fr),
-  stroke: 0.5pt + black,
-  [#align(center)[*年　月*]], [#align(center)[*免許・資格*]],
-`;
-    const byCategory: Record<string, string[]> = {};
-    for (const s of skills) {
-      if (!byCategory[s.category]) byCategory[s.category] = [];
-      byCategory[s.category].push(s.name);
-    }
-    for (const [cat, names] of Object.entries(byCategory)) {
-      typst += `  [], [${escapeTypstContent(cat)}: ${escapeTypstContent(names.join('、'))}],\n`;
-    }
+  const renderGroupContent = (group: RichTextBlock[]) => {
+    return group
+      .slice(1)
+      .map(b => escapeTypstContent(b.content))
+      .join('\\n');
+  };
+
+  if (h1Groups.length > 0) {
+    typst += `#license-table(\n`;
+    h1Groups[0].slice(1).forEach(block => {
+      const date = block.rightContent
+        ? escapeTypstContent(formatDateJapanese(block.rightContent))
+        : '';
+      typst += `  [${date}], [${escapeTypstContent(block.content)}],\n`;
+    });
     typst += `)\n\n`;
   }
 
-  // Motivation Section
-  let motivationContent = summary || '';
-  let requestsContent = '';
-  if (skillsBlocks) {
-    for (let i = 0; i < skillsBlocks.length; i++) {
-      const bk = skillsBlocks[i];
-      if (bk.type === 'h1' && /志望の動機|自己PR/i.test(bk.content)) {
-        const contents: string[] = [];
-        for (let j = i + 1; j < skillsBlocks.length; j++) {
-          if (skillsBlocks[j].type === 'h1') break;
-          contents.push(skillsBlocks[j].content);
-        }
-        if (contents.length > 0) {
-          motivationContent = contents.join('\n').trim();
-        }
-      }
-      if (bk.type === 'h1' && /本人希望記入欄/i.test(bk.content)) {
-        const contents: string[] = [];
-        for (let j = i + 1; j < skillsBlocks.length; j++) {
-          if (skillsBlocks[j].type === 'h1') break;
-          contents.push(skillsBlocks[j].content);
-        }
-        if (contents.length > 0) {
-          requestsContent = contents.join('\n').trim();
-        }
-      }
-    }
+  if (h1Groups.length > 1) {
+    typst += `#motivation-block[${renderGroupContent(h1Groups[1])}]\n\n`;
   }
-  typst += `// Motivation / Self-PR
-#table(
-  columns: (1fr),
-  stroke: 0.5pt + black,
-  table.cell(colspan: 1)[#align(center)[*志望の動機、自己PR、趣味など*]],
-  [#text(size: 9pt)[${escapeTypstContent(motivationContent)}]],
-)
 
-`;
-
-  // Additional Requests
-  typst += `// Additional requests
-#table(
-  columns: (1fr),
-  stroke: 0.5pt + black,
-  table.cell(colspan: 1)[#align(center)[*本人希望記入欄*]],
-  [#text(size: 9pt)[${escapeTypstContent(requestsContent)}]],
-)
-
-`;
+  if (h1Groups.length > 2) {
+    typst += `#hopes-block[${renderGroupContent(h1Groups[2])}]\n\n`;
+  }
 
   return typst;
 }

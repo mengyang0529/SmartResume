@@ -1,144 +1,111 @@
 import { useCallback, useEffect, useRef } from 'react';
-import localforage from 'localforage';
-import type { ResumeData, TemplateSettings } from '../types/resume';
-import type { RichTextBlock } from '../types/richText';
-import { modulesToBlocks } from '../utils/resumeTransforms';
-import { SAMPLE_RESUME_DATA, RIREKISHO_SAMPLE_DATA, SHOKUMU_SAMPLE_DATA } from '../data/sampleResume';
+import type { ResumeData } from '@app-types/resume';
+import type { EditorState } from '@app-types/editorState';
+import { migrateResumeDataToEditorState, extractTemplateSlug } from '@utils/migration';
 import {
-  skillsToBlocks,
-  educationToBlocks,
-} from '../utils/resumeEditorUtils';
-import { parseMarkdownResume } from '../utils/markdownIO';
-import { separateRirekiSections } from '../utils/rirekishoUtils';
-
-function applySeparatedData(
-  data: {
-    sections: ResumeData['sections'];
-    education?: ResumeData['education'];
-    skillsBlocks?: RichTextBlock[];
-    skills?: ResumeData['skills'];
-  },
-  setModuleBlocks: (b: RichTextBlock[]) => void,
-  setSkillsBlocks: (b: RichTextBlock[]) => void,
-  setResumeData: (d: ResumeData) => void
-) {
-  const { regularSections, extraBlocks } = separateRirekiSections(data.sections);
-  if (regularSections.length > 0) {
-    const blocks = modulesToBlocks(regularSections);
-    const hasEduSection = regularSections.some(s => /education|学歴/i.test(s.title));
-    if (data.education?.length && !hasEduSection) {
-      setModuleBlocks([...educationToBlocks(data.education), ...blocks]);
-    } else {
-      setModuleBlocks(blocks);
-    }
-  }
-  if (data.skillsBlocks?.length) {
-    setSkillsBlocks([...data.skillsBlocks, ...extraBlocks]);
-  } else if (data.skills?.length) {
-    setSkillsBlocks([...skillsToBlocks(data.skills), ...extraBlocks]);
-  } else if (extraBlocks.length > 0) {
-    setSkillsBlocks(extraBlocks);
-  }
-  setResumeData({ ...(data as ResumeData), sections: regularSections });
-}
+  SAMPLE_CLASSIC_CONTENT,
+  SAMPLE_RIREKISHO_CONTENT,
+  SAMPLE_RIREKISHO_SUPPLEMENTARY,
+  SAMPLE_SHOKUMU_CONTENT,
+  SAMPLE_SHOKUMU_SUPPLEMENTARY,
+  SAMPLE_SKILLS_SUPPLEMENTARY,
+} from '@data/sampleBlocks';
+import { SAMPLE_RESUME_DATA } from '@data/sampleResume';
+import { storage } from '@utils/storage';
 
 export function useResumePersistence(config: {
   templateId: string | undefined;
-  templateSettings: TemplateSettings;
-  resumeData: ResumeData;
-  skillsBlocks: RichTextBlock[];
-  moduleBlocks: RichTextBlock[];
-  setResumeData: (d: ResumeData) => void;
-  setModuleBlocks: (b: RichTextBlock[]) => void;
-  setSkillsBlocks: (b: RichTextBlock[]) => void;
+  state: EditorState;
+  setState: (s: EditorState) => void;
   setIsSample: (v: boolean) => void;
 }) {
-  const {
-    templateId,
-    templateSettings,
-    resumeData,
-    skillsBlocks,
-    moduleBlocks,
-    setResumeData,
-    setModuleBlocks,
-    setSkillsBlocks,
-    setIsSample,
-  } = config;
-
-  const storageKey = `current_resume_data_${templateId || 'default'}`;
+  const { templateId, state, setState, setIsSample } = config;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const lastSavedPhotoRef = useRef<string | undefined>(undefined);
 
-  // Load saved data on mount or template switch, fall back to sample
+  // Load logic
   useEffect(() => {
-    localforage.getItem<ResumeData>(storageKey).then(saved => {
-      if (saved) {
-        applySeparatedData(saved, setModuleBlocks, setSkillsBlocks, setResumeData);
-      } else {
-        const data =
-          templateSettings.template === 'rirekisho'
-            ? RIREKISHO_SAMPLE_DATA
-            : templateSettings.template === 'shokumukeirekisho'
-              ? SHOKUMU_SAMPLE_DATA
-              : SAMPLE_RESUME_DATA;
-        applySeparatedData(data, setModuleBlocks, setSkillsBlocks, setResumeData);
-        setIsSample(true);
+    async function load() {
+      // 1. Check v2
+      const v2 = await storage.getState();
+      const photo = await storage.getPhoto();
+
+      if (v2) {
+        if (photo && v2.personal.photo && v2.personal.photo.url === '__stored__') {
+          v2.personal.photo.url = photo;
+        }
+        setState(v2);
+        lastSavedPhotoRef.current = photo || undefined;
+        return;
       }
-    });
+
+      // 2. Auto-migrate legacy keys
+      const legacyKeys = [
+        'current_resume_data_classic',
+        'current_resume_data_modern',
+        'current_resume_data_art',
+        'current_resume_data_rirekisho',
+        'current_resume_data_shokumukeirekisho',
+        'current_resume_data_default',
+      ];
+      for (const key of legacyKeys) {
+        const legacy = await storage.getLegacyItem<ResumeData>(key);
+        if (legacy) {
+          const migrated = migrateResumeDataToEditorState(legacy, extractTemplateSlug(key));
+          await storage.saveState(migrated);
+          // Cleanup legacy keys
+          for (const k of legacyKeys) await storage.removeLegacyItem(k);
+          setState(migrated);
+          return;
+        }
+      }
+
+      // 3. Fallback to sample if nothing found
+      const slug = templateId || 'classic';
+      let contentBlocks = SAMPLE_CLASSIC_CONTENT;
+      let supplementaryBlocks = SAMPLE_SKILLS_SUPPLEMENTARY;
+
+      if (slug === 'rirekisho') {
+        contentBlocks = SAMPLE_RIREKISHO_CONTENT;
+        supplementaryBlocks = SAMPLE_RIREKISHO_SUPPLEMENTARY;
+      } else if (slug === 'shokumukeirekisho') {
+        contentBlocks = SAMPLE_SHOKUMU_CONTENT;
+        supplementaryBlocks = SAMPLE_SHOKUMU_SUPPLEMENTARY;
+      }
+
+      const sampleState: EditorState = {
+        version: 2,
+        personal: SAMPLE_RESUME_DATA.personal,
+        contentBlocks,
+        supplementaryBlocks,
+        templateSlug: slug,
+      };
+      setState(sampleState);
+      setIsSample(true);
+    }
+    load();
   }, [templateId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-save after 800ms debounce
+  // Auto-save
   useEffect(() => {
-    if (!resumeData.personal.firstName && resumeData.sections.length === 0) return;
+    if (state.version !== 2) return;
     const timer = setTimeout(() => {
-      localforage.setItem(storageKey, { ...resumeData, skillsBlocks });
+      storage.saveState(state);
+
+      const currentPhoto = state.personal.photo?.url;
+      if (currentPhoto !== lastSavedPhotoRef.current) {
+        if (currentPhoto) {
+          storage.savePhoto(currentPhoto);
+        } else {
+          storage.removePhoto();
+        }
+        lastSavedPhotoRef.current = currentPhoto;
+      }
     }, 800);
     return () => clearTimeout(timer);
-  }, [resumeData, skillsBlocks, storageKey]);
-
-  // Sync module blocks when sections data appears but blocks are empty
-  useEffect(() => {
-    if (moduleBlocks.length === 0 && resumeData.sections.length > 0) {
-      setModuleBlocks(modulesToBlocks(resumeData.sections));
-    }
-  }, [resumeData.sections]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Sync skills blocks when skills data appears but blocks are empty
-  useEffect(() => {
-    if (skillsBlocks.length === 0 && resumeData.skills.length > 0) {
-      setSkillsBlocks(skillsToBlocks(resumeData.skills));
-    }
-  }, [resumeData.skills]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleFileUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const raw = reader.result as string;
-          const parsed = parseMarkdownResume(raw);
-          applySeparatedData(parsed, setModuleBlocks, setSkillsBlocks, setResumeData);
-          setIsSample(false);
-        } catch (_) {
-          /* ignore parse errors */
-        }
-      };
-      reader.readAsText(file);
-      event.target.value = '';
-    },
-    [setModuleBlocks, setSkillsBlocks, setResumeData, setIsSample]
-  );
+  }, [state]);
 
   const openImportFile = useCallback(() => fileInputRef.current?.click(), []);
 
-  const handleHistoryRestore = useCallback(
-    (data: ResumeData) => {
-      applySeparatedData(data, setModuleBlocks, setSkillsBlocks, setResumeData);
-      setIsSample(false);
-    },
-    [setModuleBlocks, setSkillsBlocks, setResumeData, setIsSample]
-  );
-
-  return { handleFileUpload, openImportFile, handleHistoryRestore, fileInputRef };
+  return { openImportFile, fileInputRef };
 }

@@ -1,5 +1,8 @@
-import { TemplateSettings } from '../../types/resume';
+import { TemplateSettings } from '@app-types/template';
 
+/**
+ * Escapes special Typst characters in a content block.
+ */
 export function escapeTypstContent(text: string): string {
   if (!text) return '';
   return text
@@ -10,27 +13,52 @@ export function escapeTypstContent(text: string): string {
     .replace(/</g, '\\<')
     .replace(/>/g, '\\>')
     .replace(/"/g, '\\"')
-    .replace(/@/g, '\\@');
+    .replace(/@/g, '\\@')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/\$/g, '\\$')
+    .replace(/&/g, '\\&');
 }
 
+/**
+ * Escapes special characters for use within a Typst string literal "xxx".
+ */
 export function escapeTypstString(text: string): string {
   if (!text) return '';
   return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
-export function dataUrlToTypstBytes(dataUrl: string): string {
-  const base64 = dataUrl.split(',')[1];
-  if (!base64) return '0x00';
-  const binaryStr = atob(base64);
-  const parts: string[] = [];
-  for (let i = 0; i < binaryStr.length; i++) {
-    parts.push('0x' + binaryStr.charCodeAt(i).toString(16).toUpperCase().padStart(2, '0'));
+/**
+ * Formats a date string (YYYY-MM-DD or YYYY-MM) to Japanese format (YYYY年MM月).
+ */
+export function formatDateJapanese(dateStr: string): string {
+  if (!dateStr) return '';
+  const parts = dateStr.trim().split(/[-/]/);
+  if (parts.length >= 2) {
+    const year = parts[0];
+    const month = parseInt(parts[1], 10);
+    return `${year}年${month}月`;
   }
-  const lines: string[] = [];
-  for (let i = 0; i < parts.length; i += 16) {
-    lines.push('    ' + parts.slice(i, i + 16).join(', '));
+  return dateStr;
+}
+
+/**
+ * Formats a date range string (e.g., "2020-01 -- 2022-02") to Japanese format.
+ */
+export function formatDateRangeJapanese(rangeStr: string): string {
+  if (!rangeStr) return '';
+  // Support both "--" and "-" as separators
+  const delimiter = rangeStr.includes('--') ? '--' : '-';
+  const parts = rangeStr.split(delimiter);
+  if (parts.length === 2) {
+    const start = formatDateJapanese(parts[0]);
+    const end =
+      parts[1].trim().toLowerCase() === 'present' || parts[1].trim() === '現在'
+        ? '現在'
+        : formatDateJapanese(parts[1]);
+    return `${start} 〜 ${end}`;
   }
-  return lines.join(',\n') + ',';
+  return formatDateJapanese(rangeStr);
 }
 
 export function getAccentColor(settings: TemplateSettings): string {

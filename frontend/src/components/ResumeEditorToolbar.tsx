@@ -1,9 +1,9 @@
-import { FaUpload, FaFileDownload } from 'react-icons/fa'
+import { FaUpload, FaFileDownload } from 'react-icons/fa';
 
 interface ResumeEditorToolbarProps {
-  openImportFile: () => void
-  handleExportMarkdown: () => void
-  currentTemplate: { name: string }
+  openImportFile: () => void;
+  handleExportMarkdown: () => void;
+  currentTemplate: { name: string };
 }
 
 export default function ResumeEditorToolbar({
@@ -34,10 +34,12 @@ export default function ResumeEditorToolbar({
 
           <div className="hidden md:flex items-center gap-2">
             <span className="text-xs text-warm-400">Template</span>
-            <span className="text-xs font-semibold text-[rgba(0,0,0,0.95)]">{currentTemplate.name}</span>
+            <span className="text-xs font-semibold text-[rgba(0,0,0,0.95)]">
+              {currentTemplate.name}
+            </span>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

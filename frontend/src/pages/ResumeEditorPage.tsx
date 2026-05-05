@@ -1,37 +1,45 @@
-import { useCallback } from 'react'
-import clsx from 'clsx'
+import { useCallback, useEffect } from 'react';
+import clsx from 'clsx';
+import { useOutletContext } from 'react-router-dom';
 
-import { RichTextEditor } from '../components/RichTextEditor'
-import ResumeEditorToolbar from '../components/ResumeEditorToolbar'
-import ResumePdfPreview from '../components/ResumePdfPreview'
-import ResumePersonalInfoSection from '../components/ResumePersonalInfoSection'
-import SectionCard from '../components/SectionCard'
-import { useResumeEditor } from '../hooks/useResumeEditor'
-import { blocksToModules } from '../utils/resumeTransforms'
-import { blocksToSkills } from '../utils/resumeEditorUtils'
+import { RichTextEditor } from '@components/RichTextEditor';
+import ResumeEditorToolbar from '@components/ResumeEditorToolbar';
+import ResumePdfPreview from '@components/ResumePdfPreview';
+import ResumePersonalInfoSection from '@components/ResumePersonalInfoSection';
+import SectionCard from '@components/SectionCard';
+import { useResumeEditor } from '@hooks/useResumeEditor';
 
 export default function ResumeEditorPage() {
-  const editor = useResumeEditor()
+  const editor = useResumeEditor();
+  const { setActiveTemplateId } = useOutletContext<{ setActiveTemplateId: (id: string) => void }>();
 
-  const handleModuleChange = useCallback((blocks: typeof editor.moduleBlocks) => {
-    editor.handleChange()
-    editor.setModuleBlocks(blocks)
-    editor.setResumeData(prev => ({ ...prev, sections: blocksToModules(blocks) }))
-  }, [editor])
+  useEffect(() => {
+    setActiveTemplateId(editor.state.templateSlug);
+  }, [editor.state.templateSlug, setActiveTemplateId]);
 
-  const handleSkillsChange = useCallback((blocks: typeof editor.skillsBlocks) => {
-    editor.handleChange()
-    editor.setSkillsBlocks(blocks)
-    editor.setResumeData(p => ({ ...p, skills: blocksToSkills(blocks) }))
-  }, [editor])
-
-  const handlePersonalFieldChange = useCallback(
-    (updater: (prev: typeof editor.resumeData) => typeof editor.resumeData) => {
-      editor.handleChange()
-      editor.setResumeData(updater)
+  const handleContentChange = useCallback(
+    (blocks: typeof editor.contentBlocks) => {
+      editor.handleChange();
+      editor.setContentBlocks(blocks);
     },
     [editor]
-  )
+  );
+
+  const handleSupplementaryChange = useCallback(
+    (blocks: typeof editor.supplementaryBlocks) => {
+      editor.handleChange();
+      editor.setSupplementaryBlocks(blocks);
+    },
+    [editor]
+  );
+
+  const handlePersonalFieldChange = useCallback(
+    (updater: (prev: typeof editor.personal) => typeof editor.personal) => {
+      editor.handleChange();
+      editor.setPersonal(updater(editor.personal));
+    },
+    [editor]
+  );
 
   return (
     <div className="min-h-[calc(100vh-55px)] lg:h-[calc(100vh-55px)] bg-[#f0efed] flex flex-col selection:bg-[rgba(0,117,222,0.15)]">
@@ -51,11 +59,16 @@ export default function ResumeEditorPage() {
             </div>
           )}
 
-          <div className={clsx("px-3 sm:px-4 py-4 sm:py-6 space-y-6 pb-8 lg:pb-24", editor.isSample && "opacity-60")}>
+          <div
+            className={clsx(
+              'px-3 sm:px-4 py-4 sm:py-6 space-y-6 pb-8 lg:pb-24',
+              editor.isSample && 'opacity-60'
+            )}
+          >
             <section id="section-personal">
               <SectionCard title="Personal Information">
                 <ResumePersonalInfoSection
-                  resumeData={editor.resumeData}
+                  personal={editor.personal}
                   onFieldChange={handlePersonalFieldChange}
                   onPhotoClick={editor.handlePhotoClick}
                   onPhotoUpload={editor.handlePhotoUpload}
@@ -65,22 +78,27 @@ export default function ResumeEditorPage() {
               </SectionCard>
             </section>
 
-            <section id="section-modules">
-              <SectionCard title="Resume Modules" subtitle="Add and arrange your resume sections with the rich text editor">
+            <section id="section-content">
+              <SectionCard
+                title="Resume Content"
+                subtitle="Add and arrange your resume sections with the rich text editor"
+              >
                 <RichTextEditor
-                  blocks={editor.moduleBlocks}
-                  onChange={handleModuleChange}
+                  blocks={editor.contentBlocks}
+                  onChange={handleContentChange}
                   headingColor={editor.accentColor}
-                  showMetadata={editor.currentTemplate.settings.template === 'shokumukeirekisho'}
                 />
               </SectionCard>
             </section>
 
-            <section id="section-skills">
-              <SectionCard title="Expertise" subtitle="Use H2 for category names and H3/bullet for individual skills">
+            <section id="section-supplementary">
+              <SectionCard
+                title="Supplementary Info"
+                subtitle="Use H2 for category names and H3/bullet for details"
+              >
                 <RichTextEditor
-                  blocks={editor.skillsBlocks}
-                  onChange={handleSkillsChange}
+                  blocks={editor.supplementaryBlocks}
+                  onChange={handleSupplementaryChange}
                   headingColor={editor.accentColor}
                 />
               </SectionCard>
@@ -97,7 +115,13 @@ export default function ResumeEditorPage() {
         />
       </div>
 
-      <input ref={editor.fileInputRef} type="file" accept=".md,text/markdown" className="hidden" onChange={editor.handleFileUpload} />
+      <input
+        ref={editor.fileInputRef}
+        type="file"
+        accept=".md,text/markdown"
+        className="hidden"
+        onChange={editor.handleFileUpload}
+      />
     </div>
-  )
+  );
 }

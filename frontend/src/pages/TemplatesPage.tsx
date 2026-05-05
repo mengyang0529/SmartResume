@@ -1,10 +1,10 @@
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { FaArrowRight, FaFileAlt } from 'react-icons/fa'
-import { RESUME_TEMPLATES } from '../data/templates'
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { FaArrowRight, FaFileAlt } from 'react-icons/fa';
+import { RESUME_TEMPLATES } from '@data/templates';
 
 export default function TemplatesPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <div className="bg-[#f6f5f4] min-h-[calc(100vh-55px)]">
@@ -15,7 +15,8 @@ export default function TemplatesPage() {
             Start with the structure that fits your resume.
           </h1>
           <p className="text-body text-warm-500 mt-4 max-w-2xl">
-            Pick a template first. Your resume content, import, export, preview, and PDF tools stay available in the editor.
+            Pick a template first. Your resume content, import, export, preview, and PDF tools stay
+            available in the editor.
           </p>
         </div>
 
@@ -55,5 +56,5 @@ export default function TemplatesPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

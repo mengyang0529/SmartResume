@@ -14,10 +14,19 @@
   body {
     background-color: #ffffff;
     color: rgba(0, 0, 0, 0.95);
-    font-family: Inter, -apple-system, system-ui, Segoe UI, Helvetica, Arial, sans-serif;
+    font-family:
+      Inter,
+      -apple-system,
+      system-ui,
+      Segoe UI,
+      Helvetica,
+      Arial,
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
     line-height: 1.5;
   }
 
@@ -91,10 +100,10 @@
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 12px;
     box-shadow:
-      0px 4px 18px rgba(0,0,0,0.04),
-      0px 2.025px 7.84688px rgba(0,0,0,0.027),
-      0px 0.8px 2.925px rgba(0,0,0,0.02),
-      0px 0.175px 1.04062px rgba(0,0,0,0.01);
+      0px 4px 18px rgba(0, 0, 0, 0.04),
+      0px 2.025px 7.84688px rgba(0, 0, 0, 0.027),
+      0px 0.8px 2.925px rgba(0, 0, 0, 0.02),
+      0px 0.175px 1.04062px rgba(0, 0, 0, 0.01);
     padding: 1.5rem;
     transition: box-shadow 0.2s ease;
   }
@@ -105,10 +114,10 @@
 
   .card-hover:hover {
     box-shadow:
-      0px 6px 24px rgba(0,0,0,0.06),
-      0px 3px 10px rgba(0,0,0,0.035),
-      0px 1.2px 4px rgba(0,0,0,0.025),
-      0px 0.3px 1.5px rgba(0,0,0,0.01);
+      0px 6px 24px rgba(0, 0, 0, 0.06),
+      0px 3px 10px rgba(0, 0, 0, 0.035),
+      0px 1.2px 4px rgba(0, 0, 0, 0.025),
+      0px 0.3px 1.5px rgba(0, 0, 0, 0.01);
   }
 
   .input {

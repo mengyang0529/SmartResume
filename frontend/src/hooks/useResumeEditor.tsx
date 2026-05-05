@@ -1,148 +1,150 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import type { ResumeData, TemplateSettings } from '../types/resume';
-import type { RichTextBlock } from '../types/richText';
-import { getAccentColor } from '../utils/typstGenerators';
-import { generateMarkdownResume } from '../utils/markdownIO';
-import { EMPTY_RESUME_DATA } from '../data/sampleResume';
-import { generateId } from '../utils/id';
-import { DEFAULT_TEMPLATE, findTemplateBySlug, RESUME_TEMPLATES } from '../data/templates';
+import { useParams } from 'react-router-dom';
+import type { PersonalInfo } from '@app-types/resume';
+import type { EditorState } from '@app-types/editorState';
+import type { RichTextBlock } from '@app-types/richText';
+import { getAccentColor } from '@utils/typstGenerators';
+import { generateMarkdownResume } from '@utils/markdownGenerator';
+import { parseMarkdownResume } from '@utils/markdownParser';
+import { generateId } from '@utils/id';
+import { findTemplateBySlug, RESUME_TEMPLATES } from '@data/templates';
 import { useResumeCompile } from './useResumeCompile';
 import { useResumePersistence } from './useResumePersistence';
+import { downloadBlob } from '@utils/download';
+
+const INITIAL_PERSONAL: PersonalInfo = {
+  firstName: '',
+  lastName: '',
+  position: '',
+  email: '',
+  mobile: '',
+  address: '',
+  homepage: '',
+};
 
 export function useResumeEditor() {
-  const templates = RESUME_TEMPLATES;
   const { templateId } = useParams();
-  const initialTemplate = findTemplateBySlug(templateId);
-  const location = useLocation();
-  const navigate = useNavigate();
 
   // ── Core state ──────────────────────────────────────────────
-  const [resumeData, setResumeData] = useState<ResumeData>(EMPTY_RESUME_DATA);
-  const [templateSettings, setTemplateSettings] = useState<TemplateSettings>(
-    (initialTemplate ?? DEFAULT_TEMPLATE).settings
-  );
-  const [moduleBlocks, setModuleBlocks] = useState<RichTextBlock[]>([]);
-  const [skillsBlocks, setSkillsBlocks] = useState<RichTextBlock[]>([]);
+  const [state, setState] = useState<EditorState>({
+    version: 2,
+    personal: INITIAL_PERSONAL,
+    contentBlocks: [],
+    supplementaryBlocks: [],
+    templateSlug: templateId || 'classic',
+  });
   const [isSample, setIsSample] = useState(false);
 
   // ── Compile ──────────────────────────────────────────────────
-  const compile = useResumeCompile({ templateSettings, templates, resumeData, skillsBlocks });
+  const compile = useResumeCompile({ state });
 
-  // ── Persistence (localforage + import + history) ─────────────
+  // ── Persistence ─────────────────────────────────────────────
   const persist = useResumePersistence({
     templateId,
-    templateSettings,
-    resumeData,
-    skillsBlocks,
-    moduleBlocks,
-    setResumeData,
-    setModuleBlocks,
-    setSkillsBlocks,
+    state,
+    setState,
     setIsSample,
   });
 
   // ── Template switching ───────────────────────────────────────
   useEffect(() => {
-    const selected = findTemplateBySlug(templateId);
-    if (!selected) {
-      navigate('/templates', { replace: true });
-      return;
+    if (templateId && templateId !== state.templateSlug) {
+      setState(prev => ({ ...prev, templateSlug: templateId }));
     }
-    setTemplateSettings(selected.settings);
-  }, [templateId, navigate]);
+  }, [templateId, state.templateSlug]);
 
-  // ── Photo ────────────────────────────────────────────────────
-  const photoInputRef = useRef<HTMLInputElement | null>(null);
+  // ── Handlers ────────────────────────────────────────────────
+  const setPersonal = useCallback((personal: PersonalInfo) => {
+    setState(prev => ({ ...prev, personal }));
+  }, []);
 
-  const handlePhotoClick = () => photoInputRef.current?.click();
+  const setContentBlocks = useCallback((contentBlocks: RichTextBlock[]) => {
+    setState(prev => ({ ...prev, contentBlocks }));
+  }, []);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsSample(false);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      compile.setPhoto(dataUrl);
-      setResumeData(prev => ({
-        ...prev,
-        personal: { ...prev.personal, photo: { url: dataUrl, shape: 'circle' as const } },
-      }));
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
-  const handlePhotoRemove = () => {
-    compile.removePhoto();
-    setResumeData(prev => ({ ...prev, personal: { ...prev.personal, photo: undefined } }));
-  };
-
-  // Sync photo to the compiler worker
-  useEffect(() => {
-    const photo = resumeData.personal.photo;
-    if (photo?.url) compile.setPhoto(photo.url);
-    else compile.removePhoto();
-  }, [resumeData.personal.photo?.url]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Import file trigger ──────────────────────────────────────
-  useEffect(() => {
-    if ((location.state as any)?.openImportFile) {
-      persist.openImportFile();
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-  }, [location, navigate, persist.openImportFile]);
-
-  // ── Export ───────────────────────────────────────────────────
-  const handleExportMarkdown = () => {
-    const md = generateMarkdownResume({ ...resumeData, skillsBlocks });
-    const blob = new Blob([md], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${resumeData.personal.firstName || 'resume'}-backup.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // ── Derived values ───────────────────────────────────────────
-  const accentColor = useMemo(() => getAccentColor(templateSettings), [templateSettings]);
-
-  const sectionTitles = useMemo(
-    () =>
-      moduleBlocks
-        .filter(b => b.type === 'h1')
-        .map(b => ({ id: b.id, title: b.content || 'Untitled' })),
-    [moduleBlocks]
-  );
+  const setSupplementaryBlocks = useCallback((supplementaryBlocks: RichTextBlock[]) => {
+    setState(prev => ({ ...prev, supplementaryBlocks }));
+  }, []);
 
   const handleChange = useCallback(() => setIsSample(false), []);
 
   const addSection = () => {
-    setIsSample(false);
+    handleChange();
     const newId = generateId('block');
-    setModuleBlocks(prev => [...prev, { id: newId, type: 'h1', content: 'New Section' }]);
+    setContentBlocks([...state.contentBlocks, { id: newId, type: 'h1', content: 'New Section' }]);
   };
 
-  // ── Public API ───────────────────────────────────────────────
+  const handleFileUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const raw = reader.result as string;
+          const parsed = parseMarkdownResume(raw);
+          setState({ ...parsed, version: 2, templateSlug: state.templateSlug });
+          setIsSample(false);
+        } catch (_) {
+          /* ignore */
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    },
+    [state.templateSlug]
+  );
+
+  const handleExportMarkdown = () => {
+    const md = generateMarkdownResume({
+      personal: state.personal,
+      contentBlocks: state.contentBlocks,
+      supplementaryBlocks: state.supplementaryBlocks,
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    downloadBlob(blob, `${state.personal.firstName || 'resume'}-backup.md`);
+  };
+
+  // ── Photo ────────────────────────────────────────────────────
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
+  const handlePhotoClick = () => photoInputRef.current?.click();
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    handleChange();
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setPersonal({ ...state.personal, photo: { url: dataUrl, shape: 'circle' } });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+  const handlePhotoRemove = () => {
+    setPersonal({ ...state.personal, photo: undefined });
+  };
+
+  // ── Derived values ───────────────────────────────────────────
+  const currentTemplate = useMemo(
+    () => findTemplateBySlug(state.templateSlug) || RESUME_TEMPLATES[0],
+    [state.templateSlug]
+  );
+  const accentColor = useMemo(() => getAccentColor(currentTemplate.settings), [currentTemplate]);
+
   return {
-    resumeData,
-    setResumeData,
-    templateSettings,
-    setTemplateSettings,
-    moduleBlocks,
-    setModuleBlocks,
-    skillsBlocks,
-    setSkillsBlocks,
+    state,
+    personal: state.personal,
+    contentBlocks: state.contentBlocks,
+    supplementaryBlocks: state.supplementaryBlocks,
+    setPersonal,
+    setContentBlocks,
+    setSupplementaryBlocks,
     isSample,
-    setIsSample,
     pdfUrl: compile.pdfUrl,
     compileError: compile.compileError,
     isCompiling: compile.isCompiling,
-    currentTemplate: compile.currentTemplate,
+    currentTemplate,
     accentColor,
-    sectionTitles,
     handleChange,
     photoInputRef,
     fileInputRef: persist.fileInputRef,
@@ -150,10 +152,10 @@ export function useResumeEditor() {
     handlePhotoUpload,
     handlePhotoRemove,
     handleRefreshPreview: compile.handleRefreshPreview,
-    handleFileUpload: persist.handleFileUpload,
-    openImportFile: persist.openImportFile,
     handleExportMarkdown,
     handleDownloadPdf: compile.handleDownloadPdf,
+    openImportFile: persist.openImportFile,
+    handleFileUpload,
     addSection,
   };
 }

@@ -41,3 +41,7 @@ compile.log
 resume.pdf
 /data/*.*.tmp-template-previews
 frontend/.tmp-template-previews
+dev_log.md
+dev_log_gemini.md
+dev_log_kimi.md
+dev_log_cc.md
