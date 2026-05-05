@@ -19,49 +19,67 @@
   let line-thickness = 0.4pt
   let section-gap = 1.0em
 
-  // --- 1. Header with Name and Photo ---
+  // --- 1. Unified Header Section ---
   grid(
     columns: (1fr, 3.4cm),
-    column-gutter: 8mm,
+    column-gutter: 6mm,
     [
+      // Date row
       #align(right)[
         #text(size: 9pt)[#datetime.today().display("[year]年[month]月[day]日") 现在]
       ]
-      #v(1pt)
+      #v(2pt)
       
-      #table(
-        columns: (1fr),
-        rows: (0.7cm, 2.1cm),
-        inset: (x: 8pt, y: 0pt),
-        stroke: line-thickness,
-        [
-          #set align(left + horizon)
-          #text(size: 7pt)[ふりがな] #h(1.5em) #text(size: 8.5pt)[#personal.furigana]
-        ],
-        [
-          #set align(center + horizon)
-          #text(size: 20pt, weight: "bold", tracking: 0.2em)[#personal.name]
-        ]
-      )
-      
-      #v(-line-thickness)
+      // Unified Personal Info Table
       #table(
         columns: (1fr, 80pt),
-        rows: (1.1cm),
+        rows: (0.6cm, 1.6cm, 1.0cm, 0.6cm, 1.1cm, 1.1cm),
         inset: (x: 8pt, y: 0pt),
         stroke: line-thickness,
+        align: left + horizon,
+        
+        // Name Row
+        table.cell(colspan: 2)[
+          #text(size: 7pt)[ふりがな] #h(1.5em) #text(size: 8.5pt)[#personal.furigana]
+        ],
+        table.cell(colspan: 2)[
+          #set align(center + horizon)
+          #text(size: 19pt, weight: "bold", tracking: 0.1em)[#personal.name]
+        ],
+        
+        // Birth and Sex
         [
-          #set align(left + horizon)
           #text(size: 10pt)[#personal.birth 生] #h(1em) #text(size: 9pt)[(满 #h(2em) 岁)]
         ],
         [
           #set align(center + horizon)
           #text(size: 10pt)[男 ・ 女]
+        ],
+        
+        // Address Row
+        table.cell(colspan: 2)[
+          #text(size: 7pt)[ふりがな] #h(1.5em) #text(size: 8.5pt)[#personal.address-kana]
+        ],
+        table.cell(colspan: 2)[
+          #grid(
+            columns: (3em, 1fr),
+            [#text(size: 8pt)[住所]],
+            [#text(size: 10pt)[〒 #personal.zipcode] #h(1em) #text(size: 10pt)[#personal.address]]
+          )
+        ],
+        
+        // Contact Row
+        table.cell(colspan: 2)[
+          #grid(
+            columns: (1fr, 1fr),
+            [#text(size: 8.5pt)[电话] #h(1.5em) #text(size: 10pt)[#personal.phone]],
+            [#text(size: 8.5pt)[E-mail] #h(1.2em) #text(size: 9pt)[#personal.email]]
+          )
         ]
       )
     ],
     [
-      #v(1.2cm)
+      #v(0.9cm) // Align photo box top with the Name Box top
       #if photo != none {
         rect(width: 3.4cm, height: 4.5cm, stroke: line-thickness, padding: 0pt)[#photo]
       } else {
@@ -73,35 +91,6 @@
           ]
         ]
       }
-    ]
-  )
-
-  // --- 2. Address and Contact ---
-  v(section-gap)
-  table(
-    columns: (1fr),
-    rows: (0.6cm, 1.2cm, 1.1cm),
-    inset: (x: 8pt, y: 0pt),
-    stroke: line-thickness,
-    [
-      #set align(left + horizon)
-      #text(size: 7pt)[ふりがな] #h(1.5em) #text(size: 8.5pt)[#personal.address-kana]
-    ],
-    [
-      #set align(left + horizon)
-      #grid(
-        columns: (3em, 1fr),
-        [#text(size: 8pt)[住所]],
-        [#text(size: 10pt)[〒 #personal.zipcode] #h(1em) #text(size: 10pt)[#personal.address]]
-      )
-    ],
-    [
-      #set align(left + horizon)
-      #grid(
-        columns: (1fr, 1fr),
-        [#text(size: 8.5pt)[电话] #h(1.5em) #text(size: 10pt)[#personal.phone]],
-        [#text(size: 8.5pt)[E-mail] #h(1.2em) #text(size: 9pt)[#personal.email]]
-      )
     ]
   )
 
@@ -135,7 +124,7 @@
   v(1.0em)
 }
 
-// Generic content block for non-date sections (like Motivation, Hopes, etc.)
+// Generic content block for non-date sections
 #let content-block(content) = {
   block(width: 100%, stroke: 0.4pt, inset: 10pt, breakable: true)[
     #set text(size: 9.5pt)
