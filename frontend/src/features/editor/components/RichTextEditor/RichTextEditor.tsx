@@ -26,6 +26,9 @@ export default function RichTextEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastActiveIdRef = useRef<string | null>(null);
+  
+  // P0-3: 使用 Ref Map 管理块 DOM 元素，替代脆弱的 querySelector
+  const blockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const targetBlockId = activeBlockId || lastActiveIdRef.current;
 
@@ -143,17 +146,16 @@ export default function RichTextEditor({
         return;
       }
 
+      // P0-3: 改进光标导航逻辑，使用 Ref Map 访问相邻元素
       if (e.key === 'ArrowUp' && idx > 0) {
         const sel = window.getSelection();
         if (sel && sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          const rect = range.getBoundingClientRect();
-          const prevBlockEl = editorRef.current?.querySelector(
-            `[data-block-id="${blocks[idx - 1].id}"]`
-          );
+          const rect = sel.getRangeAt(0).getBoundingClientRect();
+          const prevBlockEl = blockRefs.current.get(blocks[idx - 1].id);
           if (prevBlockEl) {
             const prevRect = prevBlockEl.getBoundingClientRect();
-            if (rect.top <= prevRect.bottom + 5) {
+            // 如果光标在当前块顶部附近，切换到上一个块
+            if (rect.top <= prevRect.bottom + 10) {
               e.preventDefault();
               setActiveBlockId(blocks[idx - 1].id);
             }
@@ -164,14 +166,12 @@ export default function RichTextEditor({
       if (e.key === 'ArrowDown' && idx < blocks.length - 1) {
         const sel = window.getSelection();
         if (sel && sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          const rect = range.getBoundingClientRect();
-          const nextBlockEl = editorRef.current?.querySelector(
-            `[data-block-id="${blocks[idx + 1].id}"]`
-          );
+          const rect = sel.getRangeAt(0).getBoundingClientRect();
+          const nextBlockEl = blockRefs.current.get(blocks[idx + 1].id);
           if (nextBlockEl) {
             const nextRect = nextBlockEl.getBoundingClientRect();
-            if (rect.bottom >= nextRect.top - 5) {
+            // 如果光标在当前块底部附近，切换到下一个块
+            if (rect.bottom >= nextRect.top - 10) {
               e.preventDefault();
               setActiveBlockId(blocks[idx + 1].id);
             }
@@ -218,7 +218,14 @@ export default function RichTextEditor({
           <div className="text-warm-300 text-sm italic">{placeholder}</div>
         )}
         {blocks.map(block => (
-          <div key={block.id} data-block-id={block.id} className="group/block-row relative">
+          <div 
+            key={block.id} 
+            ref={el => {
+              if (el) blockRefs.current.set(block.id, el);
+              else blockRefs.current.delete(block.id);
+            }}
+            className="group/block-row relative"
+          >
             <BlockSideMenu
               block={block}
               blocks={blocks}

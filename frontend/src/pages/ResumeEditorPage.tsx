@@ -10,51 +10,54 @@ import SectionCard from '@features/editor/components/SectionCard';
 import { useEditorState } from '@features/editor/hooks/useEditorState';
 
 export default function ResumeEditorPage() {
+  // P3-3: 结构化后的编辑器实例
   const editor = useEditorState();
+  const { data, actions, photo, io, pdf } = editor;
+  
   const { setActiveTemplateId } = useOutletContext<{ setActiveTemplateId: (id: string) => void }>();
 
   useEffect(() => {
-    setActiveTemplateId(editor.state.templateSlug);
-  }, [editor.state.templateSlug, setActiveTemplateId]);
+    setActiveTemplateId(data.templateSlug);
+  }, [data.templateSlug, setActiveTemplateId]);
 
   const handleContentChange = useCallback(
-    (blocks: typeof editor.contentBlocks) => {
-      editor.handleChange();
-      editor.setContentBlocks(blocks);
+    (blocks: typeof data.contentBlocks) => {
+      actions.handleChange();
+      actions.setContentBlocks(blocks);
     },
-    [editor]
+    [actions, data.contentBlocks]
   );
 
   const handleSupplementaryChange = useCallback(
-    (blocks: typeof editor.supplementaryBlocks) => {
-      editor.handleChange();
-      editor.setSupplementaryBlocks(blocks);
+    (blocks: typeof data.supplementaryBlocks) => {
+      actions.handleChange();
+      actions.setSupplementaryBlocks(blocks);
     },
-    [editor]
+    [actions, data.supplementaryBlocks]
   );
 
   const handlePersonalFieldChange = useCallback(
-    (updater: (prev: typeof editor.personal) => typeof editor.personal) => {
-      editor.handleChange();
-      editor.setPersonal(updater(editor.personal));
+    (updater: (prev: typeof data.personal) => typeof data.personal) => {
+      actions.handleChange();
+      actions.setPersonal(updater(data.personal));
     },
-    [editor]
+    [actions, data.personal]
   );
 
   return (
     <div className="min-h-[calc(100vh-55px)] lg:h-[calc(100vh-55px)] bg-[#f0efed] flex flex-col selection:bg-[rgba(0,117,222,0.15)]">
       <ResumeEditorToolbar
-        openImportFile={editor.openImportFile}
-        handleExportMarkdown={editor.handleExportMarkdown}
-        currentTemplate={editor.currentTemplate}
+        openImportFile={io.open}
+        handleExportMarkdown={io.exportMd}
+        currentTemplate={data.currentTemplate}
       />
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         <div className="flex-1 overflow-y-auto">
-          {editor.compileError && (
+          {pdf.error && (
             <div className="px-4 pt-4">
               <div className="p-3 rounded-lg bg-[rgba(221,91,0,0.06)] border border-[rgba(221,91,0,0.15)] text-warm-600 text-xs">
-                {editor.compileError}
+                {pdf.error}
               </div>
             </div>
           )}
@@ -62,18 +65,18 @@ export default function ResumeEditorPage() {
           <div
             className={clsx(
               'px-3 sm:px-4 py-4 sm:py-6 space-y-6 pb-8 lg:pb-24',
-              editor.isSample && 'opacity-60'
+              data.isSample && 'opacity-60'
             )}
           >
             <section id="section-personal">
               <SectionCard title="Personal Information">
                 <ResumePersonalInfoSection
-                  personal={editor.personal}
+                  personal={data.personal}
                   onFieldChange={handlePersonalFieldChange}
-                  onPhotoClick={editor.handlePhotoClick}
-                  onPhotoUpload={editor.handlePhotoUpload}
-                  onPhotoRemove={editor.handlePhotoRemove}
-                  photoInputRef={editor.photoInputRef}
+                  onPhotoClick={photo.click}
+                  onPhotoUpload={photo.upload}
+                  onPhotoRemove={photo.remove}
+                  photoInputRef={photo.ref}
                 />
               </SectionCard>
             </section>
@@ -84,7 +87,7 @@ export default function ResumeEditorPage() {
                 subtitle="Add and arrange your resume sections with the rich text editor"
               >
                 <RichTextEditor
-                  blocks={editor.contentBlocks}
+                  blocks={data.contentBlocks}
                   onChange={handleContentChange}
                 />
               </SectionCard>
@@ -96,7 +99,7 @@ export default function ResumeEditorPage() {
                 subtitle="Use H1 for section headings; all other block types can be used freely."
               >
                 <RichTextEditor
-                  blocks={editor.supplementaryBlocks}
+                  blocks={data.supplementaryBlocks}
                   onChange={handleSupplementaryChange}
                 />
               </SectionCard>
@@ -105,20 +108,20 @@ export default function ResumeEditorPage() {
         </div>
 
         <ResumePdfPreview
-          currentTemplate={editor.currentTemplate}
-          isCompiling={editor.isCompiling}
-          pdfUrl={editor.pdfUrl}
-          onRefresh={editor.handleRefreshPreview}
-          onDownload={editor.handleDownloadPdf}
+          currentTemplate={data.currentTemplate}
+          isCompiling={pdf.isCompiling}
+          pdfUrl={pdf.url}
+          onRefresh={pdf.refresh}
+          onDownload={pdf.download}
         />
       </div>
 
       <input
-        ref={editor.fileInputRef}
+        ref={io.ref}
         type="file"
         accept=".md,text/markdown"
         className="hidden"
-        onChange={editor.handleFileUpload}
+        onChange={io.upload}
       />
     </div>
   );

@@ -60,18 +60,10 @@ export function useEditorState() {
 
   const handleChange = useCallback(() => setIsSample(false), []);
 
-  // ── Feature Hooks (P1-1: 职责拆分) ──────────────────────────
-  const { 
-    photoInputRef, 
-    handlePhotoClick, 
-    handlePhotoUpload, 
-    handlePhotoRemove 
-  } = usePhotoManager(state.personal, setPersonal, handleChange);
+  // ── Feature Hooks ──────────────────────────
+  const photo = usePhotoManager(state.personal, setPersonal, handleChange);
 
-  const {
-    handleFileUpload,
-    handleExportMarkdown
-  } = useEditorIO({
+  const io = useEditorIO({
     state,
     onImport: (parsed) => {
       setState({ ...parsed, version: 2, templateSlug: state.templateSlug });
@@ -86,11 +78,11 @@ export function useEditorState() {
     }
   }, [templateId, state.templateSlug]);
 
-  const addSection = () => {
+  const addSection = useCallback(() => {
     handleChange();
     const newId = generateId('block');
     setContentBlocks([...state.contentBlocks, { id: newId, type: 'h1', content: 'New Section' }]);
-  };
+  }, [state.contentBlocks, setContentBlocks, handleChange]);
 
   // ── Derived values ───────────────────────────────────────────
   const currentTemplate = useMemo(
@@ -99,31 +91,49 @@ export function useEditorState() {
   );
   const accentColor = useMemo(() => getAccentColor(currentTemplate.settings), [currentTemplate]);
 
+  // P3-3: 结构化返回对象，降低认知负荷
   return {
-    state,
-    personal: state.personal,
-    contentBlocks: state.contentBlocks,
-    supplementaryBlocks: state.supplementaryBlocks,
-    setPersonal,
-    setContentBlocks,
-    setSupplementaryBlocks,
-    isSample,
-    pdfUrl: compile.pdfUrl,
-    compileError: compile.compileError,
-    isCompiling: compile.isCompiling,
-    currentTemplate,
-    accentColor,
-    handleChange,
-    photoInputRef,
-    fileInputRef: persist.fileInputRef,
-    handlePhotoClick,
-    handlePhotoUpload,
-    handlePhotoRemove,
-    handleRefreshPreview: compile.handleRefreshPreview,
-    handleExportMarkdown,
-    handleDownloadPdf: compile.handleDownloadPdf,
-    openImportFile: persist.openImportFile,
-    handleFileUpload,
-    addSection,
+    // 数据与 UI 状态
+    data: {
+      personal: state.personal,
+      contentBlocks: state.contentBlocks,
+      supplementaryBlocks: state.supplementaryBlocks,
+      templateSlug: state.templateSlug,
+      isSample,
+      currentTemplate,
+      accentColor,
+    },
+    // 基础操作
+    actions: {
+      setPersonal,
+      setContentBlocks,
+      setSupplementaryBlocks,
+      handleChange,
+      addSection,
+    },
+    // 照片管理
+    photo: {
+      ref: photo.photoInputRef,
+      upload: photo.handlePhotoUpload,
+      remove: photo.handlePhotoRemove,
+      click: photo.handlePhotoClick,
+    },
+    // 文件 I/O
+    io: {
+      ref: persist.fileInputRef,
+      open: persist.openImportFile,
+      upload: io.handleFileUpload,
+      exportMd: io.handleExportMarkdown,
+    },
+    // PDF 编译相关
+    pdf: {
+      url: compile.pdfUrl,
+      error: compile.compileError,
+      isCompiling: compile.isCompiling,
+      refresh: compile.handleRefreshPreview,
+      download: compile.handleDownloadPdf,
+    }
   };
 }
+
+export type EditorInstance = ReturnType<typeof useEditorState>;
