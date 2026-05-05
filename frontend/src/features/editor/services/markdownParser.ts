@@ -1,22 +1,57 @@
 import { PersonalInfo } from '@app-types/resume';
-import { RichTextBlock } from '@app-types/richText';
+import { RichTextBlock, BlockType } from '@app-types/richText';
 import { generateId } from '@shared/utils/id';
 import { parseBoldLine } from '@shared/utils/text';
+import { MD_HEADER_TO_BLOCK_TYPE, SUPPLEMENTARY_HEADER } from '@constants/editor';
 
-function parseYaml(lines: string[]): Record<string, any> {
+/**
+ * 解析扁平的 Key: Value 格式 (Frontmatter)
+ * P3-1: 重命名为 parseFlatFrontmatter 以符合其实际能力
+ */
+function parseFlatFrontmatter(lines: string[]): Record<string, any> {
   const result: Record<string, any> = {};
   for (const line of lines) {
-    const m = line.match(/^(\w+):\s*(.+)/);
-    if (m) {
-      let val = m[2].replace(/^["']|["']$/g, '').trim();
-      // Handle YAML reserved words
-      if (val === 'true') result[m[1]] = true;
-      else if (val === 'false') result[m[1]] = false;
-      else if (val === 'null') result[m[1]] = null;
-      else result[m[1]] = val;
+    // P0-2: 优化正则，允许 value 中包含冒号（如 URL）
+    const match = line.match(/^(\w+):\s*(.*)/);
+    if (match) {
+      const key = match[1];
+      let val = match[2].replace(/^["']|["']$/g, '').trim();
+      // 还原被转义的双引号
+      val = val.replace(/\\"/g, '"');
+
+      // 处理 YAML 常用布尔和空值
+      if (val === 'true') result[key] = true;
+      else if (val === 'false') result[key] = false;
+      else if (val === 'null') result[key] = null;
+      else result[key] = val;
     }
   }
   return result;
+}
+
+/**
+ * P1-3: 提取 PersonalInfo 规格化逻辑，集中处理字段兼容、Fallback 和默认值
+ */
+function normalizePersonalInfo(raw: Record<string, any>): PersonalInfo {
+  return {
+    firstName: raw.firstName || '',
+    lastName: raw.lastName || '',
+    furiganaFirstName: raw.furiganaFirstName || '',
+    furiganaLastName: raw.furiganaLastName || '',
+    birth: raw.birth || '',
+    position: raw.position || '',
+    email: raw.email || '',
+    mobile: raw.mobile || '',
+    address: raw.address || '',
+    // P1-3: 处理多源 Fallback 逻辑
+    homepage: raw.homepage || raw.github || raw.gitlab || '',
+    linkedin: raw.linkedin || '',
+    github: raw.github || '',
+    gitlab: raw.gitlab || '',
+    twitter: raw.twitter || '',
+    quote: raw.quote || '',
+    photo: raw.photoUrl ? { url: raw.photoUrl, shape: 'circle' } : undefined,
+  };
 }
 
 export function parseMarkdownResume(md: string): {
@@ -33,17 +68,29 @@ export function parseMarkdownResume(md: string): {
   let yamlLines: string[] = [];
   let currentTarget = contentBlocks;
 
+  const pushHeaderBlock = (rawContent: string, type: BlockType) => {
+    let title = rawContent;
+    let rightContent = '';
+    const pipeIdx = rawContent.indexOf('|');
+    if (pipeIdx !== -1) {
+      title = rawContent.slice(0, pipeIdx).trim();
+      rightContent = rawContent.slice(pipeIdx + 1).trim();
+    }
+    currentTarget.push({ id: generateId('blk'), type, content: title, rightContent });
+  };
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
 
+    // YAML Frontmatter 处理
     if (i === 0 && trimmed === '---') {
       inYaml = true;
       continue;
     }
     if (inYaml && trimmed === '---') {
       inYaml = false;
-      Object.assign(personalRaw, parseYaml(yamlLines));
+      Object.assign(personalRaw, parseFlatFrontmatter(yamlLines));
       continue;
     }
     if (inYaml) {
@@ -51,52 +98,22 @@ export function parseMarkdownResume(md: string): {
       continue;
     }
 
-    if (trimmed === '## Supplementary') {
+    // P1-2: 使用共享常量作为补充区标识
+    if (trimmed === SUPPLEMENTARY_HEADER) {
       currentTarget = supplementaryBlocks;
       continue;
     }
 
-    // Markdown headers
-    const h2Match = trimmed.match(/^##\s+(.+)/);
-    if (h2Match) {
-      const content = h2Match[1].trim();
-      let title = content;
-      let rightContent = '';
-      const pipeIdx = content.indexOf('|');
-      if (pipeIdx !== -1) {
-        title = content.slice(0, pipeIdx).trim();
-        rightContent = content.slice(pipeIdx + 1).trim();
+    // P2-1: 统一 Header 解析逻辑
+    const headerMatch = trimmed.match(/^(#{2,4})\s+(.+)/);
+    if (headerMatch) {
+      const marker = headerMatch[1] as keyof typeof MD_HEADER_TO_BLOCK_TYPE;
+      const content = headerMatch[2].trim();
+      const type = MD_HEADER_TO_BLOCK_TYPE[marker];
+      if (type) {
+        pushHeaderBlock(content, type);
+        continue;
       }
-      currentTarget.push({ id: generateId('blk'), type: 'h1', content: title, rightContent });
-      continue;
-    }
-
-    const h3Match = trimmed.match(/^###\s+(.+)/);
-    if (h3Match) {
-      const content = h3Match[1].trim();
-      let title = content;
-      let rightContent = '';
-      const pipeIdx = content.indexOf('|');
-      if (pipeIdx !== -1) {
-        title = content.slice(0, pipeIdx).trim();
-        rightContent = content.slice(pipeIdx + 1).trim();
-      }
-      currentTarget.push({ id: generateId('blk'), type: 'h2', content: title, rightContent });
-      continue;
-    }
-
-    const h4Match = trimmed.match(/^####\s+(.+)/);
-    if (h4Match) {
-      const content = h4Match[1].trim();
-      let title = content;
-      let rightContent = '';
-      const pipeIdx = content.indexOf('|');
-      if (pipeIdx !== -1) {
-        title = content.slice(0, pipeIdx).trim();
-        rightContent = content.slice(pipeIdx + 1).trim();
-      }
-      currentTarget.push({ id: generateId('blk'), type: 'h3', content: title, rightContent });
-      continue;
     }
 
     // Bold header: **Title** | Right
@@ -125,22 +142,7 @@ export function parseMarkdownResume(md: string): {
   }
 
   return {
-    personal: {
-      firstName: personalRaw.firstName || '',
-      lastName: personalRaw.lastName || '',
-      furiganaFirstName: personalRaw.furiganaFirstName || '',
-      furiganaLastName: personalRaw.furiganaLastName || '',
-      birth: personalRaw.birth || '',
-      position: personalRaw.position || '',
-      email: personalRaw.email || '',
-      mobile: personalRaw.mobile || '',
-      address: personalRaw.address || '',
-      homepage: personalRaw.homepage || personalRaw.github || '',
-      linkedin: personalRaw.linkedin || '',
-      twitter: personalRaw.twitter || '',
-      quote: personalRaw.quote || '',
-      photo: personalRaw.photoUrl ? { url: personalRaw.photoUrl, shape: 'circle' } : undefined,
-    },
+    personal: normalizePersonalInfo(personalRaw),
     contentBlocks,
     supplementaryBlocks,
   };

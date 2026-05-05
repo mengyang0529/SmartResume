@@ -15,4 +15,16 @@ export const BLOCK_TYPES = [
   { type: 'paragraph' as const, label: '¶' },
 ] as const;
 
+export const SUPPLEMENTARY_HEADER = '## Supplementary';
+
+export const MD_HEADER_TO_BLOCK_TYPE = {
+  '##': 'h1',
+  '###': 'h2',
+  '####': 'h3',
+} as const;
+
+export const BLOCK_TYPE_TO_MD_HEADER = Object.fromEntries(
+  Object.entries(MD_HEADER_TO_BLOCK_TYPE).map(([md, type]) => [type, md])
+) as Record<string, string>;
+
 export type EditorColor = (typeof EDITOR_COLORS)[number]['value'];
