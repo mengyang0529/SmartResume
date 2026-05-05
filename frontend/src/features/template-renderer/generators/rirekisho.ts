@@ -40,84 +40,72 @@ ${dataUrlToTypstBytes(photoUrl)}
 
 `;
 
-  // Process contentBlocks (Education & Work)
-  let inTable = false;
-  contentBlocks.forEach(block => {
-    if (block.type === 'h1') {
-      if (inTable) typst += `)\n\n`;
-      typst += `#section-title[${escapeTypstContent(block.content)}]\n#rireki-table(\n`;
-      inTable = true;
-    } else if (
-      block.type === 'h2' ||
-      block.type === 'h3' ||
-      block.type === 'bullet' ||
-      block.type === 'paragraph'
-    ) {
-      if (!inTable) {
-        typst += `#rireki-table(\n`;
-        inTable = true;
-      }
-      const date = block.rightContent
-        ? escapeTypstContent(formatDateJapanese(block.rightContent))
-        : '';
-      const content = escapeTypstContent(block.content);
-      typst += `  [${date}], [${content}],\n`;
-    }
-  });
-  if (inTable) typst += `)\n\n`;
-
-  // Process supplementaryBlocks (License, Motivation, Hopes)
-  // P1-4: 消除了对下标位置的耦合，改为通过 H1 标题内容进行语义匹配
-  const h1Groups = groupBlocksByH1(supplementaryBlocks);
-
-  const renderGroupContent = (group: RichTextBlock[]) => {
-    return group
-      .slice(1)
+  // Helper to render blocks as Typst content
+  const renderBlocksAsContent = (blocks: RichTextBlock[]) => {
+    return blocks
       .map(b => {
         const content = escapeTypstContent(b.content);
-        return b.type === 'bullet' ? `- ${content}` : content;
+        let prefix = '';
+        if (b.type === 'bullet') prefix = '- ';
+        const text = b.bold ? `*${content}*` : content;
+        return `${prefix}${text}`;
       })
-      .join(' \\n ');
+      .join('\n\n');
   };
 
-  // 1. 资格/证书 (License)
-  const licenseGroup = h1Groups.find(g => /免許|資格|License/i.test(g[0].content));
-  if (licenseGroup) {
-    typst += `#license-table(\n`;
-    licenseGroup.slice(1).forEach(block => {
-      const date = block.rightContent
-        ? escapeTypstContent(formatDateJapanese(block.rightContent))
-        : '';
-      typst += `  [${date}], [${escapeTypstContent(block.content)}],\n`;
-    });
-    typst += `)\n\n`;
-  }
+  // Helper to render blocks as Table rows
+  const renderBlocksAsTableRows = (blocks: RichTextBlock[]) => {
+    return blocks
+      .map(b => {
+        const date = b.rightContent ? escapeTypstContent(formatDateJapanese(b.rightContent)) : '';
+        const content = escapeTypstContent(b.content);
+        return `  [${date}], [${content}],`;
+      })
+      .join('\n');
+  };
 
-  // 2. 志望动机 (Motivation)
-  const motivationGroup = h1Groups.find(g => /志望動機|理由|Motivation/i.test(g[0].content));
-  if (motivationGroup) {
-    typst += `#motivation-block[${renderGroupContent(motivationGroup)}]\n\n`;
-  }
+  // Helper to render a single H1 group based on its content and type
+  const renderGroup = (group: RichTextBlock[]) => {
+    const header = group[0];
+    const items = group.slice(1);
+    if (!header) return '';
 
-  // 3. 本人希望栏 (Hopes)
-  const hopesGroup = h1Groups.find(g => /本人希望|Hopes/i.test(g[0].content));
-  if (hopesGroup) {
-    typst += `#hopes-block[${renderGroupContent(hopesGroup)}]\n\n`;
-  }
+    const title = header.content;
+    const escapedTitle = escapeTypstContent(title);
 
-  // 兜底渲染：如果还有其他 H1 块没被上述特定槽位捕获，按通用格式渲染
-  const processedIds = new Set([
-    ...(licenseGroup?.[0] ? [licenseGroup[0].id] : []),
-    ...(motivationGroup?.[0] ? [motivationGroup[0].id] : []),
-    ...(hopesGroup?.[0] ? [hopesGroup[0].id] : []),
-  ]);
+    // 1. Check for specialized "slots" (usually for Supplementary)
+    if (/免許|資格|License/i.test(title)) {
+      return `#license-table(\n${renderBlocksAsTableRows(items)}\n)\n\n`;
+    }
+    if (/志望動機|理由|Motivation|自己PR/i.test(title)) {
+      return `#motivation-block[\n${renderBlocksAsContent(items)}\n]\n\n`;
+    }
+    if (/本人希望|Hopes|要望/i.test(title)) {
+      return `#hopes-block[\n${renderBlocksAsContent(items)}\n]\n\n`;
+    }
 
-  h1Groups
-    .filter(g => !processedIds.has(g[0].id))
-    .forEach(g => {
-      typst += `#section-title[${escapeTypstContent(g[0].content)}]\n`;
-      typst += `${renderGroupContent(g)}\n\n`;
-    });
+    // 2. Generic rendering (for Education, Work, or Custom sections)
+    const hasDates = items.some(b => b.rightContent);
+    let out = `#section-title[${escapedTitle}]\n`;
+    if (hasDates) {
+      out += `#rireki-table(\n${renderBlocksAsTableRows(items)}\n)\n\n`;
+    } else {
+      out += `[\n${renderBlocksAsContent(items)}\n]\n\n`;
+    }
+    return out;
+  };
+
+  // --- Step 1: Render Resume Content (Education, Work History, etc.) ---
+  const contentGroups = groupBlocksByH1(contentBlocks);
+  contentGroups.forEach(group => {
+    typst += renderGroup(group);
+  });
+
+  // --- Step 2: Render Supplementary Info (Licenses, Motivation, Hopes, etc.) ---
+  const supplementaryGroups = groupBlocksByH1(supplementaryBlocks);
+  supplementaryGroups.forEach(group => {
+    typst += renderGroup(group);
+  });
 
   return typst;
 }

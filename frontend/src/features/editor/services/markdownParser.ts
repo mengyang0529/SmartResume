@@ -154,12 +154,22 @@ export function parseMarkdownResume(md: string): {
     if (trimmed) {
       hasEncounteredContent = true;
       const isBullet = trimmed.startsWith('- ');
-      const content = isBullet ? trimmed.slice(2).trim() : trimmed;
-      const { content: finalContent, bold } = parseBoldLine(content);
+      let rawContent = isBullet ? trimmed.slice(2).trim() : trimmed;
+      
+      let title = rawContent;
+      let rightContent = '';
+      const pipeIdx = rawContent.indexOf('|');
+      if (pipeIdx !== -1) {
+        title = rawContent.slice(0, pipeIdx).trim();
+        rightContent = rawContent.slice(pipeIdx + 1).trim();
+      }
+
+      const { content: finalContent, bold } = parseBoldLine(title);
       currentTarget.push({
         id: generateId('blk'),
         type: isBullet ? 'bullet' : 'paragraph',
         content: finalContent,
+        rightContent,
         bold,
       });
     }

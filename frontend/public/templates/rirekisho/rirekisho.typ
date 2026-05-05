@@ -12,45 +12,60 @@
   set text(font: font, lang: language, size: 10pt, fill: black, fallback: true)
   set page(
     paper: paper-size,
-    margin: (left: 10mm, right: 10mm, top: 10mm, bottom: 10mm),
+    margin: (left: 12mm, right: 12mm, top: 10mm, bottom: 10mm),
   )
   set par(spacing: 0.3em, leading: 4pt)
+  
+  let line-thickness = 0.4pt
+  let section-gap = 1.0em
 
-  // 1. Header with Name and Photo
+  // --- 1. Header with Name and Photo ---
   grid(
     columns: (1fr, 3.4cm),
-    column-gutter: 5mm,
+    column-gutter: 8mm,
     [
-      // Date row
-      #align(right)[#text(size: 9pt)[#datetime.today().display("[year]年[month]月[day]日") 现在]]
-      #v(2pt)
-      
-      // Name Box
+      #align(right)[
+        #text(size: 9pt)[#datetime.today().display("[year]年[month]月[day]日") 现在]
+      ]
+      #v(1pt)
+
       #table(
         columns: (1fr),
-        rows: (0.8cm, 2.2cm),
-        inset: (x: 8pt, y: 4pt),
-        stroke: 0.5pt,
-        [#set align(left + horizon); #text(size: 7pt)[ふりがな] #h(1em) #text(size: 9pt)[#personal.furigana]],
-        [#set align(center + horizon); #text(size: 18pt, weight: "bold")[#personal.name]]
+        rows: (0.7cm, 2.1cm),
+        inset: (x: 8pt, y: 0pt),
+        stroke: line-thickness,
+        [
+          #set align(left + horizon)
+          #text(size: 7pt)[ふりがな] #h(1.5em) #text(size: 8.5pt)[#personal.furigana]
+        ],
+        [
+          #set align(center + horizon)
+          #text(size: 20pt, weight: "bold", tracking: 0.2em)[#personal.name]
+        ]
       )
-      
-      // Birth and Sex
-      #v(-0.5pt) // Overlap borders
+
+      #v(-line-thickness)
       #table(
         columns: (1fr, 80pt),
-        inset: (x: 8pt, y: 4pt),
-        stroke: 0.5pt,
-        [#text(size: 10pt)[#personal.birth 生] (满 #h(2em) 岁)],
-        [#set align(center); #text(size: 10pt)[男 ・ 女]]
+        rows: (1.1cm),
+        inset: (x: 8pt, y: 0pt),
+        stroke: line-thickness,
+        [
+          #set align(left + horizon)
+          #text(size: 10pt)[#personal.birth 生] #h(1em) #text(size: 9pt)[(满 #h(2em) 岁)]
+        ],
+        [
+          #set align(center + horizon)
+          #text(size: 10pt)[男 ・ 女]
+        ]
       )
     ],
     [
-      #v(1.15cm) // Align with name box
+      #v(0.5cm)
       #if photo != none {
-        rect(width: 3.4cm, height: 4.5cm, stroke: 0.5pt, padding: 0pt)[#photo]
+        rect(width: 3.4cm, height: 4cm, stroke: line-thickness, padding: 0pt)[#photo]
       } else {
-        rect(width: 3.4cm, height: 4.5cm, stroke: 0.5pt + gray, fill: gray.lighten(90%))[
+        rect(width: 3.4cm, height: 4cm, stroke: line-thickness + gray, fill: gray.lighten(90%))[
           #set align(center + horizon)
           #text(size: 8pt, fill: gray)[
             写真を贴る位置 \
@@ -61,76 +76,88 @@
     ]
   )
 
-  // 2. Address and Contact
-  #v(-0.5pt)
-  #table(
+  // --- 2. Address and Contact ---
+  v(section-gap)
+  table(
     columns: (1fr),
-    inset: (x: 8pt, y: 4pt),
-    stroke: 0.5pt,
-    [#text(size: 7pt)[ふりがな] #h(1em) #text(size: 8pt)[#personal.address-kana]],
+    rows: (0.6cm, 1.2cm, 1.1cm),
+    inset: (x: 8pt, y: 0pt),
+    stroke: line-thickness,
     [
+      #set align(left + horizon)
+      #text(size: 7pt)[ふりがな] #h(1.5em) #text(size: 8.5pt)[#personal.address-kana]
+    ],
+    [
+      #set align(left + horizon)
       #grid(
-        columns: (2.5em, 1fr),
+        columns: (3em, 1fr),
         [#text(size: 8pt)[住所]],
-        [#text(size: 10pt)[〒 #personal.zipcode] \ #v(2pt) #text(size: 10pt)[#personal.address]]
+        [#text(size: 10pt)[〒 #personal.zipcode] #h(1em) #text(size: 10pt)[#personal.address]]
       )
     ],
     [
+      #set align(left + horizon)
       #grid(
         columns: (1fr, 1fr),
-        [#text(size: 8pt)[电话] #h(1em) #text(size: 10pt)[#personal.phone]],
-        [#text(size: 8pt)[E-mail] #h(0.5em) #text(size: 9pt)[#personal.email]]
+        [#text(size: 8.5pt)[电话] #h(1.5em) #text(size: 10pt)[#personal.phone]],
+        [#text(size: 8.5pt)[E-mail] #h(1.2em) #text(size: 9pt)[#personal.email]]
       )
     ]
   )
 
-  v(0.5em)
+  v(section-gap)
   body
 }
 
-// Section title with lines that look like part of a table
-#let section-title(title) = {
+// Section Header logic remains the same but spacing uses the same variable
+#let section-header(title) = {
   table(
     columns: (1fr),
-    inset: (y: 3pt),
-    stroke: (bottom: 0.5pt),
-    fill: gray.lighten(95%),
-    [#set align(center); #text(size: 10pt, weight: "bold", spacing: 1em)[#title]]
+    inset: (y: 6pt),
+    stroke: 0.4pt,
+    fill: gray.lighten(96%),
+    [
+      #set align(center)
+      #text(size: 10pt, weight: "bold", spacing: 0.8em)[#title]
+    ]
   )
-  v(-0.5pt)
+  v(-0.4pt)
 }
 
 #let rireki-table(..items) = {
   table(
     columns: (3cm, 1fr),
-    rows: (1.2em),
-    inset: (x: 8pt, y: 6pt),
-    stroke: 0.5pt,
+    inset: (x: 8pt, y: 8pt),
+    stroke: 0.4pt,
     align: (center + horizon, left + horizon),
     ..items
   )
-  v(0.5em)
+  v(1.0em) // Matching section-gap
 }
 
-#let license-table(..items) = {
-  section-title("免 許 ・ 資 格")
+#let section-title(title) = {
+  section-header(title)
+}
+
+#let license-table(title: "免 許 ・ 資 格", ..items) = {
+  section-header(title)
   rireki-table(..items)
 }
 
-#let motivation-block(content) = {
-  section-title("志望動機・特技・好きな学科・アピールポイントなど")
-  rect(width: 100%, stroke: 0.5pt, inset: 10pt, min-height: 4cm)[
-    #set text(size: 9pt)
+#let motivation-block(content, title: "志望動機・特技・好きな学科・アピールポイントなど") = {
+  section-header(title)
+  block(width: 100%, stroke: 0.4pt, inset: 10pt, height: 4.5cm)[
+    #set text(size: 9.5pt)
     #set par(leading: 6pt)
     #content
   ]
-  v(0.5em)
+  v(1.0em)
 }
 
-#let hopes-block(content) = {
-  section-title("本人希望記入欄（特に給料・職種・勤務時間・勤務地等に対して希望があれば記入）")
-  rect(width: 100%, stroke: 0.5pt, inset: 10pt, min-height: 2cm)[
-    #set text(size: 9pt)
+#let hopes-block(content, title: "本人希望記入欄") = {
+  section-header(title)
+  block(width: 100%, stroke: 0.4pt, inset: 10pt, height: 2.5cm)[
+    #set text(size: 9.5pt)
     #set par(leading: 6pt)
     #content
   ]

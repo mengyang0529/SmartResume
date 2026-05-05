@@ -56,9 +56,11 @@ export function generateMarkdownResume(data: {
       if (mdHeader) {
         lines.push(`${mdHeader} ${block.content}${block.rightContent ? ` | ${block.rightContent}` : ''}`);
       } else if (block.type === 'bullet') {
-        lines.push(`- ${block.bold ? `**${block.content}**` : block.content}`);
+        const content = block.bold ? `**${block.content}**` : block.content;
+        lines.push(`- ${content}${block.rightContent ? ` | ${block.rightContent}` : ''}`);
       } else if (block.type === 'paragraph') {
-        lines.push(block.bold ? `**${block.content}**` : block.content);
+        const content = block.bold ? `**${block.content}**` : block.content;
+        lines.push(`${content}${block.rightContent ? ` | ${block.rightContent}` : ''}`);
       }
       lines.push('');
     }
