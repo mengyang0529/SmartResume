@@ -116,6 +116,7 @@ describe('useEditorPersistence', () => {
 
     // Initial save (after debounce)
     vi.advanceTimersByTime(800);
+    await vi.runAllTicks();
     expect(storage.savePhoto).toHaveBeenCalledWith('photo-v1');
     vi.mocked(storage.savePhoto).mockClear();
 
@@ -126,6 +127,7 @@ describe('useEditorPersistence', () => {
     };
     rerender({ state: stateWithNewName });
     vi.advanceTimersByTime(800);
+    await vi.runAllTicks();
 
     // saveState should be called, but savePhoto should NOT
     expect(storage.saveState).toHaveBeenCalled();
@@ -138,6 +140,7 @@ describe('useEditorPersistence', () => {
     };
     rerender({ state: stateWithNewPhoto });
     vi.advanceTimersByTime(800);
+    await vi.runAllTicks();
 
     expect(storage.savePhoto).toHaveBeenCalledWith('photo-v2');
     vi.useRealTimers();

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useRef } from 'react';
 import type { PersonalInfo } from '@app-types/resume';
 
 export function usePhotoManager(
@@ -19,6 +19,10 @@ export function usePhotoManager(
     reader.onload = () => {
       const dataUrl = reader.result as string;
       onUpdate({ ...personal, photo: { url: dataUrl, shape: 'circle' } });
+    };
+    reader.onerror = () => {
+      console.error('Failed to read photo file');
+      alert('Failed to upload photo. Please try again.');
     };
     reader.readAsDataURL(file);
     e.target.value = '';

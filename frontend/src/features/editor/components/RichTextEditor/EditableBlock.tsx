@@ -31,6 +31,7 @@ export default function EditableBlock({
 }: EditableBlockProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
+  const isComposingRef = useRef(false);
 
   // P0-4: 改进 DOM 同步逻辑，确保外部状态变化能反映到编辑器，同时避免正在输入时的闪烁
   useEffect(() => {
@@ -48,6 +49,7 @@ export default function EditableBlock({
   }, [block.rightContent, block.id]);
 
   const handleContentInput = useCallback(() => {
+    if (isComposingRef.current) return;
     const text = contentRef.current?.textContent || '';
 
     // 1. Detect whole-line bold shortcut: **text**
@@ -85,6 +87,7 @@ export default function EditableBlock({
   }, [block.id, block.type, block.bold, onChange]);
 
   const handleRightInput = useCallback(() => {
+    if (isComposingRef.current) return;
     const text = rightRef.current?.textContent || '';
     onChange(block.id, { rightContent: text });
   }, [block.id, onChange]);
@@ -129,6 +132,11 @@ export default function EditableBlock({
             contentEditable
             suppressContentEditableWarning
             onInput={handleContentInput}
+            onCompositionStart={() => { isComposingRef.current = true; }}
+            onCompositionEnd={() => {
+              isComposingRef.current = false;
+              handleContentInput();
+            }}
             onFocus={() => onFocus(block.id)}
             onBlur={onBlur}
             onKeyDown={e => onKeyDown(e, block.id)}
@@ -153,6 +161,11 @@ export default function EditableBlock({
             contentEditable
             suppressContentEditableWarning
             onInput={handleRightInput}
+            onCompositionStart={() => { isComposingRef.current = true; }}
+            onCompositionEnd={() => {
+              isComposingRef.current = false;
+              handleRightInput();
+            }}
             onFocus={() => onFocus(block.id)}
             onBlur={onBlur}
             onKeyDown={e => onKeyDown(e, block.id)}

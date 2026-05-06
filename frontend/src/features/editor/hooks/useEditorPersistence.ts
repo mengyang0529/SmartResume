@@ -2,15 +2,6 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { ResumeData } from '@app-types/resume';
 import type { EditorState } from '@app-types/editorState';
 import { migrateResumeDataToEditorState, extractTemplateSlug } from '../services/migration';
-import {
-  SAMPLE_CLASSIC_CONTENT,
-  SAMPLE_RIREKISHO_CONTENT,
-  SAMPLE_RIREKISHO_SUPPLEMENTARY,
-  SAMPLE_SHOKUMU_CONTENT,
-  SAMPLE_SHOKUMU_SUPPLEMENTARY,
-  SAMPLE_SKILLS_SUPPLEMENTARY,
-} from '@data/sampleBlocks';
-import { SAMPLE_RESUME_DATA } from '@data/sampleResume';
 import { storage } from '@shared/utils/storage';
 
 import { getSampleStateForTemplate } from '../services/sampleData';
@@ -28,39 +19,42 @@ export function useEditorPersistence(config: {
   // Load logic
   useEffect(() => {
     async function load() {
-      // 1. Check v2
-      const v2 = await storage.getState();
-      const photo = await storage.getPhoto();
+      try {
+        // 1. Check v2
+        const v2 = await storage.getState();
+        const photo = await storage.getPhoto();
 
-      if (v2) {
-        if (photo && v2.personal.photo && v2.personal.photo.url === '__stored__') {
-          v2.personal.photo.url = photo;
-        }
-        setState(v2);
-        lastSavedPhotoRef.current = photo || undefined;
-        return;
-      }
-
-      // 2. Auto-migrate legacy keys
-      // ... (rest of legacy migration logic)
-      const legacyKeys = [
-        'current_resume_data_classic',
-        'current_resume_data_modern',
-        'current_resume_data_art',
-        'current_resume_data_rirekisho',
-        'current_resume_data_shokumukeirekisho',
-        'current_resume_data_default',
-      ];
-      for (const key of legacyKeys) {
-        const legacy = await storage.getLegacyItem<ResumeData>(key);
-        if (legacy) {
-          const migrated = migrateResumeDataToEditorState(legacy, extractTemplateSlug(key));
-          await storage.saveState(migrated);
-          // Cleanup legacy keys
-          for (const k of legacyKeys) await storage.removeLegacyItem(k);
-          setState(migrated);
+        if (v2) {
+          if (photo && v2.personal.photo && v2.personal.photo.url === '__stored__') {
+            v2.personal.photo.url = photo;
+          }
+          setState(v2);
+          lastSavedPhotoRef.current = photo || undefined;
           return;
         }
+
+        // 2. Auto-migrate legacy keys
+        const legacyKeys = [
+          'current_resume_data_classic',
+          'current_resume_data_modern',
+          'current_resume_data_art',
+          'current_resume_data_rirekisho',
+          'current_resume_data_shokumukeirekisho',
+          'current_resume_data_default',
+        ];
+        for (const key of legacyKeys) {
+          const legacy = await storage.getLegacyItem<ResumeData>(key);
+          if (legacy) {
+            const migrated = migrateResumeDataToEditorState(legacy, extractTemplateSlug(key));
+            await storage.saveState(migrated);
+            // Cleanup legacy keys
+            for (const k of legacyKeys) await storage.removeLegacyItem(k);
+            setState(migrated);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load saved data, falling back to sample:', err);
       }
 
       // 3. Fallback to sample if nothing found
@@ -75,17 +69,21 @@ export function useEditorPersistence(config: {
   // Auto-save
   useEffect(() => {
     if (state.version !== 2) return;
-    const timer = setTimeout(() => {
-      storage.saveState(state);
+    const timer = setTimeout(async () => {
+      try {
+        await storage.saveState(state);
 
-      const currentPhoto = state.personal.photo?.url;
-      if (currentPhoto !== lastSavedPhotoRef.current) {
-        if (currentPhoto) {
-          storage.savePhoto(currentPhoto);
-        } else {
-          storage.removePhoto();
+        const currentPhoto = state.personal.photo?.url;
+        if (currentPhoto !== lastSavedPhotoRef.current) {
+          if (currentPhoto) {
+            await storage.savePhoto(currentPhoto);
+          } else {
+            await storage.removePhoto();
+          }
+          lastSavedPhotoRef.current = currentPhoto;
         }
-        lastSavedPhotoRef.current = currentPhoto;
+      } catch (err) {
+        console.warn('Failed to auto-save to IndexedDB:', err);
       }
     }, 800);
     return () => clearTimeout(timer);

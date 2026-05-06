@@ -63,7 +63,7 @@ export function migrateResumeDataToEditorState(
         contentBlocks.push({
           id: generateId('h3'),
           type: 'h3',
-          content: entry.subtitle,
+          content: entry.subtitle || '',
           rightContent: entry.endDate ? `${entry.startDate} -- ${entry.endDate}` : entry.startDate,
         });
       }

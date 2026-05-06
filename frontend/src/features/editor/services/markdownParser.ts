@@ -2,7 +2,7 @@ import { PersonalInfo } from '@app-types/resume';
 import { RichTextBlock, BlockType } from '@app-types/richText';
 import { generateId } from '@shared/utils/id';
 import { parseBoldLine } from '@shared/utils/text';
-import { MD_HEADER_TO_BLOCK_TYPE, SUPPLEMENTARY_HEADER } from '@constants/editor';
+import { MD_HEADER_TO_BLOCK_TYPE, SUPPLEMENTARY_HEADER, PERSONAL_INFO_OUTPUT_FIELDS, PERSONAL_INFO_KEY_SET } from '@constants/editor';
 
 /**
  * 解析扁平的 Key: Value 格式 (Frontmatter)
@@ -33,25 +33,13 @@ function parseFlatFrontmatter(lines: string[]): Record<string, any> {
  * P1-3: 提取 PersonalInfo 规格化逻辑，集中处理字段兼容、Fallback 和默认值
  */
 function normalizePersonalInfo(raw: Record<string, any>): PersonalInfo {
-  return {
-    firstName: raw.firstName || '',
-    lastName: raw.lastName || '',
-    furiganaFirstName: raw.furiganaFirstName || '',
-    furiganaLastName: raw.furiganaLastName || '',
-    birth: raw.birth || '',
-    position: raw.position || '',
-    email: raw.email || '',
-    mobile: raw.mobile || '',
-    address: raw.address || '',
-    // P1-3: 处理多源 Fallback 逻辑
-    homepage: raw.homepage || raw.github || raw.gitlab || '',
-    linkedin: raw.linkedin || '',
-    github: raw.github || '',
-    gitlab: raw.gitlab || '',
-    twitter: raw.twitter || '',
-    quote: raw.quote || '',
-    photo: raw.photoUrl ? { url: raw.photoUrl, shape: 'circle' } : undefined,
-  };
+  const info: Record<string, any> = {};
+  for (const field of PERSONAL_INFO_OUTPUT_FIELDS) {
+    info[field] = raw[field] || '';
+  }
+  info.homepage = raw.homepage || raw.github || raw.gitlab || '';
+  info.photo = raw.photoUrl ? { url: raw.photoUrl, shape: 'circle' } : undefined;
+  return info as PersonalInfo;
 }
 
 export function parseMarkdownResume(md: string): {
@@ -119,7 +107,7 @@ export function parseMarkdownResume(md: string): {
     // 且当前行符合 key: value 格式，则视为个人信息。
     if (!hasEncounteredExplicitYaml && !hasEncounteredContent) {
       const match = line.match(/^\s*([\w.-]+)\s*:\s*(.*)/);
-      if (match) {
+      if (match && PERSONAL_INFO_KEY_SET.has(match[1])) {
         Object.assign(personalRaw, parseFlatFrontmatter([line]));
         continue;
       }

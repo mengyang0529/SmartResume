@@ -8,36 +8,46 @@ const loadedTemplates = new Set<number>();
 async function ensureInitialized() {
   if (initializationPromise) return initializationPromise;
 
+  const FONT_LOAD_TIMEOUT_MS = 30_000;
+
   initializationPromise = (async () => {
-    $typst.use(
-      TypstSnippet.disableDefaultFontAssets(),
-      TypstSnippet.preloadFontAssets({ assets: ['text', 'cjk'] }),
-      TypstSnippet.preloadFontFromUrl(
-        'https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf'
-      ),
-      TypstSnippet.preloadFontFromUrl(
-        'https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Bold.otf'
-      ),
-      TypstSnippet.preloadFontFromUrl(
-        'https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf'
-      ),
-      TypstSnippet.preloadFontFromUrl(
-        'https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/Japanese/NotoSansCJKjp-Bold.otf'
-      ),
-      TypstSnippet.preloadFontFromUrl(
-        'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/webfonts/fa-solid-900.ttf'
-      ),
-      TypstSnippet.preloadFontFromUrl(
-        'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/webfonts/fa-brands-400.ttf'
-      ),
-      await TypstSnippet.fetchPackageRegistry()
+    const init = (async () => {
+      $typst.use(
+        TypstSnippet.disableDefaultFontAssets(),
+        TypstSnippet.preloadFontAssets({ assets: ['text', 'cjk'] }),
+        TypstSnippet.preloadFontFromUrl(
+          'https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf'
+        ),
+        TypstSnippet.preloadFontFromUrl(
+          'https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Bold.otf'
+        ),
+        TypstSnippet.preloadFontFromUrl(
+          'https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf'
+        ),
+        TypstSnippet.preloadFontFromUrl(
+          'https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/Japanese/NotoSansCJKjp-Bold.otf'
+        ),
+        TypstSnippet.preloadFontFromUrl(
+          'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/webfonts/fa-solid-900.ttf'
+        ),
+        TypstSnippet.preloadFontFromUrl(
+          'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/webfonts/fa-brands-400.ttf'
+        ),
+        await TypstSnippet.fetchPackageRegistry()
+      );
+
+      $typst.setCompilerInitOptions({
+        getModule: () => '/typst/typst_ts_web_compiler_bg.wasm',
+      });
+
+      await $typst.getCompiler();
+    })();
+
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('FONT_LOAD_TIMEOUT')), FONT_LOAD_TIMEOUT_MS)
     );
 
-    $typst.setCompilerInitOptions({
-      getModule: () => '/typst/typst_ts_web_compiler_bg.wasm',
-    });
-
-    await $typst.getCompiler();
+    await Promise.race([init, timeout]);
   })();
 
   return initializationPromise;

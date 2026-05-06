@@ -2,7 +2,6 @@ import { useRef, useEffect, useCallback, useState } from 'react';
 
 export interface UseTypstCompilerOptions {
   debounceMs?: number;
-  onCompileResult?: (pdfBytes: ArrayBuffer, compileId?: number) => void;
 }
 
 export interface UseTypstCompilerReturn {
@@ -23,15 +22,9 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
   const sourceRef = useRef<string>('');
   const pendingTemplateIdRef = useRef<number | undefined>(undefined);
   const pendingCompileIdRef = useRef<number | undefined>(undefined);
-  const onCompileResultRef = useRef(options.onCompileResult);
-  
+
   // P0-5: 使用 Ref 追踪当前的 PDF Blob URL 以确保在组件卸载时正确释放内存
   const currentPdfUrlRef = useRef<string | null>(null);
-
-  // Update ref when callback changes
-  useEffect(() => {
-    onCompileResultRef.current = options.onCompileResult;
-  }, [options.onCompileResult]);
 
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [isCompiling, setIsCompiling] = useState(false);
@@ -67,7 +60,7 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
     workerRef.current = worker;
 
     worker.onmessage = (e: MessageEvent) => {
-      const { type, pdfBytes, error: errMsg, compileId } = e.data;
+      const { type, pdfBytes, error: errMsg } = e.data;
 
       switch (type) {
         case 'init_done':
@@ -75,7 +68,11 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
           setIsCompiling(false);
           break;
         case 'init_error':
-          setError(errMsg);
+          if (errMsg === 'FONT_LOAD_TIMEOUT') {
+            setError('Failed to load fonts: network timeout. Please check your connection and refresh the page.');
+          } else {
+            setError(errMsg);
+          }
           setIsCompiling(false);
           setWorkerReady(false);
           break;
@@ -89,7 +86,6 @@ export function useTypstCompiler(options: UseTypstCompilerOptions = {}): UseTyps
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const newUrl = URL.createObjectURL(blob);
             setPdfBlobUrl(newUrl);
-            onCompileResultRef.current?.(pdfBytes, compileId);
           }
           setError(null);
           break;

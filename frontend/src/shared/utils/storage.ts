@@ -6,45 +6,79 @@ const STORAGE_KEY_PHOTO = 'resume_photo';
 
 export const storage = {
   async saveState(state: EditorState): Promise<void> {
-    // Strip large photo data from state before saving
-    const stateToSave = {
-      ...state,
-      personal: {
-        ...state.personal,
-        photo: state.personal.photo ? { ...state.personal.photo, url: '__stored__' } : undefined,
-      },
-    };
-    await localforage.setItem(STORAGE_KEY_V2, stateToSave);
+    try {
+      const stateToSave = {
+        ...state,
+        personal: {
+          ...state.personal,
+          photo: state.personal.photo ? { ...state.personal.photo, url: '__stored__' } : undefined,
+        },
+      };
+      await localforage.setItem(STORAGE_KEY_V2, stateToSave);
+    } catch (err) {
+      console.warn('Failed to save state to IndexedDB:', err);
+    }
   },
 
   async getState(): Promise<EditorState | null> {
-    return localforage.getItem<EditorState>(STORAGE_KEY_V2);
+    try {
+      return localforage.getItem<EditorState>(STORAGE_KEY_V2);
+    } catch (err) {
+      console.warn('Failed to load state from IndexedDB:', err);
+      return null;
+    }
   },
 
   async savePhoto(dataUrl: string): Promise<void> {
-    await localforage.setItem(STORAGE_KEY_PHOTO, dataUrl);
+    try {
+      await localforage.setItem(STORAGE_KEY_PHOTO, dataUrl);
+    } catch (err) {
+      console.warn('Failed to save photo to IndexedDB:', err);
+    }
   },
 
   async getPhoto(): Promise<string | null> {
-    return localforage.getItem<string>(STORAGE_KEY_PHOTO);
+    try {
+      return localforage.getItem<string>(STORAGE_KEY_PHOTO);
+    } catch (err) {
+      console.warn('Failed to load photo from IndexedDB:', err);
+      return null;
+    }
   },
 
   async removePhoto(): Promise<void> {
-    await localforage.removeItem(STORAGE_KEY_PHOTO);
+    try {
+      await localforage.removeItem(STORAGE_KEY_PHOTO);
+    } catch (err) {
+      console.warn('Failed to remove photo from IndexedDB:', err);
+    }
   },
 
   async clearState(): Promise<void> {
-    await Promise.all([
-      localforage.removeItem(STORAGE_KEY_V2),
-      localforage.removeItem(STORAGE_KEY_PHOTO),
-    ]);
+    try {
+      await Promise.all([
+        localforage.removeItem(STORAGE_KEY_V2),
+        localforage.removeItem(STORAGE_KEY_PHOTO),
+      ]);
+    } catch (err) {
+      console.warn('Failed to clear state from IndexedDB:', err);
+    }
   },
 
   async getLegacyItem<T>(key: string): Promise<T | null> {
-    return localforage.getItem<T>(key);
+    try {
+      return localforage.getItem<T>(key);
+    } catch (err) {
+      console.warn('Failed to load legacy item from IndexedDB:', err);
+      return null;
+    }
   },
 
   async removeLegacyItem(key: string): Promise<void> {
-    await localforage.removeItem(key);
+    try {
+      await localforage.removeItem(key);
+    } catch (err) {
+      console.warn('Failed to remove legacy item from IndexedDB:', err);
+    }
   },
 };

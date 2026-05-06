@@ -28,3 +28,13 @@ export const BLOCK_TYPE_TO_MD_HEADER = Object.fromEntries(
 ) as Record<string, string>;
 
 export type EditorColor = (typeof EDITOR_COLORS)[number]['value'];
+
+import type { PersonalInfo } from '@app-types/resume';
+
+export const PERSONAL_INFO_OUTPUT_FIELDS: (keyof PersonalInfo)[] = [
+  'firstName', 'lastName', 'furiganaFirstName', 'furiganaLastName',
+  'birth', 'position', 'email', 'mobile', 'address',
+  'homepage', 'linkedin', 'github', 'gitlab', 'twitter', 'quote',
+];
+
+export const PERSONAL_INFO_KEY_SET: Set<string> = new Set(PERSONAL_INFO_OUTPUT_FIELDS);

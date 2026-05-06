@@ -1,6 +1,6 @@
 import { PersonalInfo } from '@app-types/resume';
 import { RichTextBlock } from '@app-types/richText';
-import { BLOCK_TYPE_TO_MD_HEADER, SUPPLEMENTARY_HEADER } from '@constants/editor';
+import { BLOCK_TYPE_TO_MD_HEADER, SUPPLEMENTARY_HEADER, PERSONAL_INFO_OUTPUT_FIELDS } from '@constants/editor';
 
 /**
  * P3-3: 重命名为 quoteYamlValue。
@@ -26,14 +26,7 @@ export function generateMarkdownResume(data: {
 
   lines.push('---');
   
-  // P2-2: 使用配置驱动的字段映射，减少手动硬编码
-  const personalFields: (keyof PersonalInfo)[] = [
-    'firstName', 'lastName', 'furiganaFirstName', 'furiganaLastName',
-    'birth', 'position', 'email', 'mobile', 'address',
-    'homepage', 'linkedin', 'github', 'gitlab', 'twitter', 'quote'
-  ];
-
-  for (const field of personalFields) {
+  for (const field of PERSONAL_INFO_OUTPUT_FIELDS) {
     const val = personal[field];
     if (val) {
       // P0-3: 统一使用 quoteYamlValue 处理所有字段（包括 mobile）

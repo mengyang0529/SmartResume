@@ -47,53 +47,53 @@ describe('useEditorState', () => {
   it('should initialize with templateId from params', () => {
     const { result } = renderHook(() => useEditorState(), { wrapper });
 
-    expect(result.current.state.templateSlug).toBe('modern');
-    expect(result.current.personal.firstName).toBe('');
+    expect(result.current.data.templateSlug).toBe('modern');
+    expect(result.current.data.personal.firstName).toBe('');
   });
 
   it('should update personal info', () => {
     const { result } = renderHook(() => useEditorState(), { wrapper });
 
     act(() => {
-      result.current.setPersonal({
-        ...result.current.personal,
+      result.current.actions.setPersonal({
+        ...result.current.data.personal,
         firstName: 'John',
         lastName: 'Doe',
       });
     });
 
-    expect(result.current.personal.firstName).toBe('John');
-    expect(result.current.personal.lastName).toBe('Doe');
+    expect(result.current.data.personal.firstName).toBe('John');
+    expect(result.current.data.personal.lastName).toBe('Doe');
   });
 
   it('should add a section', () => {
     const { result } = renderHook(() => useEditorState(), { wrapper });
 
     act(() => {
-      result.current.addSection();
+      result.current.actions.addSection();
     });
 
-    expect(result.current.contentBlocks.length).toBe(1);
-    expect(result.current.contentBlocks[0].type).toBe('h1');
-    expect(result.current.contentBlocks[0].content).toBe('New Section');
+    expect(result.current.data.contentBlocks.length).toBe(1);
+    expect(result.current.data.contentBlocks[0].type).toBe('h1');
+    expect(result.current.data.contentBlocks[0].content).toBe('New Section');
   });
 
   it('should handle photo remove', () => {
     const { result } = renderHook(() => useEditorState(), { wrapper });
 
     act(() => {
-      result.current.setPersonal({
-        ...result.current.personal,
+      result.current.actions.setPersonal({
+        ...result.current.data.personal,
         photo: { url: 'data:image/png;base64,xxx', shape: 'circle' },
       });
     });
 
-    expect(result.current.personal.photo).toBeDefined();
+    expect(result.current.data.personal.photo).toBeDefined();
 
     act(() => {
-      result.current.handlePhotoRemove();
+      result.current.photo.remove();
     });
 
-    expect(result.current.personal.photo).toBeUndefined();
+    expect(result.current.data.personal.photo).toBeUndefined();
   });
 });

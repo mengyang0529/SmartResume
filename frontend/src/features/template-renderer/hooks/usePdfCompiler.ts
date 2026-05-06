@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { EditorState } from '@app-types/editorState';
 import { findTemplateBySlug, RESUME_TEMPLATES } from '@data/templates';
 import { useTypstCompiler } from './useTypstCompiler';
@@ -7,34 +7,16 @@ import { generateResumeTypst } from '../generators';
 export function usePdfCompiler(config: { state: EditorState }) {
   const { state } = config;
 
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const pdfUrlRef = useRef<string | null>(null);
   const lastCompileSource = useRef('');
-
-  const onCompileResult = useCallback((pdfBytes: ArrayBuffer) => {
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current);
-    pdfUrlRef.current = url;
-    setPdfUrl(url);
-  }, []);
 
   const {
     isCompiling,
     error: compileError,
+    pdfBlobUrl,
     compile: triggerCompile,
     setPhoto,
     removePhoto,
-  } = useTypstCompiler({
-    debounceMs: 400,
-    onCompileResult,
-  });
-
-  useEffect(() => {
-    return () => {
-      if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current);
-    };
-  }, []);
+  } = useTypstCompiler({ debounceMs: 400 });
 
   const currentTemplate = useMemo(
     () => findTemplateBySlug(state.templateSlug) || RESUME_TEMPLATES[0],
@@ -76,20 +58,17 @@ export function usePdfCompiler(config: { state: EditorState }) {
   }, [generateTypstNow]);
 
   const handleDownloadPdf = useCallback(() => {
-    if (!pdfUrl) return;
+    if (!pdfBlobUrl) return;
     const a = document.createElement('a');
-    a.href = pdfUrl;
+    a.href = pdfBlobUrl;
     a.download = `${state.personal.firstName || 'resume'}_${state.personal.lastName || 'export'}.pdf`;
     a.click();
-  }, [pdfUrl, state.personal]);
+  }, [pdfBlobUrl, state.personal]);
 
   return {
-    pdfUrl,
+    pdfUrl: pdfBlobUrl,
     isCompiling,
     compileError,
-    currentTemplate,
-    setPhoto,
-    removePhoto,
     handleRefreshPreview,
     handleDownloadPdf,
   };
